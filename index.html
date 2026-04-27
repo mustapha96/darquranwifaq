@@ -178,7 +178,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
 .sa.late{background:var(--ol);}
 .sa.excused{background:var(--pl);}
 .sa img{width:100%;height:100%;object-fit:cover;}
-.sd{position:absolute;bottom:0;left:0;width:14px;height:14px;border-radius:50%;border:2px solid white;font-size:7px;display:flex;align-items:center;justify-content:center;}
+.sd{position:absolute;bottom:0;left:0;width:14px;height:14px;border-radius:50%;border:2px solid white;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;}
 .sd.present{background:var(--green);}
 .sd.absent{background:var(--red);}
 .sd.late{background:var(--orange);}
@@ -222,7 +222,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
 
 /* ===HIFZ MAP=== */
 .hm{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin:10px 0;}
-.hj{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;cursor:pointer;transition:all .15s;}
+.hj{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;font-weight:700;cursor:pointer;transition:all .15s;}
 .hj.memorized{background:var(--green);color:white;}
 .hj.in-progress{background:var(--orange);color:white;}
 .hj.not-started{background:var(--gray);color:var(--gr);}
@@ -572,9 +572,9 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
     <!-- FINANCE -->
     <div id="scr-finance" class="scr">
       <div class="stat4" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stc gr"><div><div class="sn" id="fin-in">0</div><div class="sl">إجمالي الواردات (دج)</div></div><div class="sic">💰</div></div>
-        <div class="stc rd"><div><div class="sn" id="fin-out">0</div><div class="sl">إجمالي الصادرات (دج)</div></div><div class="sic">💸</div></div>
-        <div class="stc go"><div><div class="sn" id="fin-bal">0</div><div class="sl">الرصيد (دج)</div></div><div class="sic">📊</div></div>
+        <div class="stc gr"><div><div class="sn" id="fin-in">0</div><div class="sl">إجمالي الواردات (درهم)</div></div><div class="sic">💰</div></div>
+        <div class="stc rd"><div><div class="sn" id="fin-out">0</div><div class="sl">إجمالي الصادرات (درهم)</div></div><div class="sic">💸</div></div>
+        <div class="stc go"><div><div class="sn" id="fin-bal">0</div><div class="sl">الرصيد (درهم)</div></div><div class="sic">📊</div></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
         <button class="btn bgr" onclick="openMod('mod-fin-in')">+ وارد</button>
@@ -621,7 +621,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
     <div class="fg2"><label class="fl3">الحلقة</label><select class="fs" id="ns-grp"><option value="">-- اختر الحلقة --</option></select></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
       <div class="fg2"><label class="fl3">اسم ولي الأمر</label><input class="fi" id="ns-par" placeholder="اسم ولي الأمر"></div>
-      <div class="fg2"><label class="fl3">هاتف ولي الأمر</label><input class="fi" id="ns-phn" placeholder="0551234567"></div>
+      <div class="fg2"><label class="fl3">هاتف ولي الأمر</label><input class="fi" id="ns-phn" placeholder="+212600000000"></div>
     </div>
     <button class="btn bbl2" style="width:100%;padding:12px;" id="sstu-btn" onclick="addStudent()">✅ تسجيل الطالب</button>
   </div>
@@ -651,7 +651,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
       </select>
     </div>
     <div class="fg2"><label class="fl3">وقت الحلقة</label>
-      <select class="fs" id="ng-time">
+      <select class="fs" id="ng-time" multiple>
         <option value="">-- اختر الوقت --</option>
         <option>الاثنين والأربعاء والسبت | 19:00 - 21:30</option>
         <option>الخميس | 09:30 - 11:30</option>
@@ -684,7 +684,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
   <div class="mb">
     <div class="mt">+ إضافة وارد <button class="mc" onclick="closeMod('mod-fin-in')">✕</button></div>
     <div class="fg2"><label class="fl3">البيان</label><input class="fi" id="fin-in-desc" placeholder="مثال: أقساط شهر أبريل"></div>
-    <div class="fg2"><label class="fl3">المبلغ (دج)</label><input class="fi" id="fin-in-amt" type="number" placeholder="5000"></div>
+    <div class="fg2"><label class="fl3">المبلغ (درهم)</label><input class="fi" id="fin-in-amt" type="number" placeholder="5000"></div>
     <div class="fg2"><label class="fl3">التاريخ</label><input class="fi" id="fin-in-date" type="date"></div>
     <button class="btn bgr" style="width:100%;padding:11px;" onclick="addFin('in')">✅ إضافة</button>
   </div>
@@ -694,7 +694,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
   <div class="mb">
     <div class="mt">- إضافة صادر <button class="mc" onclick="closeMod('mod-fin-out')">✕</button></div>
     <div class="fg2"><label class="fl3">البيان</label><input class="fi" id="fin-out-desc" placeholder="مثال: مستلزمات المركز"></div>
-    <div class="fg2"><label class="fl3">المبلغ (دج)</label><input class="fi" id="fin-out-amt" type="number" placeholder="2000"></div>
+    <div class="fg2"><label class="fl3">المبلغ (درهم)</label><input class="fi" id="fin-out-amt" type="number" placeholder="2000"></div>
     <div class="fg2"><label class="fl3">التاريخ</label><input class="fi" id="fin-out-date" type="date"></div>
     <button class="btn brd" style="width:100%;padding:11px;" onclick="addFin('out')">✅ إضافة</button>
   </div>
