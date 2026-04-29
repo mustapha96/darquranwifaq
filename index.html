@@ -652,15 +652,14 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
       </select>
     </div>
     <div class="fg2"><label class="fl3">وقت الحلقة</label>
-      <select class="fs" id="ng-time">
-        <option value="">-- اختر الوقت --</option>
-        <option>الاثنين والأربعاء والسبت | 19:00 - 21:30</option>
-        <option>الخميس | 09:30 - 11:30</option>
-        <option>الثلاثاء والخميس | 19:00 - 21:30</option>
-        <option>الأربعاء | 09:30 - 11:30</option>
-        <option>الأحد | 10:30 - 12:30</option>
-        <option>السبت | 10:00 - 12:00</option>
-      </select>
+      <div id="ng-time" style="display:flex;flex-direction:column;gap:6px;">
+<label><input type="checkbox" value="الاثنين والأربعاء والسبت | 19:00 - 21:30"> الاثنين والأربعاء والسبت | 19:00 - 21:30</label>
+<label><input type="checkbox" value="الخميس | 09:30 - 11:30"> الخميس | 09:30 - 11:30</label>
+<label><input type="checkbox" value="الثلاثاء والخميس | 19:00 - 21:30"> الثلاثاء والخميس | 19:00 - 21:30</label>
+<label><input type="checkbox" value="الأربعاء | 09:30 - 11:30"> الأربعاء | 09:30 - 11:30</label>
+<label><input type="checkbox" value="الأحد | 10:30 - 12:30"> الأحد | 10:30 - 12:30</label>
+<label><input type="checkbox" value="السبت | 10:00 - 12:00"> السبت | 10:00 - 12:00</label>
+</div>
     </div>
     <button class="btn bbl2" style="width:100%;padding:11px;" id="sgrp-btn" onclick="addGroup()">✅ إضافة الفوج</button>
   </div>
