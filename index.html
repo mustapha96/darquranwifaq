@@ -618,14 +618,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
         <option>المستوى الثاني</option><option>المستوى الثالث</option><option>مستوى الكبار</option>
       </select>
     </div>
-    <div class="fg2"><label class="fl3">الأستاذ المسؤول</label><select class="fs" id="ns-tch" onchange="fillTchGroups()">
-<option value="">-- اختر الأستاذ --</option>
-<option>الأستاذ سمير اندجار</option>
-<option>الأستاذ محمد تور</option>
-<option>الأستاذ يونس أسوقي</option>
-<option>الأستاذ حسن تحسا</option>
-<option>الأستاذ عبد الغفور حسبي</option>
-</select></div>
+    <div class="fg2"><label class="fl3">الأستاذ المسؤول</label><select class="fs" id="ns-tch" onchange="fillTchGroups()"><option value="">-- اختر الأستاذ --</option></select></div>
     <div class="fg2"><label class="fl3">الحلقة</label><select class="fs" id="ns-grp"><option value="">-- اختر الحلقة --</option></select></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
       <div class="fg2"><label class="fl3">اسم ولي الأمر</label><input class="fi" id="ns-par" placeholder="اسم ولي الأمر"></div>
@@ -650,14 +643,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
   <div class="mb">
     <div class="mt">إضافة فوج جديد <button class="mc" onclick="closeMod('mod-group')">✕</button></div>
     <div class="fg2"><label class="fl3">اسم الفوج <span style="color:var(--red);">*</span></label><input class="fi" id="ng-name" placeholder="الفوج أ"></div>
-    <div class="fg2"><label class="fl3">الأستاذ المسؤول</label><select class="fs" id="ng-tch">
-<option value="">-- اختر الأستاذ --</option>
-<option>الأستاذ سمير اندجار</option>
-<option>الأستاذ محمد تور</option>
-<option>الأستاذ يونس أسوقي</option>
-<option>الأستاذ حسن تحسا</option>
-<option>الأستاذ عبد الغفور حسبي</option>
-</select></div>
+    <div class="fg2"><label class="fl3">الأستاذ المسؤول</label><select class="fs" id="ng-tch"><option value="">-- اختر الأستاذ --</option></select></div>
     <div class="fg2"><label class="fl3">المستوى</label>
       <select class="fs" id="ng-lev">
         <option value="">-- اختر المستوى --</option>
@@ -665,15 +651,17 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#e8f4fd,
         <option>المستوى الثاني</option><option>المستوى الثالث</option><option>مستوى الكبار</option>
       </select>
     </div>
-    <div class="fg2"><label class="fl3">وقت الحلقة</label>
-      <div id="ng-time" style="display:flex;flex-direction:column;gap:6px;">
-<label><input type="checkbox" value="الاثنين والأربعاء والسبت | 19:00 - 21:30"> الاثنين والأربعاء والسبت | 19:00 - 21:30</label>
-<label><input type="checkbox" value="الخميس | 09:30 - 11:30"> الخميس | 09:30 - 11:30</label>
-<label><input type="checkbox" value="الثلاثاء والخميس | 19:00 - 21:30"> الثلاثاء والخميس | 19:00 - 21:30</label>
-<label><input type="checkbox" value="الأربعاء | 09:30 - 11:30"> الأربعاء | 09:30 - 11:30</label>
-<label><input type="checkbox" value="الأحد | 10:30 - 12:30"> الأحد | 10:30 - 12:30</label>
-<label><input type="checkbox" value="السبت | 10:00 - 12:00"> السبت | 10:00 - 12:00</label>
-</div>
+        <div class="fg2">
+      <label class="fl3">أوقات الحلقة <span style="color:#aaa;font-weight:400;font-size:10px;">(اختر واحداً أو أكثر)</span></label>
+      <div style="border:1.5px solid var(--bs);border-radius:8px;overflow:hidden;" id="ng-times">
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--bs);"><input type="checkbox" value="الاثنين والأربعاء والسبت | 19:00-21:30" style="width:15px;height:15px;accent-color:var(--bm);" onchange="updateTimePrev()"><div><div style="font-size:12px;font-weight:700;">الاثنين والأربعاء والسبت</div><div style="font-size:10px;color:#888;">19:00 — 21:30</div></div></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--bs);"><input type="checkbox" value="الخميس | 09:30-11:30" style="width:15px;height:15px;accent-color:var(--bm);" onchange="updateTimePrev()"><div><div style="font-size:12px;font-weight:700;">الخميس صباحاً</div><div style="font-size:10px;color:#888;">09:30 — 11:30</div></div></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--bs);"><input type="checkbox" value="الثلاثاء والخميس | 19:00-21:30" style="width:15px;height:15px;accent-color:var(--bm);" onchange="updateTimePrev()"><div><div style="font-size:12px;font-weight:700;">الثلاثاء والخميس</div><div style="font-size:10px;color:#888;">19:00 — 21:30</div></div></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--bs);"><input type="checkbox" value="الأربعاء | 09:30-11:30" style="width:15px;height:15px;accent-color:var(--bm);" onchange="updateTimePrev()"><div><div style="font-size:12px;font-weight:700;">الأربعاء صباحاً</div><div style="font-size:10px;color:#888;">09:30 — 11:30</div></div></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--bs);"><input type="checkbox" value="الأحد | 10:30-12:30" style="width:15px;height:15px;accent-color:var(--bm);" onchange="updateTimePrev()"><div><div style="font-size:12px;font-weight:700;">الأحد</div><div style="font-size:10px;color:#888;">10:30 — 12:30</div></div></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;"><input type="checkbox" value="السبت | 10:00-12:00" style="width:15px;height:15px;accent-color:var(--bm);" onchange="updateTimePrev()"><div><div style="font-size:12px;font-weight:700;">السبت صباحاً</div><div style="font-size:10px;color:#888;">10:00 — 12:00</div></div></label>
+      </div>
+      <div id="tprev" style="margin-top:6px;font-size:11px;color:var(--bm);font-weight:700;min-height:14px;"></div>
     </div>
     <button class="btn bbl2" style="width:100%;padding:11px;" id="sgrp-btn" onclick="addGroup()">✅ إضافة الفوج</button>
   </div>
@@ -809,11 +797,14 @@ async function loadProf(){
   const {data}=await sb.from('profiles').select('*').eq('id',CU.id).single();
   CP=data;
   if(data){
-    const ini=(data.name||'م').split(' ').map(w=>w[0]).slice(0,2).join('');
+    const nm2=data.name||'';const dispN=nm2.includes('@')||!nm2?'مستخدم':nm2;
+    const ini=dispN.split(' ').map(w=>w[0]).slice(0,2).join('')||'م';
     document.getElementById('uav').textContent=ini;
-    document.getElementById('uname').textContent=data.name||CU.email;
+    const nm=data.name||'';
+    const dispName=nm.includes('@')||!nm ? 'مستخدم' : nm;
+    document.getElementById('uname').textContent=dispName;
     document.getElementById('urole').textContent=data.role==='admin'?'مشرف عام':'أستاذ';
-    document.getElementById('hwelcome').textContent=`مرحباً ${data.name?.split(' ').slice(0,2).join(' ')||''} 👋`;
+    document.getElementById('hwelcome').textContent=`مرحباً ${dispName.split(' ').slice(0,2).join(' ')} 👋`;
   }
 }
 
@@ -986,7 +977,17 @@ function fillSelects(){
   const tOpts=TCHS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
   const sOpts=STUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   ['att-gsel','rec-gf','bulk-grp'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<option value="all">كل الأفواج</option>'+gOpts;});
-  ['ns-tch','tr-tch','ng-tch'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<option value="">-- اختر الأستاذ --</option>'+tOpts;});
+  // إذا لم تتحمل قائمة الأساتذة من DB، استخدم القائمة الثابتة
+  const staticTchs = [
+    {id:'Mohamed@wafaq.com', name:'الأستاذ محمد تور'},
+    {id:'Samir@wafaq.com', name:'الأستاذ سمير اندجار'},
+    {id:'Abdelghafour@wafaq.com', name:'الأستاذ عبد الغفور حسبي'},
+    {id:'Hassan@wafaq.com', name:'الأستاذ حسن تحسا'},
+    {id:'Younsse@wafaq.com', name:'الأستاذ يونس أسوقي'},
+  ];
+  const finalTchs = TCHS.length > 0 ? TCHS : staticTchs;
+  const tOptsF = finalTchs.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  ['ns-tch','tr-tch','ng-tch'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<option value="">-- اختر الأستاذ --</option>'+tOptsF;});
   const exs=document.getElementById('ex-stu');if(exs)exs.innerHTML='<option value="all">كل الطلبة</option>'+sOpts;
 }
 
@@ -1225,6 +1226,12 @@ async function addGroup(){
   if(error){toast('❌ '+error.message);return;}
   closeMod('mod-group');document.getElementById('ng-name').value='';
   await loadAll();renderGroups();toast('✅ تمت إضافة الفوج');
+}
+
+function updateTimePrev(){
+  const checked=Array.from(document.querySelectorAll('#ng-times input:checked')).map(c=>c.value);
+  const prev=document.getElementById('tprev');
+  if(prev) prev.textContent=checked.length?'✅ '+checked.join(' + '):'';
 }
 
 function fillTchGroups(){
