@@ -800,8 +800,9 @@ async function loadProf(){
     const nm2=data.name||'';const dispN=nm2.includes('@')||!nm2?'مستخدم':nm2;
     const ini=dispN.split(' ').map(w=>w[0]).slice(0,2).join('')||'م';
     document.getElementById('uav').textContent=ini;
-    const nm=data.name||'';
-    const dispName=nm.includes('@')||!nm ? 'مستخدم' : nm;
+    const TMAP={'Mohamed@wafaq.com':'الأستاذ محمد تور','Samir@wafaq.com':'الأستاذ سمير اندجار','Abdelghafour@wafaq.com':'الأستاذ عبد الغفور حسبي','Hassan@wafaq.com':'الأستاذ حسن تحسا','Younsse@wafaq.com':'الأستاذ يونس أسوقي','admin@wafaq.com':'المشرف العام'};
+    const rawNm=data.name||CU.email||'';
+    const dispName=TMAP[rawNm]||TMAP[CU.email]||(rawNm.includes('@')?'مستخدم':rawNm)||'مستخدم';
     document.getElementById('uname').textContent=dispName;
     document.getElementById('urole').textContent=data.role==='admin'?'مشرف عام':'أستاذ';
     document.getElementById('hwelcome').textContent=`مرحباً ${dispName.split(' ').slice(0,2).join(' ')} 👋`;
@@ -978,14 +979,24 @@ function fillSelects(){
   const sOpts=STUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   ['att-gsel','rec-gf','bulk-grp'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<option value="all">كل الأفواج</option>'+gOpts;});
   // إذا لم تتحمل قائمة الأساتذة من DB، استخدم القائمة الثابتة
-  const staticTchs = [
-    {id:'Mohamed@wafaq.com', name:'الأستاذ محمد تور'},
-    {id:'Samir@wafaq.com', name:'الأستاذ سمير اندجار'},
-    {id:'Abdelghafour@wafaq.com', name:'الأستاذ عبد الغفور حسبي'},
-    {id:'Hassan@wafaq.com', name:'الأستاذ حسن تحسا'},
-    {id:'Younsse@wafaq.com', name:'الأستاذ يونس أسوقي'},
-  ];
-  const finalTchs = TCHS.length > 0 ? TCHS : staticTchs;
+  // قائمة الأساتذة الثابتة مع ربط الإيميل بالاسم
+  const TEACHERS_MAP = {
+    'Mohamed@wafaq.com':     'الأستاذ محمد تور',
+    'Samir@wafaq.com':       'الأستاذ سمير اندجار',
+    'Abdelghafour@wafaq.com':'الأستاذ عبد الغفور حسبي',
+    'Hassan@wafaq.com':      'الأستاذ حسن تحسا',
+    'Younsse@wafaq.com':     'الأستاذ يونس أسوقي',
+  };
+  // إذا تحمّل الأساتذة من DB، استخدم أسماءهم الحقيقية بدل الإيميل
+  let finalTchs;
+  if(TCHS.length > 0){
+    finalTchs = TCHS.map(t=>({
+      id: t.id,
+      name: TEACHERS_MAP[t.name] || TEACHERS_MAP[Object.keys(TEACHERS_MAP).find(k=>t.name?.includes(k.split('@')[0]))] || t.name || t.id
+    }));
+  } else {
+    finalTchs = Object.entries(TEACHERS_MAP).map(([email,name])=>({id:email,name}));
+  }
   const tOptsF = finalTchs.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
   ['ns-tch','tr-tch','ng-tch'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<option value="">-- اختر الأستاذ --</option>'+tOptsF;});
   const exs=document.getElementById('ex-stu');if(exs)exs.innerHTML='<option value="all">كل الطلبة</option>'+sOpts;
