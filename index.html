@@ -773,6 +773,8 @@ tr:last-child td { border-bottom:none; }
 .badge-blue { background:#dbeafe; color:#1e40af; }
 .badge-orange { background:#ffedd5; color:#9a3412; }
 .badge-gray { background:#f1f5f9; color:#475569; }
+.badge-gold { background:#fef3c7; color:#92400e; }
+.badge-purple { background:#ede9fe; color:#5b21b6; }
 .badge-purple { background:#ede9fe; color:#5b21b6; }
 
 /* FORMS */
@@ -1579,6 +1581,11 @@ textarea { resize:vertical; min-height:80px; }
       <div class="nav-item" onclick="nav('reports')"><i class="fas fa-chart-bar"></i> التقارير</div>
       <div class="nav-item" onclick="nav('holidays')"><i class="fas fa-calendar-alt"></i> العطل والإجازات</div>
       <div class="nav-item" id="nav-finance-item" style="display:none" onclick="nav('finance')"><i class="fas fa-coins"></i> الإدارة المالية</div>
+      <div class="nav-item" id="nav-users-item" style="display:none" onclick="nav('users')"><i class="fas fa-users-cog"></i> إدارة المستخدمين</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">برامج خاصة</div>
+      <div class="nav-item" onclick="nav('summer')"><i class="fas fa-sun"></i> الدورة الصيفية</div>
     </div>
     <div class="nav-section">
       <div class="nav-section-title">الإعدادات</div>
@@ -1593,6 +1600,15 @@ textarea { resize:vertical; min-height:80px; }
 
   <!-- MAIN -->
   <div class="main">
+    <div id="session-alert-bar" style="display:none;background:linear-gradient(90deg,#1565c0,#1e88e5);color:white;padding:10px 24px;display:none;align-items:center;gap:12px;font-size:13px;font-weight:600;z-index:89">
+      <i class="fas fa-bell" style="font-size:16px;animation:pulse 1.5s infinite"></i>
+      <span id="session-alert-text">لديك حصة الآن</span>
+      <button id="session-alert-btn" onclick="goToSession()" style="margin-right:auto;background:white;color:#1565c0;border:none;padding:6px 16px;border-radius:6px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+        <i class="fas fa-arrow-left"></i> الدخول الآن
+      </button>
+      <button onclick="document.getElementById('session-alert-bar').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:white;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px">✕</button>
+    </div>
+    <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}</style>
     <div class="header">
       <button class="btn-ghost btn-icon" onclick="toggleSidebar()" style="display:none;margin-left:8px" id="menu-btn">
         <i class="fas fa-bars"></i>
@@ -1799,6 +1815,11 @@ textarea { resize:vertical; min-height:80px; }
           <div class="tab" onclick="switchReportTab('hifz')">خريطة الحفظ</div>
         </div>
         <div class="tab-content active" id="report-overview">
+          <div style="text-align:left;margin-bottom:12px">
+            <button class="btn btn-primary btn-sm" onclick="exportGeneralReportPDF()">
+              <i class="fas fa-file-pdf"></i> تصدير PDF
+            </button>
+          </div>
           <div class="stats-grid" id="report-stats"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div class="card" id="report-chart1"></div>
@@ -1806,6 +1827,11 @@ textarea { resize:vertical; min-height:80px; }
           </div>
         </div>
         <div class="tab-content" id="report-student">
+          <div style="text-align:left;margin-bottom:12px">
+            <button class="btn btn-primary btn-sm" onclick="exportStudentReportPDF()">
+              <i class="fas fa-file-pdf"></i> تصدير PDF
+            </button>
+          </div>
           <div class="card" style="margin-bottom:16px">
             <div class="card-body">
               <div class="form-row">
@@ -1821,6 +1847,11 @@ textarea { resize:vertical; min-height:80px; }
           <div id="student-report-content"></div>
         </div>
         <div class="tab-content" id="report-group">
+          <div style="text-align:left;margin-bottom:12px">
+            <button class="btn btn-primary btn-sm" onclick="exportGroupReportPDF()">
+              <i class="fas fa-file-pdf"></i> تصدير PDF
+            </button>
+          </div>
           <div class="card" style="margin-bottom:16px">
             <div class="card-body">
               <div class="form-row">
@@ -1883,6 +1914,74 @@ textarea { resize:vertical; min-height:80px; }
             </table>
           </div>
         </div>
+      </div>
+
+      <!-- USERS MANAGEMENT -->
+      <div class="page" id="page-users">
+        <div class="page-header">
+          <div class="page-title"><h1>إدارة المستخدمين</h1><p>إدارة صلاحيات المدراء والمشرفين والأساتذة</p></div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <h3><i class="fas fa-crown" style="color:var(--gold);margin-left:6px"></i> هرمية الصلاحيات</h3>
+          </div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+              <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fbbf24;text-align:center">
+                <i class="fas fa-crown" style="font-size:28px;color:#d97706;margin-bottom:8px;display:block"></i>
+                <h4 style="color:#92400e;font-size:14px">مدير النظام</h4>
+                <p style="font-size:12px;color:#78350f;margin-top:4px">تحكم كامل في جميع الوظائف والبيانات</p>
+              </div>
+              <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:1px solid #93c5fd;text-align:center">
+                <i class="fas fa-user-shield" style="font-size:28px;color:#1d4ed8;margin-bottom:8px;display:block"></i>
+                <h4 style="color:#1e3a8a;font-size:14px">المشرف</h4>
+                <p style="font-size:12px;color:#1e40af;margin-top:4px">إدارة الحلقات والأساتذة التابعين له</p>
+              </div>
+              <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;text-align:center">
+                <i class="fas fa-chalkboard-teacher" style="font-size:28px;color:#15803d;margin-bottom:8px;display:block"></i>
+                <h4 style="color:#14532d;font-size:14px">الأستاذ</h4>
+                <p style="font-size:12px;color:#166534;margin-top:4px">إدارة طلبته وتسجيل الحضور والحفظ</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>قائمة المستخدمين</h3></div>
+          <div id="users-list-content">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMER SESSION -->
+      <div class="page" id="page-summer">
+        <div class="page-header">
+          <div class="page-title">
+            <h1><i class="fas fa-sun" style="color:var(--gold);margin-left:8px"></i> الدورة الصيفية</h1>
+            <p>برنامج مستقل تماماً عن الموسم الدراسي العادي</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-warning" onclick="openModal('modal-summer-config')">
+              <i class="fas fa-cog"></i> إعدادات الدورة
+            </button>
+            <button class="btn btn-primary" onclick="openSummerStudentModal()">
+              <i class="fas fa-user-plus"></i> إضافة طالب
+            </button>
+          </div>
+        </div>
+        <div id="summer-status-banner" style="margin-bottom:16px"></div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchSummerTab('overview')"><i class="fas fa-chart-pie"></i> نظرة عامة</div>
+          <div class="tab" onclick="switchSummerTab('groups')"><i class="fas fa-users"></i> الأفواج</div>
+          <div class="tab" onclick="switchSummerTab('students')"><i class="fas fa-user-graduate"></i> الطلبة</div>
+          <div class="tab" onclick="switchSummerTab('attendance')"><i class="fas fa-clipboard-check"></i> الحضور</div>
+          <div class="tab" onclick="switchSummerTab('reports')"><i class="fas fa-chart-bar"></i> التقارير</div>
+        </div>
+        <div class="tab-content active" id="summer-overview"><div id="summer-overview-content"></div></div>
+        <div class="tab-content" id="summer-groups"><div id="summer-groups-content"></div></div>
+        <div class="tab-content" id="summer-students"><div id="summer-students-content"></div></div>
+        <div class="tab-content" id="summer-attendance"><div id="summer-attendance-content"></div></div>
+        <div class="tab-content" id="summer-reports"><div id="summer-reports-content"></div></div>
       </div>
 
       <!-- SETTINGS -->
@@ -1949,30 +2048,27 @@ textarea { resize:vertical; min-height:80px; }
         <div class="form-group">
           <label>المستوى</label>
           <select id="group-level">
-            <option value="مبتدئ">مبتدئ</option>
-            <option value="متوسط">متوسط</option>
-            <option value="متقدم">متقدم</option>
+            <option value="تمهيدي">تمهيدي</option>
+            <option value="مستوى أول">مستوى أول</option>
+            <option value="مستوى ثاني">مستوى ثاني</option>
+            <option value="مستوى ثالث">مستوى ثالث</option>
+            <option value="مستوى رابع (الكبار)">مستوى رابع (الكبار)</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>وقت البداية</label>
-          <input type="time" id="group-start">
-        </div>
-        <div class="form-group">
-          <label>وقت النهاية</label>
-          <input type="time" id="group-end">
-        </div>
+        <input type="hidden" id="group-start">
+        <input type="hidden" id="group-end">
         <div class="form-group full">
-          <label>أيام الأسبوع</label>
+          <label>أيام الأسبوع والتوقيت</label>
           <div class="days-grid" id="group-days">
-            <label class="day-cb" data-day="الاثنين"><input type="checkbox" value="الاثنين"> الاثنين</label>
-            <label class="day-cb" data-day="الثلاثاء"><input type="checkbox" value="الثلاثاء"> الثلاثاء</label>
-            <label class="day-cb" data-day="الأربعاء"><input type="checkbox" value="الأربعاء"> الأربعاء</label>
-            <label class="day-cb" data-day="الخميس"><input type="checkbox" value="الخميس"> الخميس</label>
-            <label class="day-cb" data-day="الجمعة"><input type="checkbox" value="الجمعة"> الجمعة</label>
-            <label class="day-cb" data-day="السبت"><input type="checkbox" value="السبت"> السبت</label>
-            <label class="day-cb" data-day="الأحد"><input type="checkbox" value="الأحد"> الأحد</label>
+            <label class="day-cb" data-day="الاثنين" onclick="toggleDayTime('الاثنين',this)"><input type="checkbox" value="الاثنين"> الاثنين</label>
+            <label class="day-cb" data-day="الثلاثاء" onclick="toggleDayTime('الثلاثاء',this)"><input type="checkbox" value="الثلاثاء"> الثلاثاء</label>
+            <label class="day-cb" data-day="الأربعاء" onclick="toggleDayTime('الأربعاء',this)"><input type="checkbox" value="الأربعاء"> الأربعاء</label>
+            <label class="day-cb" data-day="الخميس" onclick="toggleDayTime('الخميس',this)"><input type="checkbox" value="الخميس"> الخميس</label>
+            <label class="day-cb" data-day="الجمعة" onclick="toggleDayTime('الجمعة',this)"><input type="checkbox" value="الجمعة"> الجمعة</label>
+            <label class="day-cb" data-day="السبت" onclick="toggleDayTime('السبت',this)"><input type="checkbox" value="السبت"> السبت</label>
+            <label class="day-cb" data-day="الأحد" onclick="toggleDayTime('الأحد',this)"><input type="checkbox" value="الأحد"> الأحد</label>
           </div>
+          <div id="day-times-container" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
         </div>
         <div class="form-group full">
           <label>ملاحظات</label>
@@ -2029,9 +2125,11 @@ textarea { resize:vertical; min-height:80px; }
         <div class="form-group">
           <label>المستوى</label>
           <select id="student-level">
-            <option value="مبتدئ">مبتدئ</option>
-            <option value="متوسط">متوسط</option>
-            <option value="متقدم">متقدم</option>
+            <option value="تمهيدي">تمهيدي</option>
+            <option value="مستوى أول">مستوى أول</option>
+            <option value="مستوى ثاني">مستوى ثاني</option>
+            <option value="مستوى ثالث">مستوى ثالث</option>
+            <option value="مستوى رابع (الكبار)">مستوى رابع (الكبار)</option>
             <option value="حافظ">حافظ للقرآن</option>
           </select>
         </div>
@@ -2223,6 +2321,97 @@ textarea { resize:vertical; min-height:80px; }
   </div>
 </div>
 
+<!-- Modal Summer Config -->
+<div class="modal-overlay" id="modal-summer-config">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-sun" style="color:var(--gold);margin-left:6px"></i> إعدادات الدورة الصيفية</h3>
+      <button class="btn-close" onclick="closeModal('modal-summer-config')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>اسم الدورة</label>
+          <input type="text" id="summer-name" placeholder="مثال: الدورة الصيفية 2025">
+        </div>
+        <div class="form-group">
+          <label>تاريخ البداية</label>
+          <input type="date" id="summer-start">
+        </div>
+        <div class="form-group">
+          <label>تاريخ النهاية</label>
+          <input type="date" id="summer-end">
+        </div>
+        <div class="form-group full">
+          <label>الحالة</label>
+          <select id="summer-status-sel">
+            <option value="active">نشطة</option>
+            <option value="archived">مؤرشفة</option>
+            <option value="closed">مغلقة</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>وصف الدورة</label>
+          <textarea id="summer-desc" rows="2" placeholder="وصف مختصر للدورة الصيفية..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-summer-config')">إلغاء</button>
+      <button class="btn btn-warning" onclick="saveSummerConfig()"><i class="fas fa-save"></i> حفظ الإعدادات</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Summer Student -->
+<div class="modal-overlay" id="modal-summer-student">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>إضافة طالب للدورة الصيفية</h3>
+      <button class="btn-close" onclick="closeModal('modal-summer-student')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ss-id">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>الاسم الكامل <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="ss-name" placeholder="اسم الطالب">
+        </div>
+        <div class="form-group">
+          <label>الفوج الصيفي</label>
+          <select id="ss-group"><option value="">اختر فوجاً...</option></select>
+        </div>
+        <div class="form-group">
+          <label>رقم هاتف ولي الأمر</label>
+          <input type="tel" id="ss-phone" placeholder="0612345678">
+        </div>
+        <div class="form-group">
+          <label>اسم ولي الأمر</label>
+          <input type="text" id="ss-parent">
+        </div>
+        <div class="form-group">
+          <label>الجنس</label>
+          <select id="ss-gender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select>
+        </div>
+        <div class="form-group">
+          <label>المستوى</label>
+          <select id="ss-level">
+            <option value="تمهيدي">تمهيدي</option>
+            <option value="مستوى أول">مستوى أول</option>
+            <option value="مستوى ثاني">مستوى ثاني</option>
+            <option value="مستوى ثالث">مستوى ثالث</option>
+            <option value="مستوى رابع (الكبار)">مستوى رابع (الكبار)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-summer-student')">إلغاء</button>
+      <button class="btn btn-warning" onclick="saveSummerStudent()"><i class="fas fa-save"></i> حفظ</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast-container"></div>
 
@@ -2390,9 +2579,16 @@ async function loadProfile() {
   }
 }
 
-function doLogout() {
-  db.auth.signOut();
-  location.reload();
+async function doLogout() {
+  try { await db.auth.signOut(); } catch(e) {}
+  STATE = { user:null, profile:null, groups:[], teachers:[], students:[],
+    attendance:[], recitations:[], holidays:[], finance:[], currentPage:'dashboard' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('landing-screen').style.display = 'block';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
 }
 
 // ============ INIT APP ============
@@ -2409,12 +2605,18 @@ async function initApp() {
   
   // Update UI
   ['sb-name','hd-name'].forEach(id => document.getElementById(id).textContent = name);
-  ['sb-role','hd-role'].forEach(id => document.getElementById(id).textContent = isAdmin ? 'مشرف عام' : 'أستاذ');
+  const roleLabel = STATE.profile?.role==='admin' ? 'مدير النظام' :
+    STATE.profile?.role==='supervisor' ? 'مشرف' : 'أستاذ';
+  ['sb-role','hd-role'].forEach(id => document.getElementById(id).textContent = roleLabel);
   ['sb-avatar','hd-avatar'].forEach(id => document.getElementById(id).textContent = initial);
   
-  if(isAdmin) {
+  const isSupervisor = STATE.profile?.role==='supervisor';
+  if(isAdmin || isSupervisor) {
     document.getElementById('nav-admin').style.display = 'block';
+  }
+  if(isAdmin) {
     document.getElementById('nav-finance-item').style.display = 'flex';
+    document.getElementById('nav-users-item').style.display = 'flex';
   }
   
   // Load all data
@@ -2425,6 +2627,9 @@ async function initApp() {
   
   // Nav to dashboard
   nav('dashboard');
+  // Check session alert
+  checkCurrentSession();
+  setInterval(checkCurrentSession, 60000); // refresh every minute
 }
 
 async function loadAllData() {
@@ -2487,6 +2692,7 @@ function nav(page) {
     dashboard:'لوحة التحكم', groups:'الأفواج', teachers:'الأساتذة',
     students:'الطلبة', attendance:'الحضور والغياب', recitations:'الحفظ والمراجعة',
     reports:'التقارير', holidays:'العطل والإجازات', finance:'الإدارة المالية',
+    users:'إدارة المستخدمين', summer:'الدورة الصيفية',
     settings:'الإعدادات'
   };
   document.getElementById('breadcrumb').innerHTML = `<i class="fas fa-home"></i> <span>${titles[page]||page}</span>`;
@@ -2501,6 +2707,8 @@ function nav(page) {
   if(page==='reports') renderReports();
   if(page==='holidays') renderHolidays();
   if(page==='finance') renderFinance();
+  if(page==='users') renderUsers();
+  if(page==='summer') renderSummer();
 }
 
 // ============ DASHBOARD ============
@@ -3359,14 +3567,14 @@ function initSurahSelects() {
 // Group CRUD
 async function saveGroup() {
   const id = document.getElementById('group-id').value;
-  const days = Array.from(document.querySelectorAll('#group-days .day-cb.checked')).map(d=>d.dataset.day);
+  const schedule = getDayTimes();
+  const days = schedule.map(s=>s.day);
   
   const data = {
     name: document.getElementById('group-name').value.trim(),
     teacher_id: document.getElementById('group-teacher').value||null,
     level: document.getElementById('group-level').value,
-    start_time: document.getElementById('group-start').value,
-    end_time: document.getElementById('group-end').value,
+    schedule: schedule,
     days: days,
     notes: document.getElementById('group-notes').value
   };
@@ -3401,11 +3609,8 @@ function editGroup(id) {
   document.getElementById('group-end').value = g.end_time||'';
   document.getElementById('group-notes').value = g.notes||'';
   
-  // Days
-  const gDays = Array.isArray(g.days)?g.days:(g.days?g.days.split(','):[]);
-  document.querySelectorAll('#group-days .day-cb').forEach(d => {
-    d.classList.toggle('checked', gDays.includes(d.dataset.day));
-  });
+  // Days + times
+  setDayTimesUI(Array.isArray(g.schedule) ? g.schedule : []);
   
   document.getElementById('modal-group-title').textContent = 'تعديل الفوج';
   openModal('modal-group');
@@ -3582,10 +3787,7 @@ async function deleteFinance(id) {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// Day checkboxes toggle
-document.querySelectorAll('.day-cb').forEach(d => {
-  d.addEventListener('click', () => d.classList.toggle('checked'));
-});
+// Day checkboxes are toggled via onclick="toggleDayTime(...)" only
 
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(m => {
@@ -3621,6 +3823,446 @@ function sendWhatsApp(phone, name) {
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
 }
+
+
+// ============ DAY-TIME PER DAY ============
+const DAYS_LIST = ['الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'];
+
+function toggleDayTime(day, label) {
+  label.classList.toggle('checked');
+  const container = document.getElementById('day-times-container');
+  const existing = container.querySelector(`[data-day-time="${day}"]`);
+  if(label.classList.contains('checked')) {
+    if(!existing) {
+      const row = document.createElement('div');
+      row.setAttribute('data-day-time', day);
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f0f6ff;border-radius:8px;border:1px solid #c5d8fb';
+      row.innerHTML = `<span style="font-size:13px;font-weight:700;color:#1565c0;min-width:60px">${day}</span>
+        <input type="time" data-start="${day}" placeholder="من" style="flex:1;padding:7px 10px;border:1.5px solid #c5d8fb;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:13px">
+        <span style="color:#718096;font-size:12px">—</span>
+        <input type="time" data-end="${day}" placeholder="إلى" style="flex:1;padding:7px 10px;border:1.5px solid #c5d8fb;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:13px">`;
+      container.appendChild(row);
+    }
+  } else {
+    if(existing) existing.remove();
+  }
+}
+
+function getDayTimes() {
+  const result = [];
+  document.querySelectorAll('#day-times-container [data-day-time]').forEach(row => {
+    const day = row.getAttribute('data-day-time');
+    const start = row.querySelector(`[data-start]`)?.value || '';
+    const end = row.querySelector(`[data-end]`)?.value || '';
+    result.push({ day, start, end });
+  });
+  return result;
+}
+
+function setDayTimesUI(schedule) {
+  // schedule = [{day, start, end}]
+  const container = document.getElementById('day-times-container');
+  container.innerHTML = '';
+  document.querySelectorAll('#group-days .day-cb').forEach(l => l.classList.remove('checked'));
+  if(!schedule || !schedule.length) return;
+  schedule.forEach(s => {
+    const label = document.querySelector(`#group-days .day-cb[data-day="${s.day}"]`);
+    if(label) {
+      label.classList.add('checked');
+      const row = document.createElement('div');
+      row.setAttribute('data-day-time', s.day);
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f0f6ff;border-radius:8px;border:1px solid #c5d8fb';
+      row.innerHTML = `<span style="font-size:13px;font-weight:700;color:#1565c0;min-width:60px">${s.day}</span>
+        <input type="time" data-start="${s.day}" value="${s.start||''}" style="flex:1;padding:7px 10px;border:1.5px solid #c5d8fb;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:13px">
+        <span style="color:#718096;font-size:12px">—</span>
+        <input type="time" data-end="${s.day}" value="${s.end||''}" style="flex:1;padding:7px 10px;border:1.5px solid #c5d8fb;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:13px">`;
+      container.appendChild(row);
+    }
+  });
+}
+
+// ============ SESSION ALERT ============
+const AR_DAYS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+let currentSessionGroupId = null;
+
+function checkCurrentSession() {
+  const now = new Date();
+  const todayAr = AR_DAYS[now.getDay()];
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const isAdmin = STATE.profile?.role === 'admin';
+  const myGroups = isAdmin ? STATE.groups :
+    STATE.groups.filter(g => g.teacher_id === STATE.profile?.id);
+
+  let found = null;
+  let upcoming = null;
+
+  for(const g of myGroups) {
+    const schedule = Array.isArray(g.schedule) ? g.schedule : [];
+    for(const s of schedule) {
+      if(s.day === todayAr && s.start && s.end) {
+        const [sh,sm] = s.start.split(':').map(Number);
+        const [eh,em] = s.end.split(':').map(Number);
+        const startMin = sh*60+sm;
+        const endMin = eh*60+em;
+        if(nowMin >= startMin && nowMin <= endMin) {
+          found = { group: g, schedule: s };
+          break;
+        } else if(nowMin < startMin) {
+          if(!upcoming || startMin < upcoming.startMin)
+            upcoming = { group: g, schedule: s, startMin };
+        }
+      }
+    }
+    if(found) break;
+  }
+
+  const bar = document.getElementById('session-alert-bar');
+  const txt = document.getElementById('session-alert-text');
+  if(found) {
+    currentSessionGroupId = found.group.id;
+    bar.style.display = 'flex';
+    txt.innerHTML = `<strong>الحصة الحالية:</strong> ${found.group.name} — من ${found.schedule.start} إلى ${found.schedule.end}`;
+    document.getElementById('session-alert-btn').textContent = '← الدخول الآن';
+  } else if(upcoming) {
+    currentSessionGroupId = upcoming.group.id;
+    const diff = upcoming.startMin - nowMin;
+    const h = Math.floor(diff/60), m = diff%60;
+    bar.style.display = 'flex';
+    bar.style.background = 'linear-gradient(90deg,#d97706,#f59e0b)';
+    txt.innerHTML = `<strong>أقرب حصة:</strong> ${upcoming.group.name} — ${upcoming.schedule.day} ${upcoming.schedule.start} (بعد ${h>0?h+'س ':''} ${m} د)`;
+    document.getElementById('session-alert-btn').textContent = '← التحضير';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function goToSession() {
+  if(currentSessionGroupId) {
+    nav('attendance');
+    setTimeout(() => {
+      const sel = document.getElementById('att-group');
+      if(sel) { sel.value = currentSessionGroupId; loadAttendance(); }
+    }, 300);
+  }
+}
+
+// ============ PDF EXPORT ============
+function exportPDF(title, contentHtml) {
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl">
+<head><meta charset="UTF-8">
+<style>
+  body{font-family:'Arial',sans-serif;padding:30px;color:#1e2d42;font-size:13px}
+  .pdf-header{text-align:center;border-bottom:3px solid #1565c0;padding-bottom:20px;margin-bottom:24px}
+  .pdf-header img{width:70px;height:70px;border-radius:50%;border:2px solid #1565c0}
+  .pdf-header h1{font-size:20px;color:#0a3d7a;margin:8px 0 4px}
+  .pdf-header p{font-size:12px;color:#5a7a9a}
+  .pdf-date{font-size:11px;color:#718096;text-align:left;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;margin:16px 0}
+  th{background:#0a3d7a;color:white;padding:8px 12px;font-size:12px;text-align:right}
+  td{padding:7px 12px;border-bottom:1px solid #e0eaf8;font-size:12px}
+  tr:nth-child(even) td{background:#f7faff}
+  .stat-box{display:inline-block;padding:12px 20px;margin:6px;border-radius:8px;border:1px solid #c5d8fb;background:#f0f6ff;text-align:center}
+  .stat-box h3{font-size:22px;color:#0a3d7a;margin:0}
+  .stat-box p{font-size:11px;color:#5a7a9a;margin:2px 0 0}
+  @media print{body{padding:15px}.no-print{display:none}}
+</style>
+</head><body>
+<div class="pdf-header">
+  <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار">
+  <h1>${title}</h1>
+  <p>دار القرآن الكريم — جمعية الوفاق | الوفاق الكبير، بنسركاو</p>
+</div>
+<div class="pdf-date">تاريخ التقرير: ${new Date().toLocaleDateString('ar-MA',{day:'2-digit',month:'long',year:'numeric'})}</div>
+${contentHtml}
+<div class="no-print" style="text-align:center;margin-top:24px">
+  <button onclick="window.print()" style="padding:10px 28px;background:#1565c0;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button>
+</div>
+</body></html>`);
+  win.document.close();
+}
+
+function exportStudentReportPDF() {
+  const sid = document.getElementById('report-student-select').value;
+  if(!sid) { toast('اختر طالباً أولاً','warning'); return; }
+  const s = STATE.students.find(st=>st.id===sid);
+  if(!s) return;
+  const g = STATE.groups.find(gg=>gg.id===s.group_id);
+  const sAtt = STATE.attendance.filter(a=>a.student_id===sid);
+  const attRate = sAtt.length ? Math.round(sAtt.filter(a=>a.status==='حاضر').length/sAtt.length*100) : 0;
+  const sRec = STATE.recitations.filter(r=>r.student_id===sid&&r.type==='حفظ جديد');
+  const totalV = sRec.reduce((a,r)=>a+(r.verses_count||0),0);
+  
+  const rows = sRec.slice(0,20).map(r=>{
+    const fs=SURAHS.find(sr=>sr.n===r.surah_from);
+    const ts=SURAHS.find(sr=>sr.n===r.surah_to);
+    return `<tr><td>${r.type}</td><td>${fs?.name||'—'} (${r.verse_from})</td><td>${ts?.name||'—'} (${r.verse_to})</td><td>${r.verses_count}</td><td>${formatDate(r.date)}</td></tr>`;
+  }).join('');
+  
+  const html = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="stat-box"><h3>${totalV}</h3><p>آيات محفوظة</p></div>
+      <div class="stat-box"><h3>${Math.floor(totalV/600)}</h3><p>أحزاب</p></div>
+      <div class="stat-box"><h3>${attRate}%</h3><p>نسبة الحضور</p></div>
+      <div class="stat-box"><h3>${sRec.length}</h3><p>جلسات الحفظ</p></div>
+    </div>
+    <table style="margin-bottom:8px"><tr><td><strong>الاسم</strong></td><td>${s.name}</td><td><strong>الفوج</strong></td><td>${g?.name||'—'}</td></tr>
+    <tr><td><strong>المستوى</strong></td><td>${s.level||'—'}</td><td><strong>ولي الأمر</strong></td><td>${s.parent_name||'—'}</td></tr></table>
+    <h3 style="color:#0a3d7a;margin:16px 0 8px">سجل الحفظ</h3>
+    <table><thead><tr><th>النوع</th><th>من</th><th>إلى</th><th>الآيات</th><th>التاريخ</th></tr></thead><tbody>${rows}</tbody></table>`;
+  exportPDF(`تقرير الطالب: ${s.name}`, html);
+}
+
+function exportGroupReportPDF() {
+  const gid = document.getElementById('report-group-select').value;
+  if(!gid) { toast('اختر فوجاً أولاً','warning'); return; }
+  const g = STATE.groups.find(gg=>gg.id===gid);
+  const gStudents = STATE.students.filter(s=>s.group_id===gid);
+  const teacher = STATE.teachers.find(t=>t.id===g?.teacher_id);
+  
+  const rows = gStudents.map(s=>{
+    const sRec = STATE.recitations.filter(r=>r.student_id===s.id&&r.type==='حفظ جديد');
+    const totalV = sRec.reduce((a,r)=>a+(r.verses_count||0),0);
+    const sAtt = STATE.attendance.filter(a=>a.student_id===s.id);
+    const attRate = sAtt.length ? Math.round(sAtt.filter(a=>a.status==='حاضر').length/sAtt.length*100) : 0;
+    return `<tr><td>${s.name}</td><td>${s.level||'—'}</td><td>${totalV}</td><td>${Math.floor(totalV/600)}</td><td>${attRate}%</td></tr>`;
+  }).join('');
+  
+  const html = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="stat-box"><h3>${gStudents.length}</h3><p>الطلبة</p></div>
+      <div class="stat-box"><h3>${teacher?.name||'—'}</h3><p>الأستاذ</p></div>
+    </div>
+    <table><thead><tr><th>الطالب</th><th>المستوى</th><th>الآيات المحفوظة</th><th>الأحزاب</th><th>نسبة الحضور</th></tr></thead><tbody>${rows}</tbody></table>`;
+  exportPDF(`تقرير فوج: ${g?.name}`, html);
+}
+
+function exportGeneralReportPDF() {
+  const totalV = STATE.recitations.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
+  const avgAtt = STATE.attendance.length ? Math.round(STATE.attendance.filter(a=>a.status==='حاضر').length/STATE.attendance.length*100) : 0;
+  
+  const gRows = STATE.groups.map(g=>{
+    const gs = STATE.students.filter(s=>s.group_id===g.id);
+    const gRecs = STATE.recitations.filter(r=>r.type==='حفظ جديد'&&gs.some(s=>s.id===r.student_id));
+    const tv = gRecs.reduce((a,r)=>a+(r.verses_count||0),0);
+    const gAtt = STATE.attendance.filter(a=>a.group_id===g.id);
+    const rate = gAtt.length ? Math.round(gAtt.filter(a=>a.status==='حاضر').length/gAtt.length*100) : 0;
+    return `<tr><td>${g.name}</td><td>${gs.length}</td><td>${tv.toLocaleString()}</td><td>${rate}%</td></tr>`;
+  }).join('');
+  
+  const html = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="stat-box"><h3>${STATE.students.length}</h3><p>إجمالي الطلبة</p></div>
+      <div class="stat-box"><h3>${STATE.groups.length}</h3><p>الأفواج</p></div>
+      <div class="stat-box"><h3>${totalV.toLocaleString()}</h3><p>آيات محفوظة</p></div>
+      <div class="stat-box"><h3>${avgAtt}%</h3><p>متوسط الحضور</p></div>
+    </div>
+    <table><thead><tr><th>الفوج</th><th>عدد الطلبة</th><th>الآيات المحفوظة</th><th>نسبة الحضور</th></tr></thead><tbody>${gRows}</tbody></table>`;
+  exportPDF('التقرير الإجمالي العام', html);
+}
+
+// ============ USERS MANAGEMENT ============
+function renderUsers() {
+  const html = STATE.teachers.length ? `
+    <div class="table-container">
+      <table>
+        <thead><tr><th>الاسم</th><th>البريد</th><th>الصلاحية</th><th>الأفواج</th><th>الطلبة</th><th>تعديل الصلاحية</th></tr></thead>
+        <tbody>
+          ${STATE.teachers.map(t => {
+            const tG = STATE.groups.filter(g=>g.teacher_id===t.id);
+            const tS = STATE.students.filter(s=>s.teacher_id===t.id);
+            const roleIcon = t.role==='admin'?'👑':t.role==='supervisor'?'🛡️':'📚';
+            const roleLabel = t.role==='admin'?'مدير النظام':t.role==='supervisor'?'مشرف':'أستاذ';
+            return `<tr>
+              <td><div style="display:flex;align-items:center;gap:8px">
+                <div class="user-avatar" style="width:32px;height:32px;font-size:12px">${t.name?.[0]||'؟'}</div>
+                <strong>${t.name}</strong>
+              </div></td>
+              <td style="direction:ltr;text-align:right;font-size:12px">${t.email||'—'}</td>
+              <td>${roleIcon} <span class="badge ${t.role==='admin'?'badge-gold':t.role==='supervisor'?'badge-blue':'badge-green'}">${roleLabel}</span></td>
+              <td>${tG.length}</td>
+              <td>${tS.length}</td>
+              <td>
+                ${t.role !== 'admin' ? `
+                <select onchange="changeUserRole('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px">
+                  <option value="teacher" ${t.role==='teacher'?'selected':''}>أستاذ</option>
+                  <option value="supervisor" ${t.role==='supervisor'?'selected':''}>مشرف</option>
+                </select>` : '<span style="color:var(--text3);font-size:12px">مدير النظام</span>'}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '<div class="empty-state" style="padding:40px"><p>لا يوجد مستخدمون</p></div>';
+  
+  document.getElementById('users-list-content').innerHTML = html;
+}
+
+async function changeUserRole(userId, newRole) {
+  try {
+    const {error} = await db.from('profiles').update({role: newRole}).eq('id', userId);
+    if(error) throw error;
+    STATE.teachers = STATE.teachers.map(t => t.id===userId ? {...t, role:newRole} : t);
+    toast('تم تحديث الصلاحية','success');
+    renderUsers();
+  } catch(e) { toast('خطأ: '+e.message,'error'); }
+}
+
+// ============ SUMMER SESSION ============
+let SUMMER_CONFIG = null;
+let SUMMER_STUDENTS = [];
+let SUMMER_GROUPS = [];
+
+async function loadSummerData() {
+  try {
+    const {data:sc} = await db.from('settings').select('*').eq('key','summer_config').single();
+    if(sc) SUMMER_CONFIG = JSON.parse(sc.value||'{}');
+    
+    const {data:sg} = await db.from('groups').select('*').eq('is_summer',true);
+    SUMMER_GROUPS = sg || [];
+    
+    const {data:ss} = await db.from('students').select('*').eq('is_summer',true);
+    SUMMER_STUDENTS = ss || [];
+  } catch(e) {
+    SUMMER_CONFIG = null; SUMMER_GROUPS = []; SUMMER_STUDENTS = [];
+  }
+}
+
+function renderSummer() {
+  loadSummerData().then(() => {
+    renderSummerBanner();
+    renderSummerOverview();
+    // Populate group select
+    document.getElementById('ss-group').innerHTML = '<option value="">اختر فوجاً...</option>' +
+      SUMMER_GROUPS.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  });
+}
+
+function renderSummerBanner() {
+  const banner = document.getElementById('summer-status-banner');
+  if(!SUMMER_CONFIG?.name) {
+    banner.innerHTML = `<div class="alert alert-info"><i class="fas fa-info-circle"></i> لم يتم إعداد الدورة الصيفية بعد. اضغط "إعدادات الدورة" للبدء.</div>`;
+    return;
+  }
+  const today = new Date();
+  const start = new Date(SUMMER_CONFIG.start);
+  const end = new Date(SUMMER_CONFIG.end);
+  const isActive = today >= start && today <= end;
+  const statusColor = isActive ? 'badge-green' : today < start ? 'badge-blue' : 'badge-gray';
+  const statusText = isActive ? 'نشطة الآن' : today < start ? 'لم تبدأ بعد' : 'منتهية';
+  banner.innerHTML = `
+    <div style="background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1px solid #fbbf24;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <i class="fas fa-sun" style="font-size:24px;color:#d97706"></i>
+      <div style="flex:1">
+        <h3 style="font-size:15px;font-weight:700;color:#92400e">${SUMMER_CONFIG.name}</h3>
+        <p style="font-size:12px;color:#78350f">من ${formatDate(SUMMER_CONFIG.start)} إلى ${formatDate(SUMMER_CONFIG.end)}</p>
+      </div>
+      <span class="badge ${statusColor}">${statusText}</span>
+      <span class="badge badge-blue">${SUMMER_STUDENTS.length} طالب</span>
+      <span class="badge badge-purple">${SUMMER_GROUPS.length} فوج</span>
+    </div>`;
+}
+
+function renderSummerOverview() {
+  document.getElementById('summer-overview-content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon gold"><i class="fas fa-user-graduate"></i></div>
+        <div class="stat-content"><h3>${SUMMER_STUDENTS.length}</h3><p>طلبة الدورة</p></div></div>
+      <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-users"></i></div>
+        <div class="stat-content"><h3>${SUMMER_GROUPS.length}</h3><p>الأفواج الصيفية</p></div></div>
+    </div>
+    ${SUMMER_CONFIG ? '' : '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> يرجى إعداد الدورة الصيفية أولاً من زر "إعدادات الدورة".</div>'}
+  `;
+}
+
+function renderSummerStudents() {
+  document.getElementById('summer-students-content').innerHTML = SUMMER_STUDENTS.length ?
+    `<div class="student-grid">` + SUMMER_STUDENTS.map(s => `
+      <div class="student-card">
+        <div class="student-card-header">
+          <div class="s-avatar">${s.name?.[0]||'؟'}</div>
+          <div><h4>${s.name}</h4><p>${s.level||'—'}</p></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span class="badge badge-yellow">${s.gender||'—'}</span>
+          <button class="btn btn-ghost btn-sm btn-icon" style="color:var(--danger)" onclick="deleteSummerStudent('${s.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`) .join('') + '</div>'
+    : '<div class="empty-state"><i class="fas fa-user-graduate"></i><p>لا يوجد طلبة في الدورة الصيفية</p></div>';
+}
+
+function switchSummerTab(tab) {
+  document.querySelectorAll('#page-summer .tab').forEach((t,i)=> {
+    const tabs = ['overview','groups','students','attendance','reports'];
+    t.classList.toggle('active', tabs[i]===tab);
+  });
+  document.querySelectorAll('#page-summer .tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('summer-'+tab).classList.add('active');
+  if(tab==='students') renderSummerStudents();
+}
+
+async function saveSummerConfig() {
+  const cfg = {
+    name: document.getElementById('summer-name').value.trim(),
+    start: document.getElementById('summer-start').value,
+    end: document.getElementById('summer-end').value,
+    status: document.getElementById('summer-status-sel').value,
+    desc: document.getElementById('summer-desc').value
+  };
+  if(!cfg.name || !cfg.start || !cfg.end) { toast('أكمل البيانات','warning'); return; }
+  try {
+    await db.from('settings').upsert({key:'summer_config', value: JSON.stringify(cfg)}, {onConflict:'key'});
+    SUMMER_CONFIG = cfg;
+    closeModal('modal-summer-config');
+    renderSummerBanner();
+    renderSummerOverview();
+    toast('تم حفظ إعدادات الدورة الصيفية','success');
+  } catch(e) { toast('خطأ: '+e.message,'error'); }
+}
+
+function openSummerStudentModal() {
+  document.getElementById('ss-id').value = '';
+  document.getElementById('ss-name').value = '';
+  document.getElementById('ss-phone').value = '';
+  document.getElementById('ss-parent').value = '';
+  openModal('modal-summer-student');
+}
+
+async function saveSummerStudent() {
+  const data = {
+    name: document.getElementById('ss-name').value.trim(),
+    group_id: document.getElementById('ss-group').value || null,
+    phone: document.getElementById('ss-phone').value.trim(),
+    parent_name: document.getElementById('ss-parent').value.trim(),
+    gender: document.getElementById('ss-gender').value,
+    level: document.getElementById('ss-level').value,
+    is_summer: true,
+    teacher_id: STATE.profile?.id
+  };
+  if(!data.name) { toast('أدخل اسم الطالب','warning'); return; }
+  try {
+    const {data:ns,error} = await db.from('students').insert(data).select().single();
+    if(error) throw error;
+    SUMMER_STUDENTS.push(ns);
+    closeModal('modal-summer-student');
+    renderSummerStudents();
+    toast('تم إضافة الطالب للدورة الصيفية','success');
+  } catch(e) { toast('خطأ: '+e.message,'error'); }
+}
+
+async function deleteSummerStudent(id) {
+  if(!confirm('حذف هذا الطالب من الدورة الصيفية؟')) return;
+  const {error} = await db.from('students').delete().eq('id',id);
+  if(!error) {
+    SUMMER_STUDENTS = SUMMER_STUDENTS.filter(s=>s.id!==id);
+    renderSummerStudents();
+    toast('تم الحذف','success');
+  }
+}
+
+// Extend saveGroup to save schedule
+// (patch getDayTimes into saveGroup)
 
 // Check auth on load
 async function checkAuth() {
