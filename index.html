@@ -1006,16 +1006,24 @@ textarea { resize:vertical; min-height:80px; }
 .days-grid { display:flex; flex-wrap:wrap; gap:8px; }
 .day-cb {
   display:flex; align-items:center; gap:6px;
-  padding:6px 12px;
+  padding:8px 14px;
   border:1.5px solid var(--border);
   border-radius:20px;
   cursor:pointer;
-  transition:all .15s;
-  font-size:12px; font-weight:600;
+  transition:all .2s;
+  font-size:13px; font-weight:600;
   user-select:none;
+  background:white;
+  color:var(--text);
 }
 .day-cb input { display:none; }
-.day-cb.checked { background:var(--primary); color:white; border-color:var(--primary); }
+.day-cb:hover { border-color:var(--primary-light); background:#f0f6ff; color:var(--primary); }
+.day-cb.checked { 
+  background:linear-gradient(135deg,var(--primary),var(--primary-light)); 
+  color:white; 
+  border-color:var(--primary); 
+  box-shadow:0 2px 8px rgba(26,60,110,0.25);
+}
 
 /* Toast */
 #toast-container { 
@@ -1707,7 +1715,7 @@ textarea { resize:vertical; min-height:80px; }
             <select id="filter-group" onchange="filterStudents()" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:13px">
               <option value="">كل الأفواج</option>
             </select>
-            <button class="btn btn-primary" onclick="openModal('modal-student')">
+            <button class="btn btn-primary" onclick="openStudentModal()">
               <i class="fas fa-user-plus"></i> إضافة طالب
             </button>
           </div>
@@ -1898,7 +1906,7 @@ textarea { resize:vertical; min-height:80px; }
       <div class="page" id="page-finance">
         <div class="page-header">
           <div class="page-title"><h1>الإدارة المالية</h1><p>متابعة الواجبات المالية</p></div>
-          <button class="btn btn-primary" onclick="openModal('modal-finance')">
+          <button class="btn btn-primary" onclick="openFinanceModal()">
             <i class="fas fa-plus"></i> إضافة عملية
           </button>
         </div>
@@ -2559,24 +2567,32 @@ function showErr(msg) {
 }
 
 async function loadProfile() {
+  const email = STATE.user.email;
+  const mappedName = TEACHERS_MAP[email] || email;
+  const defaultRole = email === 'admin@wafaq.com' ? 'admin' : 'teacher';
+  
   try {
-    const { data } = await db.from('profiles').select('*').eq('id', STATE.user.id).single();
-    STATE.profile = data;
-    if(!STATE.profile) {
-      // Create profile if missing
-      const email = STATE.user.email;
-      const name = TEACHERS_MAP[email] || email;
-      const role = email === 'admin@wafaq.com' ? 'admin' : 'teacher';
-      const { data: np } = await db.from('profiles').insert({id: STATE.user.id, name, role}).select().single();
-      STATE.profile = np;
+    const { data, error } = await db.from('profiles').select('*').eq('id', STATE.user.id).single();
+    if(error || !data) {
+      // Create profile
+      const { data: np, error: ne } = await db.from('profiles')
+        .insert({ id: STATE.user.id, name: mappedName, role: defaultRole, email: email })
+        .select().single();
+      STATE.profile = np || { id: STATE.user.id, name: mappedName, role: defaultRole, email };
+    } else {
+      STATE.profile = data;
+      // Always ensure admin@wafaq.com has admin role
+      if(email === 'admin@wafaq.com' && data.role !== 'admin') {
+        await db.from('profiles').update({role:'admin'}).eq('id', STATE.user.id);
+        STATE.profile.role = 'admin';
+      }
     }
   } catch(e) {
-    STATE.profile = { 
-      id: STATE.user.id, 
-      name: TEACHERS_MAP[STATE.user.email] || STATE.user.email,
-      role: STATE.user.email === 'admin@wafaq.com' ? 'admin' : 'teacher'
-    };
+    console.error('loadProfile error:', e);
+    STATE.profile = { id: STATE.user.id, name: mappedName, role: defaultRole, email };
   }
+  
+  console.log('Profile loaded:', STATE.profile?.name, '/', STATE.profile?.role);
 }
 
 async function doLogout() {
@@ -2605,9 +2621,12 @@ async function initApp() {
   
   // Update UI
   ['sb-name','hd-name'].forEach(id => document.getElementById(id).textContent = name);
-  const roleLabel = STATE.profile?.role==='admin' ? 'مدير النظام' :
-    STATE.profile?.role==='supervisor' ? 'مشرف' : 'أستاذ';
-  ['sb-role','hd-role'].forEach(id => document.getElementById(id).textContent = roleLabel);
+  const roleLabel = STATE.profile?.role==='admin' ? '👑 مدير النظام' :
+    STATE.profile?.role==='supervisor' ? '🛡️ مشرف' : '📚 أستاذ';
+  ['sb-role','hd-role'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = roleLabel;
+  });
   ['sb-avatar','hd-avatar'].forEach(id => document.getElementById(id).textContent = initial);
   
   const isSupervisor = STATE.profile?.role==='supervisor';
@@ -2635,43 +2654,68 @@ async function initApp() {
 async function loadAllData() {
   const isAdmin = STATE.profile?.role === 'admin';
   
+  const isAdminOrSup = isAdmin || STATE.profile?.role==='supervisor';
+  
   try {
-    // Groups
-    const { data: g } = await db.from('groups').select('*').order('name');
+    // Groups - admin/supervisor see all, teacher sees own
+    const gq = isAdminOrSup
+      ? db.from('groups').select('*').order('name')
+      : db.from('groups').select('*').eq('teacher_id', STATE.profile?.id).order('name');
+    const { data: g, error: ge } = await gq;
+    if(ge) console.warn('groups:', ge.message);
     STATE.groups = g || [];
     
-    // Teachers (profiles with role teacher + admin)
-    const { data: t } = await db.from('profiles').select('*');
+    // Teachers/profiles
+    const { data: t, error: te } = await db.from('profiles').select('*');
+    if(te) console.warn('profiles:', te.message);
     STATE.teachers = t || [];
     
-    // Students
-    let sq = db.from('students').select('*').order('name');
-    if(!isAdmin && STATE.profile) sq = sq.eq('teacher_id', STATE.profile.id);
-    const { data: s } = await sq;
+    // Students - filter by teacher unless admin/supervisor
+    let sq = db.from('students').select('*').eq('is_summer', false).order('name');
+    if(!isAdminOrSup && STATE.profile?.id) {
+      sq = db.from('students').select('*').eq('is_summer', false).eq('teacher_id', STATE.profile.id).order('name');
+    }
+    const { data: s, error: se } = await sq;
+    if(se) console.warn('students:', se.message);
     STATE.students = s || [];
     
-    // Recitations (last 100)
-    let rq = db.from('recitations').select('*, students(name,group_id)').order('date', {ascending:false}).limit(100);
-    const { data: r } = await rq;
+    // Recitations last 200
+    const { data: r, error: re } = await db.from('recitations')
+      .select('*, students(name,group_id)').order('date',{ascending:false}).limit(200);
+    if(re) console.warn('recitations:', re.message);
     STATE.recitations = r || [];
     
-    // Attendance (last 7 days)
-    const d7 = new Date(); d7.setDate(d7.getDate()-7);
-    const { data: a } = await db.from('attendance').select('*').gte('date', d7.toISOString().split('T')[0]).order('date',{ascending:false});
+    // Attendance last 30 days
+    const d30 = new Date(); d30.setDate(d30.getDate()-30);
+    const { data: a, error: ae } = await db.from('attendance')
+      .select('*').gte('date', d30.toISOString().split('T')[0]).order('date',{ascending:false});
+    if(ae) console.warn('attendance:', ae.message);
     STATE.attendance = a || [];
     
     // Holidays
-    const { data: h } = await db.from('holidays').select('*').order('start_date');
+    const { data: h, error: he } = await db.from('holidays').select('*').order('start_date');
+    if(he) console.warn('holidays:', he.message);
     STATE.holidays = h || [];
     
-    // Finance
-    if(isAdmin) {
-      const { data: f } = await db.from('finance').select('*').order('date',{ascending:false}).limit(100);
+    // Finance - admin/supervisor
+    if(isAdminOrSup) {
+      const { data: f, error: fe } = await db.from('finance')
+        .select('*').order('date',{ascending:false}).limit(200);
+      if(fe) console.warn('finance:', fe.message);
       STATE.finance = f || [];
     }
+    
+    console.log('✅ Data loaded:', {
+      groups: STATE.groups.length,
+      students: STATE.students.length,
+      teachers: STATE.teachers.length,
+      recitations: STATE.recitations.length,
+      attendance: STATE.attendance.length
+    });
+    
   } catch(e) {
     console.error('loadAllData error:', e);
-    toast('تعذر تحميل بعض البيانات', 'warning');
+    toast('تحذير: تعذر تحميل بعض البيانات — ' + e.message, 'warning');
   }
   
   populateGroupSelects();
@@ -2820,19 +2864,21 @@ function renderGroups() {
       <div class="table-container">
         <table>
           <thead><tr>
-            <th>اسم الفوج</th><th>الأستاذ</th><th>المستوى</th><th>الأيام</th><th>الوقت</th><th>عدد الطلبة</th><th>إجراءات</th>
+            <th>اسم الفوج</th><th>الأستاذ</th><th>المستوى</th><th>الجدول الزمني</th><th>عدد الطلبة</th><th>إجراءات</th>
           </tr></thead>
           <tbody>
             ${STATE.groups.map(g => {
               const teacher = STATE.teachers.find(t=>t.id===g.teacher_id);
               const studentsCount = STATE.students.filter(s=>s.group_id===g.id).length;
-              const days = Array.isArray(g.days) ? g.days.join('، ') : (g.days||'—');
+              const schedule = Array.isArray(g.schedule) ? g.schedule : [];
+              const scheduleHtml = schedule.length
+                ? schedule.map(s=>`<div style="font-size:11px;white-space:nowrap"><strong>${s.day}</strong>: ${s.start||'—'}—${s.end||'—'}</div>`).join('')
+                : (g.days ? (Array.isArray(g.days)?g.days.join('، '):g.days) : '—');
               return `<tr>
                 <td><strong>${g.name}</strong></td>
                 <td>${teacher?.name || '—'}</td>
                 <td><span class="badge badge-blue">${g.level||'—'}</span></td>
-                <td style="font-size:12px">${days}</td>
-                <td>${g.start_time||''}${g.start_time&&g.end_time?' — ':''}${g.end_time||''}</td>
+                <td style="font-size:12px">${scheduleHtml}</td>
                 <td><span class="badge badge-green">${studentsCount} طالب</span></td>
                 <td>
                   <div style="display:flex;gap:4px">
@@ -2846,7 +2892,7 @@ function renderGroups() {
         </table>
       </div>
     </div>
-  ` : `<div class="empty-state card" style="padding:60px"><i class="fas fa-users-class"></i><p>لا توجد أفواج بعد</p><button class="btn btn-primary" style="margin-top:16px" onclick="openModal('modal-group')"><i class="fas fa-plus"></i> إضافة فوج</button></div>`;
+  ` : `<div class="empty-state card" style="padding:60px"><i class="fas fa-users-class"></i><p>لا توجد أفواج بعد</p><button class="btn btn-primary" style="margin-top:16px" onclick="openGroupModal()"><i class="fas fa-plus"></i> إضافة فوج</button></div>`;
   
   document.getElementById('groups-list').innerHTML = html;
 }
@@ -2977,14 +3023,30 @@ function renderAttendancePage() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('att-date').value = today;
   
-  // Fill group select
-  const attGroup = document.getElementById('att-group');
-  const myGroups = STATE.profile?.role==='admin' ? STATE.groups : STATE.groups.filter(g=>g.teacher_id===STATE.profile?.id);
-  attGroup.innerHTML = '<option value="">اختر فوجاً...</option>' + myGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  const isAdmin = STATE.profile?.role==='admin';
+  const isSup = STATE.profile?.role==='supervisor';
+  const myGroups = (isAdmin||isSup) ? STATE.groups : STATE.groups.filter(g=>g.teacher_id===STATE.profile?.id);
   
+  const attGroup = document.getElementById('att-group');
+  attGroup.innerHTML = '<option value="">— اختر الفوج —</option>' + 
+    myGroups.map(g => {
+      const schedule = Array.isArray(g.schedule) ? g.schedule : [];
+      const today_ar = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][new Date().getDay()];
+      const todaySch = schedule.find(s=>s.day===today_ar);
+      const timeInfo = todaySch ? ` (${todaySch.start}—${todaySch.end})` : '';
+      return `<option value="${g.id}">${g.name}${timeInfo}</option>`;
+    }).join('');
+  
+  // Auto-select if only one group OR if there's an active session
   if(myGroups.length === 1) {
     attGroup.value = myGroups[0].id;
     loadAttendance();
+  } else if(currentSessionGroupId) {
+    attGroup.value = currentSessionGroupId;
+    loadAttendance();
+  } else {
+    document.getElementById('att-list').innerHTML = '<div class="empty-state" style="padding:30px"><i class="fas fa-users" style="font-size:36px;color:var(--border)"></i><p style="margin-top:12px">اختر الفوج والتاريخ لعرض القائمة</p></div>';
+    document.getElementById('att-summary').innerHTML = '';
   }
 }
 
@@ -3115,7 +3177,10 @@ function loadRecitations() {
   const fromD = document.getElementById('rec-from').value;
   const toD = document.getElementById('rec-to').value;
   
-  if(gf) recs = recs.filter(r => STATE.students.find(s=>s.id===r.student_id)?.group_id === gf);
+  if(gf) {
+    const groupStudentIds = new Set(STATE.students.filter(s=>s.group_id===gf).map(s=>s.id));
+    recs = recs.filter(r => groupStudentIds.has(r.student_id));
+  }
   if(sf) recs = recs.filter(r=>r.student_id===sf);
   if(fromD) recs = recs.filter(r=>r.date>=fromD);
   if(toD) recs = recs.filter(r=>r.date<=toD);
@@ -3526,7 +3591,10 @@ function renderFinance() {
       <td style="font-weight:700;color:${f.type==='دخل'?'var(--accent)':'var(--danger)'}">${(f.amount||0).toLocaleString()} د.م.</td>
       <td>${formatDate(f.date)}</td>
       <td style="font-size:12px;color:var(--text3)">${f.notes||'—'}</td>
-      <td><button class="btn btn-ghost btn-sm btn-icon" style="color:var(--danger)" onclick="deleteFinance('${f.id}')"><i class="fas fa-trash"></i></button></td>
+      <td><div style="display:flex;gap:3px">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openFinanceModal('${f.id}')" title="تعديل"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-ghost btn-sm btn-icon" style="color:var(--danger)" onclick="deleteFinance('${f.id}')" title="حذف"><i class="fas fa-trash"></i></button>
+      </div></td>
     </tr>`;
   }).join('') : `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3)">لا توجد سجلات مالية</td></tr>`;
 }
@@ -3535,25 +3603,81 @@ function renderFinance() {
 
 // Populate selects
 function populateGroupSelects() {
-  const myGroups = STATE.profile?.role==='admin' ? STATE.groups : STATE.groups.filter(g=>g.teacher_id===STATE.profile?.id);
+  const isAdmin = STATE.profile?.role==='admin';
+  const isSup = STATE.profile?.role==='supervisor';
+  const myGroups = (isAdmin||isSup) ? STATE.groups : STATE.groups.filter(g=>g.teacher_id===STATE.profile?.id);
+  
+  // Helper: build group option with teacher + level info
+  function groupOpt(g) {
+    const teacher = STATE.teachers.find(t=>t.id===g.teacher_id);
+    const tName = teacher ? ` | ${teacher.name.replace('الأستاذ ','أ.')}` : '';
+    const level = g.level ? ` | ${g.level}` : '';
+    return `<option value="${g.id}">${g.name}${tName}${level}</option>`;
+  }
   
   // Student group select
-  const sg = document.getElementById('student-group');
-  if(sg) sg.innerHTML = '<option value="">اختر فوجاً...</option>' + myGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  ['student-group','ss-group'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      el.innerHTML = '<option value="">— اختر الفوج —</option>' + myGroups.map(groupOpt).join('');
+    }
+  });
   
-  // Filter group
+  // Filter group (في قسم الطلبة)
   const fg = document.getElementById('filter-group');
   if(fg) fg.innerHTML = '<option value="">كل الأفواج</option>' + myGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
   
+  // Attendance group
+  const ag = document.getElementById('att-group');
+  if(ag) {
+    const prev = ag.value;
+    ag.innerHTML = '<option value="">— اختر الفوج —</option>' + myGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+    if(prev) ag.value = prev;
+  }
+  
   // Group teacher
   const gt = document.getElementById('group-teacher');
-  if(gt) gt.innerHTML = '<option value="">اختر أستاذاً...</option>' + STATE.teachers.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  if(gt) gt.innerHTML = '<option value="">— اختر الأستاذ —</option>' + STATE.teachers.filter(t=>t.role!=='admin').map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  
+  // Recitation group selects
+  ['rec-filter-group','rec-group'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      const prev = el.value;
+      el.innerHTML = (id==='rec-filter-group'?'<option value="">كل الأفواج</option>':'') +
+        myGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+      if(prev) el.value = prev;
+    }
+  });
+  
+  // Report selects
+  ['report-group-select'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = '<option value="">— اختر الفوج —</option>' + myGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  });
 }
 
 function populateStudentSelects() {
-  const opts = '<option value="">غير محدد</option>' + STATE.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  // Report selects
+  ['report-student-select','hifz-map-student'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      el.innerHTML = '<option value="">— اختر الطالب —</option>' +
+        STATE.students.map(s => {
+          const g = STATE.groups.find(gg=>gg.id===s.group_id);
+          return `<option value="${s.id}">${s.name}${g?' | '+g.name:''}</option>`;
+        }).join('');
+    }
+  });
+  // Finance student
   const finS = document.getElementById('fin-student');
-  if(finS) finS.innerHTML = opts;
+  if(finS) {
+    finS.innerHTML = '<option value="">— غير مرتبط بطالب —</option>' +
+      STATE.students.map(s => {
+        const g = STATE.groups.find(gg=>gg.id===s.group_id);
+        return `<option value="${s.id}">${s.name}${g?' | '+g.name:''}</option>`;
+      }).join('');
+  }
 }
 
 function initSurahSelects() {
@@ -3565,21 +3689,41 @@ function initSurahSelects() {
 }
 
 // Group CRUD
+function openGroupModal() {
+  document.getElementById('group-id').value = '';
+  document.getElementById('group-name').value = '';
+  document.getElementById('group-teacher').value = '';
+  document.getElementById('group-level').value = 'تمهيدي';
+  document.getElementById('group-notes').value = '';
+  document.getElementById('day-times-container').innerHTML = '';
+  document.querySelectorAll('#group-days .day-cb').forEach(l => l.classList.remove('checked'));
+  document.getElementById('modal-group-title').textContent = 'إضافة فوج جديد';
+  // Repopulate teacher select
+  const gt = document.getElementById('group-teacher');
+  if(gt) gt.innerHTML = '<option value="">— اختر الأستاذ —</option>' + 
+    STATE.teachers.filter(t=>t.role!=='admin').map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  openModal('modal-group');
+}
+
 async function saveGroup() {
   const id = document.getElementById('group-id').value;
   const schedule = getDayTimes();
   const days = schedule.map(s=>s.day);
+  const groupName = document.getElementById('group-name').value.trim();
+  
+  if(!groupName) { toast('أدخل اسم الفوج','warning'); return; }
+  if(!days.length) { toast('اختر يوماً واحداً على الأقل','warning'); return; }
   
   const data = {
-    name: document.getElementById('group-name').value.trim(),
+    name: groupName,
     teacher_id: document.getElementById('group-teacher').value||null,
     level: document.getElementById('group-level').value,
     schedule: schedule,
     days: days,
+    start_time: schedule[0]?.start || null,
+    end_time: schedule[0]?.end || null,
     notes: document.getElementById('group-notes').value
   };
-  
-  if(!data.name) { toast('أدخل اسم الفوج','warning'); return; }
   
   try {
     if(id) {
@@ -3612,7 +3756,14 @@ function editGroup(id) {
   // Days + times
   setDayTimesUI(Array.isArray(g.schedule) ? g.schedule : []);
   
-  document.getElementById('modal-group-title').textContent = 'تعديل الفوج';
+  document.getElementById('modal-group-title').textContent = 'تعديل الفوج — ' + g.name;
+  // Repopulate teacher select
+  const gt = document.getElementById('group-teacher');
+  if(gt) {
+    gt.innerHTML = '<option value="">— اختر الأستاذ —</option>' +
+      STATE.teachers.filter(t=>t.role!=='admin').map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    gt.value = g.teacher_id||'';
+  }
   openModal('modal-group');
 }
 
@@ -3623,6 +3774,36 @@ async function deleteGroup(id) {
 }
 
 // Student CRUD
+function openStudentModal() {
+  // Reset form
+  document.getElementById('student-id').value = '';
+  document.getElementById('student-name').value = '';
+  document.getElementById('student-phone').value = '';
+  document.getElementById('student-parent').value = '';
+  document.getElementById('student-dob').value = '';
+  document.getElementById('student-gender').value = 'ذكر';
+  document.getElementById('student-level').value = 'تمهيدي';
+  document.getElementById('student-joindate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('student-photo').value = '';
+  document.getElementById('student-notes').value = '';
+  document.getElementById('modal-student-title').textContent = 'إضافة طالب جديد';
+  
+  // Populate groups fresh
+  const isAdmin = STATE.profile?.role==='admin';
+  const isSup = STATE.profile?.role==='supervisor';
+  const myGroups = (isAdmin||isSup) ? STATE.groups : STATE.groups.filter(g=>g.teacher_id===STATE.profile?.id);
+  const sg = document.getElementById('student-group');
+  if(sg) {
+    sg.innerHTML = '<option value="">— اختر الفوج —</option>' +
+      myGroups.map(g => {
+        const teacher = STATE.teachers.find(t=>t.id===g.teacher_id);
+        const tShort = teacher ? ` | أ.${teacher.name.split(' ').pop()}` : '';
+        return `<option value="${g.id}">${g.name}${tShort} | ${g.level||''}</option>`;
+      }).join('');
+  }
+  openModal('modal-student');
+}
+
 async function saveStudent() {
   const id = document.getElementById('student-id').value;
   const data = {
@@ -3668,7 +3849,7 @@ function editStudent(id) {
   document.getElementById('student-parent').value = s.parent_name||'';
   document.getElementById('student-dob').value = s.dob||'';
   document.getElementById('student-gender').value = s.gender||'ذكر';
-  document.getElementById('student-level').value = s.level||'مبتدئ';
+  document.getElementById('student-level').value = s.level||'تمهيدي';
   document.getElementById('student-joindate').value = s.join_date||'';
   document.getElementById('student-photo').value = s.photo_url||'';
   document.getElementById('student-notes').value = s.notes||'';
@@ -3757,7 +3938,49 @@ async function deleteHoliday(id) {
 }
 
 // Finance CRUD
+function openFinanceModal(id=null) {
+  const today = new Date().toISOString().split('T')[0];
+  // Reset
+  document.getElementById('fin-id').value = id||'';
+  document.getElementById('fin-type').value = 'دخل';
+  document.getElementById('fin-amount').value = '';
+  document.getElementById('fin-desc').value = '';
+  document.getElementById('fin-student').value = '';
+  document.getElementById('fin-date').value = today;
+  document.getElementById('fin-notes').value = '';
+  
+  if(id) {
+    const f = STATE.finance.find(x=>x.id===id);
+    if(f) {
+      document.getElementById('fin-type').value = f.type||'دخل';
+      document.getElementById('fin-amount').value = f.amount||'';
+      document.getElementById('fin-desc').value = f.description||'';
+      document.getElementById('fin-student').value = f.student_id||'';
+      document.getElementById('fin-date').value = f.date||today;
+      document.getElementById('fin-notes').value = f.notes||'';
+    }
+  }
+  
+  // Rebuild student select with current students
+  const fs = document.getElementById('fin-student');
+  if(fs) {
+    fs.innerHTML = '<option value="">— غير مرتبط بطالب —</option>' +
+      STATE.students.map(s => {
+        const g = STATE.groups.find(gg=>gg.id===s.group_id);
+        return `<option value="${s.id}">${s.name}${g?' | '+g.name:''}</option>`;
+      }).join('');
+    if(id) {
+      const f = STATE.finance.find(x=>x.id===id);
+      if(f?.student_id) fs.value = f.student_id;
+    }
+  }
+  
+  document.querySelector('#modal-finance .modal-header h3').textContent = id ? 'تعديل عملية مالية' : 'إضافة عملية مالية';
+  openModal('modal-finance');
+}
+
 async function saveFinance() {
+  const id = document.getElementById('fin-id').value;
   const data = {
     type: document.getElementById('fin-type').value,
     amount: parseFloat(document.getElementById('fin-amount').value)||0,
@@ -3766,15 +3989,23 @@ async function saveFinance() {
     date: document.getElementById('fin-date').value||new Date().toISOString().split('T')[0],
     notes: document.getElementById('fin-notes').value
   };
-  if(!data.description) { toast('أدخل وصفاً','warning'); return; }
+  if(!data.description) { toast('أدخل وصف العملية','warning'); return; }
+  if(!data.amount || data.amount<=0) { toast('أدخل مبلغاً صحيحاً','warning'); return; }
   try {
-    const {data:nf,error} = await db.from('finance').insert(data).select().single();
-    if(error) throw error;
-    STATE.finance.unshift(nf);
+    if(id) {
+      const {error} = await db.from('finance').update(data).eq('id',id);
+      if(error) throw error;
+      STATE.finance = STATE.finance.map(f=>f.id===id?{...f,...data}:f);
+      toast('تم تحديث العملية المالية','success');
+    } else {
+      const {data:nf,error} = await db.from('finance').insert(data).select().single();
+      if(error) throw error;
+      STATE.finance.unshift(nf);
+      toast('تم حفظ العملية المالية ✅','success');
+    }
     closeModal('modal-finance');
     renderFinance();
-    toast('تم حفظ العملية المالية','success');
-  } catch(e) { toast('خطأ: '+e.message,'error'); }
+  } catch(e) { toast('خطأ في الحفظ: '+e.message,'error'); }
 }
 
 async function deleteFinance(id) {
@@ -3829,23 +4060,38 @@ function toggleSidebar() {
 const DAYS_LIST = ['الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'];
 
 function toggleDayTime(day, label) {
-  label.classList.toggle('checked');
+  // Prevent double-fire from checkbox + label
+  event.preventDefault();
+  const isNowChecked = !label.classList.contains('checked');
+  label.classList.toggle('checked', isNowChecked);
+  
   const container = document.getElementById('day-times-container');
-  const existing = container.querySelector(`[data-day-time="${day}"]`);
-  if(label.classList.contains('checked')) {
-    if(!existing) {
-      const row = document.createElement('div');
-      row.setAttribute('data-day-time', day);
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f0f6ff;border-radius:8px;border:1px solid #c5d8fb';
-      row.innerHTML = `<span style="font-size:13px;font-weight:700;color:#1565c0;min-width:60px">${day}</span>
-        <input type="time" data-start="${day}" placeholder="من" style="flex:1;padding:7px 10px;border:1.5px solid #c5d8fb;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:13px">
-        <span style="color:#718096;font-size:12px">—</span>
-        <input type="time" data-end="${day}" placeholder="إلى" style="flex:1;padding:7px 10px;border:1.5px solid #c5d8fb;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:13px">`;
-      container.appendChild(row);
-    }
-  } else {
-    if(existing) existing.remove();
+  const existing = container.querySelector('[data-day-time="' + day + '"]');
+  
+  if(isNowChecked && !existing) {
+    const row = document.createElement('div');
+    row.setAttribute('data-day-time', day);
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 16px;background:#f0f7ff;border-radius:10px;border:1.5px solid #bdd6f8;margin-bottom:4px';
+    row.innerHTML = 
+      '<div style="min-width:72px;font-size:13px;font-weight:700;color:#1565c0;display:flex;align-items:center;gap:5px"><i class="fas fa-calendar-day" style="font-size:11px"></i>' + day + '</div>' +
+      '<label style="font-size:12px;color:#5a7a9a;font-weight:400">من</label>' +
+      '<input type="time" data-start="' + day + '" style="flex:1;padding:7px 11px;border:1.5px solid #bdd6f8;border-radius:8px;font-family:Tajawal,sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor='#1565c0'" onblur="this.style.borderColor='#bdd6f8'">' +
+      '<label style="font-size:12px;color:#5a7a9a;font-weight:400">إلى</label>' +
+      '<input type="time" data-end="' + day + '" style="flex:1;padding:7px 11px;border:1.5px solid #bdd6f8;border-radius:8px;font-family:Tajawal,sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor='#1565c0'" onblur="this.style.borderColor='#bdd6f8'">' +
+      '<button onclick="removeDayTime('' + day + '')" style="width:28px;height:28px;background:#fee2e2;border:none;border-radius:6px;cursor:pointer;color:#dc2626;font-size:13px;flex-shrink:0">✕</button>';
+    container.appendChild(row);
+  } else if(!isNowChecked && existing) {
+    existing.remove();
   }
+}
+
+function removeDayTime(day) {
+  const container = document.getElementById('day-times-container');
+  const existing = container.querySelector('[data-day-time="' + day + '"]');
+  if(existing) existing.remove();
+  // Also uncheck the label
+  const label = document.querySelector('#group-days .day-cb[data-day="' + day + '"]');
+  if(label) label.classList.remove('checked');
 }
 
 function getDayTimes() {
@@ -3860,22 +4106,24 @@ function getDayTimes() {
 }
 
 function setDayTimesUI(schedule) {
-  // schedule = [{day, start, end}]
   const container = document.getElementById('day-times-container');
   container.innerHTML = '';
   document.querySelectorAll('#group-days .day-cb').forEach(l => l.classList.remove('checked'));
   if(!schedule || !schedule.length) return;
   schedule.forEach(s => {
-    const label = document.querySelector(`#group-days .day-cb[data-day="${s.day}"]`);
+    const label = document.querySelector('#group-days .day-cb[data-day="' + s.day + '"]');
     if(label) {
       label.classList.add('checked');
       const row = document.createElement('div');
       row.setAttribute('data-day-time', s.day);
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f0f6ff;border-radius:8px;border:1px solid #c5d8fb';
-      row.innerHTML = `<span style="font-size:13px;font-weight:700;color:#1565c0;min-width:60px">${s.day}</span>
-        <input type="time" data-start="${s.day}" value="${s.start||''}" style="flex:1;padding:7px 10px;border:1.5px solid #c5d8fb;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:13px">
-        <span style="color:#718096;font-size:12px">—</span>
-        <input type="time" data-end="${s.day}" value="${s.end||''}" style="flex:1;padding:7px 10px;border:1.5px solid #c5d8fb;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:13px">`;
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 16px;background:#f0f7ff;border-radius:10px;border:1.5px solid #bdd6f8;margin-bottom:4px';
+      row.innerHTML = 
+        '<div style="min-width:72px;font-size:13px;font-weight:700;color:#1565c0;display:flex;align-items:center;gap:5px"><i class="fas fa-calendar-day" style="font-size:11px"></i>' + s.day + '</div>' +
+        '<label style="font-size:12px;color:#5a7a9a;font-weight:400">من</label>' +
+        '<input type="time" data-start="' + s.day + '" value="' + (s.start||'') + '" style="flex:1;padding:7px 11px;border:1.5px solid #bdd6f8;border-radius:8px;font-family:Tajawal,sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor='#1565c0'" onblur="this.style.borderColor='#bdd6f8'">' +
+        '<label style="font-size:12px;color:#5a7a9a;font-weight:400">إلى</label>' +
+        '<input type="time" data-end="' + s.day + '" value="' + (s.end||'') + '" style="flex:1;padding:7px 11px;border:1.5px solid #bdd6f8;border-radius:8px;font-family:Tajawal,sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor='#1565c0'" onblur="this.style.borderColor='#bdd6f8'">' +
+        '<button onclick="removeDayTime('' + s.day + '')" style="width:28px;height:28px;background:#fee2e2;border:none;border-radius:6px;cursor:pointer;color:#dc2626;font-size:13px;flex-shrink:0">✕</button>';
       container.appendChild(row);
     }
   });
