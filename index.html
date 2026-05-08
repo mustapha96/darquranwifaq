@@ -1144,6 +1144,75 @@ textarea { resize:vertical; min-height:80px; }
 .hifz-range-text h4 { font-size:14px; font-weight:700; color:#166534; }
 .hifz-range-text p { font-size:12px; color:#4ade80; }
 
+/* ===== STARS & BADGES SYSTEM ===== */
+.stars-display { display:flex; gap:2px; align-items:center; }
+.star-icon { color:#fbbf24; font-size:14px; }
+.star-icon.empty { color:#e5e7eb; }
+
+.grade-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 10px; border-radius:20px;
+  font-size:11px; font-weight:700;
+}
+.grade-excellent { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+.grade-good { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; }
+.grade-ok { background:#fef9c3; color:#713f12; border:1px solid #fde047; }
+.grade-weak { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+
+.achievement-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:4px 12px; border-radius:20px;
+  font-size:11px; font-weight:700;
+  border:1px solid;
+}
+.badge-gold-star { background:#fef3c7; color:#92400e; border-color:#fbbf24; }
+.badge-blue-star { background:#dbeafe; color:#1e3a8a; border-color:#93c5fd; }
+.badge-green-star { background:#dcfce7; color:#166534; border-color:#86efac; }
+.badge-purple-star { background:#ede9fe; color:#5b21b6; border-color:#c4b5fd; }
+
+.honor-card {
+  background:linear-gradient(135deg,#0a1628,#0d2e6e);
+  border-radius:14px; padding:20px;
+  color:white; text-align:center;
+  position:relative; overflow:hidden;
+}
+.honor-card::before {
+  content:''; position:absolute; top:-30px; right:-30px;
+  width:100px; height:100px;
+  background:rgba(255,255,255,0.04);
+  border-radius:50%;
+}
+.honor-rank {
+  position:absolute; top:10px; right:10px;
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:800;
+}
+.honor-rank.r1 { background:#fbbf24; color:#78350f; }
+.honor-rank.r2 { background:#94a3b8; color:white; }
+.honor-rank.r3 { background:#cd7f32; color:white; }
+.honor-rank.rn { background:rgba(255,255,255,0.15); color:white; }
+
+.stars-total {
+  font-size:28px; font-weight:800; color:#fbbf24; line-height:1;
+}
+.honor-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px;
+  padding:20px;
+}
+
+/* Progress quality */
+.quality-bar { height:6px; background:#e5e7eb; border-radius:3px; overflow:hidden; margin-top:4px; }
+.quality-fill { height:100%; border-radius:3px; transition:width .5s; }
+.quality-fill.q-excellent { background:linear-gradient(90deg,#16a34a,#22c55e); }
+.quality-fill.q-good { background:linear-gradient(90deg,#2563eb,#3b82f6); }
+.quality-fill.q-ok { background:linear-gradient(90deg,#d97706,#f59e0b); }
+.quality-fill.q-weak { background:linear-gradient(90deg,#dc2626,#ef4444); }
+
+/* Recitation type selector */
+.rec-type-btn.selected-hifz { border-color:#16a34a !important; background:#f0fdf4 !important; }
+.rec-type-btn.selected-mur { border-color:#0891b2 !important; background:#ecfeff !important; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width:5px; height:5px; }
 ::-webkit-scrollbar-track { background:transparent; }
@@ -1770,6 +1839,12 @@ textarea { resize:vertical; min-height:80px; }
           <button class="btn btn-primary" onclick="openAddRecitation()">
             <i class="fas fa-plus"></i> إضافة تسميع
           </button>
+          <button class="btn btn-warning" onclick="openStarsModal()">
+            <i class="fas fa-star"></i> نجوم يدوية
+          </button>
+          <button class="btn btn-outline" onclick="openHonorBoard()">
+            <i class="fas fa-trophy"></i> لوحة الشرف
+          </button>
         </div>
         <div class="card" style="margin-bottom:16px">
           <div class="card-body">
@@ -1802,7 +1877,7 @@ textarea { resize:vertical; min-height:80px; }
               <thead>
                 <tr>
                   <th>الطالب</th><th>الفوج</th><th>النوع</th><th>من</th><th>إلى</th>
-                  <th>الآيات</th><th>التاريخ</th><th>ملاحظات</th><th>إجراءات</th>
+                  <th>الآيات</th><th>التقييم</th><th>النجوم</th><th>التاريخ</th><th>إجراءات</th>
                 </tr>
               </thead>
               <tbody id="rec-tbody"></tbody>
@@ -2164,77 +2239,194 @@ textarea { resize:vertical; min-height:80px; }
 
 <!-- Modal Recitation -->
 <div class="modal-overlay" id="modal-recitation">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>إضافة تسميع / مراجعة</h3>
+  <div class="modal modal-lg">
+    <div class="modal-header" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-bottom:1px solid #86efac">
+      <h3 style="color:#166534"><i class="fas fa-book-open" style="margin-left:8px;color:#16a34a"></i>تسجيل تسميع / مراجعة</h3>
       <button class="btn-close" onclick="closeModal('modal-recitation')">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="rec-id">
-      <div class="form-grid">
+      <!-- الفوج والطالب -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div class="form-group">
-          <label>الفوج</label>
-          <select id="rec-group" onchange="loadRecStudents()"></select>
+          <label><i class="fas fa-users" style="color:var(--primary);margin-left:4px"></i>الفوج</label>
+          <select id="rec-group" onchange="loadRecStudents()" style="border-color:#bdd6f8"></select>
         </div>
         <div class="form-group">
-          <label>الطالب <span style="color:var(--danger)">*</span></label>
-          <select id="rec-student">
-            <option value="">اختر طالباً...</option>
+          <label><i class="fas fa-user-graduate" style="color:var(--accent);margin-left:4px"></i>الطالب <span style="color:var(--danger)">*</span></label>
+          <select id="rec-student" style="border-color:#bdd6f8">
+            <option value="">— اختر الطالب —</option>
           </select>
         </div>
-        <div class="form-group full">
-          <label>النوع</label>
-          <div style="display:flex;gap:8px">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
-              <input type="radio" name="rec-type" value="حفظ جديد" checked> حفظ جديد
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
-              <input type="radio" name="rec-type" value="مراجعة"> مراجعة
-            </label>
+      </div>
+      <!-- نوع التسميع -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:8px">نوع التسميع</label>
+        <div style="display:flex;gap:10px">
+          <label onclick="updateRecType('حفظ جديد')" id="rec-type-hifz" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 16px;border:2px solid #16a34a;border-radius:10px;cursor:pointer;background:#f0fdf4;transition:all .2s">
+            <input type="radio" name="rec-type" value="حفظ جديد" checked style="display:none">
+            <i class="fas fa-book-quran" style="color:#16a34a;font-size:16px"></i>
+            <div><div style="font-weight:700;color:#166534;font-size:13px">حفظ جديد</div><div style="font-size:11px;color:#4ade80">تسميع حفظ جديد</div></div>
+          </label>
+          <label onclick="updateRecType('مراجعة')" id="rec-type-mur" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 16px;border:2px solid var(--border);border-radius:10px;cursor:pointer;background:white;transition:all .2s">
+            <input type="radio" name="rec-type" value="مراجعة" style="display:none">
+            <i class="fas fa-redo" style="color:var(--info);font-size:16px"></i>
+            <div><div style="font-weight:700;color:var(--text);font-size:13px">مراجعة</div><div style="font-size:11px;color:var(--text3)">مراجعة محفوظ سابق</div></div>
+          </label>
+        </div>
+      </div>
+      <!-- نطاق الحفظ -->
+      <div style="background:#f8fafc;border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px"><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-left:6px"></i>نطاق الحفظ</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:5px">من (البداية)</div>
+            <div style="display:grid;grid-template-columns:1fr;gap:6px">
+              <select id="rec-surah-from" class="surah-select" onchange="calcVerses()" style="font-size:13px"></select>
+              <input type="number" id="rec-from-verse" min="1" max="286" value="1" onchange="calcVerses()" placeholder="رقم الآية" style="padding:8px;border:1.5px solid var(--border);border-radius:7px;font-family:Tajawal,sans-serif;font-size:13px;outline:none">
+            </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label>من سورة</label>
-          <select id="rec-surah-from" class="surah-select" onchange="calcVerses()"></select>
-        </div>
-        <div class="form-group">
-          <label>من آية</label>
-          <input type="number" id="rec-from-verse" min="1" max="286" value="1" onchange="calcVerses()">
-        </div>
-        <div class="form-group">
-          <label>إلى سورة</label>
-          <select id="rec-surah-to" class="surah-select" onchange="calcVerses()"></select>
-        </div>
-        <div class="form-group">
-          <label>إلى آية</label>
-          <input type="number" id="rec-to-verse" min="1" max="286" value="10" onchange="calcVerses()">
-        </div>
-        <div class="form-group full" id="rec-calc-display" style="display:none">
-          <div class="hifz-range">
-            <i class="fas fa-book-quran"></i>
-            <div class="hifz-range-text">
-              <h4 id="rec-range-text">—</h4>
-              <p id="rec-verses-count">—</p>
+          <div style="text-align:center;padding-bottom:8px;color:var(--text3)"><i class="fas fa-long-arrow-alt-left" style="font-size:20px"></i></div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:5px">إلى (النهاية)</div>
+            <div style="display:grid;grid-template-columns:1fr;gap:6px">
+              <select id="rec-surah-to" class="surah-select" onchange="calcVerses()" style="font-size:13px"></select>
+              <input type="number" id="rec-to-verse" min="1" max="286" value="10" onchange="calcVerses()" placeholder="رقم الآية" style="padding:8px;border:1.5px solid var(--border);border-radius:7px;font-family:Tajawal,sans-serif;font-size:13px;outline:none">
             </div>
           </div>
         </div>
+        <div id="rec-calc-display" style="display:none;margin-top:12px">
+          <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px">
+            <i class="fas fa-book-quran" style="color:#16a34a;font-size:18px"></i>
+            <div>
+              <div id="rec-range-text" style="font-weight:700;color:#166534;font-size:13px">—</div>
+              <div id="rec-verses-count" style="font-size:12px;color:#4ade80;margin-top:2px">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- التقييم -->
+      <div style="background:#fffbf0;border-radius:10px;padding:16px;border:1px solid #fde68a;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:12px"><i class="fas fa-star" style="color:#d97706;margin-left:6px"></i>تقييم الأستاذ للحفظ</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="rec-grade-btns">
+          <button type="button" onclick="setRecGrade('ممتاز',3,'#16a34a')" data-grade="ممتاز"
+            style="padding:8px 16px;border-radius:8px;border:2px solid #16a34a;background:white;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;font-weight:600;color:#16a34a;transition:all .2s">
+            ⭐⭐⭐ ممتاز
+          </button>
+          <button type="button" onclick="setRecGrade('جيد جداً',0,'#0891b2')" data-grade="جيد جداً"
+            style="padding:8px 16px;border-radius:8px;border:2px solid #0891b2;background:white;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;font-weight:600;color:#0891b2;transition:all .2s">
+            جيد جداً
+          </button>
+          <button type="button" onclick="setRecGrade('جيد',0,'#2563eb')" data-grade="جيد"
+            style="padding:8px 16px;border-radius:8px;border:2px solid #2563eb;background:white;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;font-weight:600;color:#2563eb;transition:all .2s">
+            جيد
+          </button>
+          <button type="button" onclick="setRecGrade('حسن',0,'#d97706')" data-grade="حسن"
+            style="padding:8px 16px;border-radius:8px;border:2px solid #d97706;background:white;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;font-weight:600;color:#d97706;transition:all .2s">
+            حسن
+          </button>
+          <button type="button" onclick="setRecGrade('لا بأس به',0,'#ea580c')" data-grade="لا بأس به"
+            style="padding:8px 16px;border-radius:8px;border:2px solid #ea580c;background:white;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;font-weight:600;color:#ea580c;transition:all .2s">
+            لا بأس به
+          </button>
+          <button type="button" onclick="setRecGrade('ضعيف',0,'#dc2626')" data-grade="ضعيف"
+            style="padding:8px 16px;border-radius:8px;border:2px solid #dc2626;background:white;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;font-weight:600;color:#dc2626;transition:all .2s">
+            ضعيف
+          </button>
+        </div>
+        <input type="hidden" id="rec-grade" value="">
+        <input type="hidden" id="rec-stars" value="0">
+        <div id="rec-grade-info" style="display:none;margin-top:10px;padding:8px 12px;background:white;border-radius:8px;font-size:12px;font-weight:600"></div>
+      </div>
+      <!-- التاريخ والملاحظات -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
-          <label>تاريخ التسميع</label>
+          <label><i class="fas fa-calendar" style="color:var(--primary);margin-left:4px"></i>تاريخ التسميع</label>
           <input type="date" id="rec-date">
         </div>
-        <div class="form-group full">
-          <label>ملاحظات</label>
-          <textarea id="rec-notes" rows="2" placeholder="ملاحظات الأستاذ..."></textarea>
+        <div class="form-group">
+          <label>ملاحظات الأستاذ</label>
+          <input type="text" id="rec-notes" placeholder="ملاحظة مختصرة...">
         </div>
       </div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="background:#f8fafc">
       <button class="btn btn-outline" onclick="closeModal('modal-recitation')">إلغاء</button>
-      <button class="btn btn-success" onclick="saveRecitation()"><i class="fas fa-book-open"></i> حفظ التسميع</button>
+      <button class="btn btn-success" onclick="saveRecitation()">
+        <i class="fas fa-check-circle"></i> حفظ التسميع
+      </button>
     </div>
   </div>
 </div>
 
+<!-- Modal Stars Manual -->
+<div class="modal-overlay" id="modal-stars">
+  <div class="modal">
+    <div class="modal-header" style="background:linear-gradient(135deg,#fffbf0,#fef3c7);border-bottom:1px solid #fde68a">
+      <h3 style="color:#92400e"><i class="fas fa-star" style="color:#d97706;margin-left:8px"></i>منح النجوم اليدوية</h3>
+      <button class="btn-close" onclick="closeModal('modal-stars')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fef9c3;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#713f12;border:1px solid #fde047">
+        <i class="fas fa-info-circle" style="margin-left:4px"></i>
+        هذا القسم مخصص للنجوم التي يمنحها الأستاذ يدوياً مثل السلوك والانضباط والتفاعل.
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>اختر الطالب</label>
+        <select id="stars-student" style="border-color:#fde068"></select>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">نوع النجمة</div>
+      <div style="display:flex;flex-direction:column;gap:8px" id="stars-types">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbf0;border-radius:8px;border:1px solid #fde68a">
+          <i class="fas fa-heart" style="color:#ec4899;font-size:16px;width:20px"></i>
+          <span style="flex:1;font-size:13px;font-weight:600">سلوك داخل الحلقة</span>
+          <button onclick="giveManualStar('سلوك',1)" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">⭐ +1</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbf0;border-radius:8px;border:1px solid #fde68a">
+          <i class="fas fa-shield-alt" style="color:#3b82f6;font-size:16px;width:20px"></i>
+          <span style="flex:1;font-size:13px;font-weight:600">الانضباط والالتزام</span>
+          <button onclick="giveManualStar('انضباط',1)" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">⭐ +1</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbf0;border-radius:8px;border:1px solid #fde68a">
+          <i class="fas fa-comments" style="color:#8b5cf6;font-size:16px;width:20px"></i>
+          <span style="flex:1;font-size:13px;font-weight:600">التفاعل والمشاركة</span>
+          <button onclick="giveManualStar('تفاعل',1)" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">⭐ +1</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbf0;border-radius:8px;border:1px solid #fde68a">
+          <i class="fas fa-tshirt" style="color:#10b981;font-size:16px;width:20px"></i>
+          <span style="flex:1;font-size:13px;font-weight:600">الالتزام باللباس</span>
+          <button onclick="giveManualStar('لباس',1)" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">⭐ +1</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbf0;border-radius:8px;border:1px solid #fde68a">
+          <i class="fas fa-plus-circle" style="color:#d97706;font-size:16px;width:20px"></i>
+          <span style="flex:1;font-size:13px;font-weight:600">مكافأة إضافية</span>
+          <div style="display:flex;gap:4px">
+            <button onclick="giveManualStar('مكافأة',1)" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">⭐ +1</button>
+            <button onclick="giveManualStar('مكافأة',2)" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">⭐⭐ +2</button>
+            <button onclick="giveManualStar('مكافأة',3)" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">⭐⭐⭐ +3</button>
+          </div>
+        </div>
+      </div>
+      <div id="stars-feedback" style="margin-top:12px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-stars')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Honor Board -->
+<div class="modal-overlay" id="modal-honor">
+  <div class="modal modal-lg">
+    <div class="modal-header" style="background:linear-gradient(135deg,#0a1628,#1565c0);color:white">
+      <h3 style="color:white"><i class="fas fa-trophy" style="color:#fbbf24;margin-left:8px"></i>لوحة الشرف والتفوق</h3>
+      <button class="btn-close" style="background:rgba(255,255,255,0.2);color:white" onclick="closeModal('modal-honor')">✕</button>
+    </div>
+    <div class="modal-body" id="honor-board-content" style="padding:0"></div>
+  </div>
+</div>
+
+<!-- Modal Honor Board -->
 <!-- Modal Holiday -->
 <div class="modal-overlay" id="modal-holiday">
   <div class="modal">
@@ -2470,6 +2662,7 @@ let STATE = {
   recitations: [],
   holidays: [],
   finance: [],
+  manualStars: [],
   currentPage: 'dashboard'
 };
 
@@ -2705,12 +2898,19 @@ async function loadAllData() {
       STATE.finance = f || [];
     }
     
+    // Manual stars
+    try {
+      const {data:ms} = await db.from('student_stars').select('*').order('date',{ascending:false}).limit(500);
+      STATE.manualStars = ms || [];
+    } catch(e) { STATE.manualStars = []; }
+    
     console.log('✅ Data loaded:', {
       groups: STATE.groups.length,
       students: STATE.students.length,
       teachers: STATE.teachers.length,
       recitations: STATE.recitations.length,
-      attendance: STATE.attendance.length
+      attendance: STATE.attendance.length,
+      manualStars: STATE.manualStars?.length||0
     });
     
   } catch(e) {
@@ -2830,15 +3030,23 @@ function renderDashboard() {
     return {...s, totalV};
   }).sort((a,b) => b.totalV - a.totalV).slice(0,5);
   
-  document.getElementById('top-students').innerHTML = studentHifz.length ? 
-    `<div style="display:flex;flex-direction:column;gap:10px">` + studentHifz.map((s,i) => `
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:24px;height:24px;border-radius:50%;background:${i===0?'var(--gold)':i===1?'#94a3b8':i===2?'#cd7c2e':'var(--bg2)'};display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
-      <div class="s-avatar" style="width:32px;height:32px;font-size:12px">${s.name?.[0]||'?'}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div></div>
-      <div style="font-size:12px;color:var(--accent);font-weight:700">${s.totalV} آية</div>
+  const rankedByStars = STATE.students.map(s=>({
+    ...s, totalV: STATE.recitations.filter(r=>r.student_id===s.id&&r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0),
+    stars: getStudentStars(s.id), group: STATE.groups.find(g=>g.id===s.group_id)
+  })).sort((a,b)=>b.stars-a.stars).slice(0,5);
+  
+  document.getElementById('top-students').innerHTML = rankedByStars.length ? 
+    `<div style="display:flex;flex-direction:column;gap:8px">` + rankedByStars.map((s,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:${i===0?'#fef9c3':'#f8fafc'};border:1px solid ${i===0?'#fde68a':'var(--border)'}">
+      <div style="width:24px;height:24px;border-radius:50%;background:${i===0?'#d97706':i===1?'#94a3b8':i===2?'#cd7c2e':'var(--bg2)'};display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
+      <div class="s-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0">${s.name?.[0]||'?'}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--text3)">${s.group?.name||'—'}</div></div>
+      <div style="text-align:center">
+        <div style="font-size:14px;font-weight:800;color:#d97706">${s.stars} ⭐</div>
+        <div style="font-size:10px;color:var(--text3)">${s.totalV} آية</div>
+      </div>
     </div>
-  `).join('') + '</div>' : '<div class="empty-state"><i class="fas fa-book"></i><p>لا توجد بيانات</p></div>';
+  `).join('') + '</div>' : '<div class="empty-state"><i class="fas fa-star"></i><p>لا توجد بيانات</p></div>';
   
   // Recent activities
   const activities = STATE.recitations.slice(0,5).map(r => ({
@@ -3192,6 +3400,9 @@ function loadRecitations() {
     const g = s ? STATE.groups.find(gg=>gg.id===s.group_id) : null;
     const fromSurah = SURAHS.find(sr=>sr.n===r.surah_from);
     const toSurah = SURAHS.find(sr=>sr.n===r.surah_to);
+    const GRADE_COLORS = {'ممتاز':'grade-excellent','جيد جداً':'grade-good','جيد':'grade-good','حسن':'grade-ok','لا بأس به':'grade-ok','ضعيف':'grade-weak'};
+    const gradeClass = GRADE_COLORS[r.grade] || 'badge-gray';
+    const starsHtml = r.stars>0 ? '⭐'.repeat(Math.min(r.stars,3)) : '—';
     return `<tr>
       <td><strong>${r.students?.name||s?.name||'—'}</strong></td>
       <td>${g?.name||'—'}</td>
@@ -3199,34 +3410,96 @@ function loadRecitations() {
       <td style="font-size:12px">${fromSurah?fromSurah.name:'—'} (${r.verse_from||1})</td>
       <td style="font-size:12px">${toSurah?toSurah.name:'—'} (${r.verse_to||1})</td>
       <td><strong>${r.verses_count||0}</strong></td>
+      <td>${r.grade?`<span class="grade-badge ${gradeClass}">${r.grade}</span>`:'—'}</td>
+      <td style="font-size:15px">${starsHtml}</td>
       <td>${formatDate(r.date)}</td>
-      <td style="font-size:12px;color:var(--text3)">${r.notes||'—'}</td>
       <td><button class="btn btn-ghost btn-sm btn-icon" style="color:var(--danger)" onclick="deleteRecitation('${r.id}')"><i class="fas fa-trash"></i></button></td>
     </tr>`;
   }).join('') : `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text3)">لا توجد سجلات</td></tr>`;
 }
 
+function updateRecType(type) {
+  document.querySelectorAll('input[name="rec-type"]').forEach(r => r.checked = r.value === type);
+  const hifzBtn = document.getElementById('rec-type-hifz');
+  const murBtn = document.getElementById('rec-type-mur');
+  if(hifzBtn && murBtn) {
+    if(type === 'حفظ جديد') {
+      hifzBtn.style.borderColor = '#16a34a';
+      hifzBtn.style.background = '#f0fdf4';
+      murBtn.style.borderColor = 'var(--border)';
+      murBtn.style.background = 'white';
+    } else {
+      murBtn.style.borderColor = '#0891b2';
+      murBtn.style.background = '#ecfeff';
+      hifzBtn.style.borderColor = 'var(--border)';
+      hifzBtn.style.background = 'white';
+    }
+  }
+}
+
+function setRecGrade(grade, stars, color) {
+  document.getElementById('rec-grade').value = grade;
+  document.getElementById('rec-stars').value = stars;
+  // Update buttons
+  document.querySelectorAll('#rec-grade-btns button').forEach(btn => {
+    const isSelected = btn.dataset.grade === grade;
+    btn.style.background = isSelected ? color : 'white';
+    btn.style.color = isSelected ? 'white' : color;
+    btn.style.transform = isSelected ? 'scale(1.05)' : 'scale(1)';
+  });
+  // Show info
+  const info = document.getElementById('rec-grade-info');
+  if(info) {
+    info.style.display = 'block';
+    const starsStr = stars > 0 ? '⭐'.repeat(stars) + ` +${stars} نجوم` : 'بدون نجوم';
+    info.innerHTML = `<span style="color:${color};font-weight:700">${grade}</span> — ${starsStr}`;
+    info.style.borderRight = `3px solid ${color}`;
+  }
+}
+
 function openAddRecitation() {
   const isAdmin = STATE.profile?.role==='admin';
-  const myGroups = isAdmin ? STATE.groups : STATE.groups.filter(g=>g.teacher_id===STATE.profile?.id);
+  const isSup = STATE.profile?.role==='supervisor';
+  const myGroups = (isAdmin||isSup) ? STATE.groups : STATE.groups.filter(g=>g.teacher_id===STATE.profile?.id);
   
   const rg = document.getElementById('rec-group');
   rg.innerHTML = myGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
-  if(myGroups.length) {
+  
+  // Auto-select current session group
+  let autoGroup = currentSessionGroupId;
+  if(!autoGroup && myGroups.length === 1) autoGroup = myGroups[0].id;
+  if(autoGroup) {
+    rg.value = autoGroup;
+  } else if(myGroups.length) {
     rg.value = myGroups[0].id;
-    loadRecStudents();
   }
+  loadRecStudents();
   
   document.getElementById('rec-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('rec-id').value = '';
+  document.getElementById('rec-notes').value = '';
+  document.getElementById('rec-grade').value = '';
+  document.getElementById('rec-stars').value = '0';
+  document.getElementById('rec-calc-display').style.display = 'none';
+  
+  // Reset grade buttons
+  document.querySelectorAll('#rec-grade-btns button').forEach(btn => {
+    btn.style.background = 'white';
+    btn.style.transform = 'scale(1)';
+  });
+  const info = document.getElementById('rec-grade-info');
+  if(info) info.style.display = 'none';
+  
+  // Reset type
+  updateRecType('حفظ جديد');
   
   // Default surahs
   const fromSel = document.getElementById('rec-surah-from');
   const toSel = document.getElementById('rec-surah-to');
-  if(fromSel.options.length) {
-    fromSel.selectedIndex = 0;
-    toSel.selectedIndex = 0;
-  }
+  if(fromSel && fromSel.options.length) { fromSel.selectedIndex = 0; }
+  if(toSel && toSel.options.length) { toSel.selectedIndex = 0; }
+  document.getElementById('rec-from-verse').value = '1';
+  document.getElementById('rec-to-verse').value = '10';
   
   openModal('modal-recitation');
 }
@@ -3271,6 +3544,23 @@ function calcVerses() {
   document.getElementById('rec-verses-count').textContent = `عدد الآيات: ${Math.abs(total)} آية — يعادل ${(Math.abs(total)/100).toFixed(2)} حزب`;
 }
 
+function calcVersesCount(surahFrom, verseFrom, surahTo, verseTo) {
+  const fs = SURAHS.findIndex(s=>s.n===surahFrom);
+  const ts = SURAHS.findIndex(s=>s.n===surahTo);
+  let verses = 0;
+  if(surahFrom === surahTo) {
+    verses = Math.abs(verseTo - verseFrom) + 1;
+  } else {
+    const [si,ei] = fs<ts?[fs,ts]:[ts,fs];
+    for(let i=si;i<=ei;i++){
+      if(i===si) verses += SURAHS[i].v - verseFrom + 1;
+      else if(i===ei) verses += verseTo;
+      else verses += SURAHS[i].v;
+    }
+  }
+  return Math.abs(verses);
+}
+
 async function saveRecitation() {
   const sid = document.getElementById('rec-student').value;
   const type = document.querySelector('input[name="rec-type"]:checked')?.value || 'حفظ جديد';
@@ -3280,41 +3570,227 @@ async function saveRecitation() {
   const verseTo = parseInt(document.getElementById('rec-to-verse').value)||1;
   const date = document.getElementById('rec-date').value;
   const notes = document.getElementById('rec-notes').value;
+  const grade = document.getElementById('rec-grade').value;
+  const starsFromGrade = parseInt(document.getElementById('rec-stars').value)||0;
   
-  if(!sid) { toast('اختر الطالب','warning'); return; }
-  if(!surahFrom||!surahTo) { toast('اختر السور','warning'); return; }
+  if(!sid) { toast('اختر الطالب أولاً','warning'); return; }
+  if(!surahFrom||!surahTo) { toast('اختر نطاق الحفظ','warning'); return; }
   if(!date) { toast('أدخل التاريخ','warning'); return; }
+  if(!grade) { toast('يرجى اختيار تقييم للحفظ','warning'); return; }
   
-  // Calc verses
-  const fs = SURAHS.findIndex(s=>s.n===surahFrom);
-  const ts = SURAHS.findIndex(s=>s.n===surahTo);
-  let verses = 0;
-  if(surahFrom === surahTo) verses = Math.abs(verseTo - verseFrom) + 1;
-  else {
-    const [si,ei] = fs<ts?[fs,ts]:[ts,fs];
-    for(let i=si;i<=ei;i++){
-      if(i===si)verses+=SURAHS[i].v-verseFrom+1;
-      else if(i===ei)verses+=verseTo;
-      else verses+=SURAHS[i].v;
-    }
-  }
+  const verses = calcVersesCount(surahFrom, verseFrom, surahTo, verseTo);
   
   const record = {
-    student_id: sid, type, surah_from: surahFrom, verse_from: verseFrom,
-    surah_to: surahTo, verse_to: verseTo, verses_count: Math.abs(verses),
+    student_id: sid, type,
+    surah_from: surahFrom, verse_from: verseFrom,
+    surah_to: surahTo, verse_to: verseTo,
+    verses_count: verses,
+    grade, stars: starsFromGrade,
     date, notes, teacher_id: STATE.profile?.id
   };
   
   try {
-    const { data, error } = await db.from('recitations').insert(record).select('*, students(name,group_id)').single();
+    const { data, error } = await db.from('recitations')
+      .insert(record).select('*, students(name,group_id)').single();
     if(error) throw error;
     STATE.recitations.unshift(data);
+    
+    // Auto-add stars to student points
+    if(starsFromGrade > 0) {
+      await addStarsToStudent(sid, starsFromGrade, type==='حفظ جديد'?'حفظ':'مراجعة');
+    }
+    
     closeModal('modal-recitation');
-    toast('تم حفظ التسميع','success');
+    const gradeTxt = grade === 'ممتاز' ? '⭐⭐⭐ ممتاز!' : grade;
+    toast(`✅ تم حفظ التسميع — التقييم: ${gradeTxt}`, 'success');
     loadRecitations();
   } catch(e) {
-    toast('خطأ: '+e.message,'error');
+    toast('خطأ في الحفظ: '+e.message,'error');
   }
+}
+
+// ============ STARS & POINTS SYSTEM ============
+
+// حساب نجوم الطالب من كل المصادر
+function getStudentStars(studentId) {
+  const recs = STATE.recitations.filter(r=>r.student_id===studentId);
+  const att = STATE.attendance.filter(a=>a.student_id===studentId);
+  const manual = (STATE.manualStars||[]).filter(s=>s.student_id===studentId);
+  
+  let total = 0;
+  // من التسميع
+  recs.forEach(r => { total += (r.stars||0); });
+  // من الحضور: حاضر = 1 نجمة
+  total += att.filter(a=>a.status==='حاضر').length;
+  // النجوم اليدوية
+  manual.forEach(s => { total += (s.stars||0); });
+  
+  return total;
+}
+
+// نسبة جودة الحفظ
+function getHifzQuality(studentId) {
+  const GRADE_SCORES = { 'ممتاز':100, 'جيد جداً':85, 'جيد':70, 'حسن':60, 'لا بأس به':45, 'ضعيف':25 };
+  const recs = STATE.recitations.filter(r=>r.student_id===studentId && r.grade);
+  if(!recs.length) return null;
+  const avg = recs.reduce((a,r)=>(a + (GRADE_SCORES[r.grade]||50)), 0) / recs.length;
+  return Math.round(avg);
+}
+
+function qualityColor(pct) {
+  if(pct>=90) return {cls:'q-excellent',color:'#16a34a',label:'ممتاز'};
+  if(pct>=70) return {cls:'q-good',color:'#2563eb',label:'جيد'};
+  if(pct>=50) return {cls:'q-ok',color:'#d97706',label:'حسن'};
+  return {cls:'q-weak',color:'#dc2626',label:'يحتاج تحسين'};
+}
+
+function getStudentBadges(studentId) {
+  const badges = [];
+  const recs = STATE.recitations.filter(r=>r.student_id===studentId);
+  const att = STATE.attendance.filter(a=>a.student_id===studentId);
+  const stars = getStudentStars(studentId);
+  const totalV = recs.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
+  const excellent = recs.filter(r=>r.grade==='ممتاز').length;
+  const attRate = att.length ? Math.round(att.filter(a=>a.status==='حاضر').length/att.length*100) : 0;
+  
+  if(stars >= 50) badges.push({icon:'👑',label:'نجم المركز',cls:'badge-gold-star'});
+  if(stars >= 20) badges.push({icon:'⭐',label:'طالب متميز',cls:'badge-gold-star'});
+  if(totalV >= 6236) badges.push({icon:'📖',label:'حافظ القرآن',cls:'badge-green-star'});
+  if(totalV >= 1200) badges.push({icon:'🏆',label:'حافظ متقدم',cls:'badge-blue-star'});
+  if(excellent >= 10) badges.push({icon:'✨',label:'نجم المراجعة',cls:'badge-purple-star'});
+  if(attRate >= 95) badges.push({icon:'🎯',label:'أفضل حضور',cls:'badge-green-star'});
+  if(attRate >= 85) badges.push({icon:'📅',label:'منضبط',cls:'badge-blue-star'});
+  
+  return badges;
+}
+
+// نجوم شهر هذا الشهر
+function getMonthStars(studentId) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const recs = STATE.recitations.filter(r=>r.student_id===studentId && r.date>=monthStart);
+  const att = STATE.attendance.filter(a=>a.student_id===studentId && a.date>=monthStart);
+  const manual = (STATE.manualStars||[]).filter(s=>s.student_id===studentId && s.date>=monthStart);
+  let total = 0;
+  recs.forEach(r=>total+=(r.stars||0));
+  total += att.filter(a=>a.status==='حاضر').length;
+  manual.forEach(s=>total+=(s.stars||0));
+  return total;
+}
+
+async function addStarsToStudent(studentId, stars, reason) {
+  if(!STATE.manualStars) STATE.manualStars = [];
+  const record = {
+    student_id: studentId,
+    stars, reason,
+    teacher_id: STATE.profile?.id,
+    date: new Date().toISOString().split('T')[0]
+  };
+  try {
+    const {data,error} = await db.from('student_stars').insert(record).select().single();
+    if(!error && data) STATE.manualStars.push(data);
+    else STATE.manualStars.push({...record, id: Date.now().toString()});
+  } catch(e) {
+    STATE.manualStars.push({...record, id: Date.now().toString()});
+  }
+}
+
+// فتح modal النجوم اليدوية
+function openStarsModal(groupId) {
+  const myStudents = groupId
+    ? STATE.students.filter(s=>s.group_id===groupId)
+    : STATE.students;
+  const sel = document.getElementById('stars-student');
+  sel.innerHTML = '<option value="">— اختر الطالب —</option>' +
+    myStudents.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('stars-feedback').innerHTML = '';
+  openModal('modal-stars');
+}
+
+async function giveManualStar(reason, count) {
+  const sid = document.getElementById('stars-student').value;
+  if(!sid) { toast('اختر الطالب أولاً','warning'); return; }
+  const s = STATE.students.find(st=>st.id===sid);
+  await addStarsToStudent(sid, count, reason);
+  const fb = document.getElementById('stars-feedback');
+  fb.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> تم منح <strong>${'⭐'.repeat(count)}</strong> للطالب <strong>${s?.name}</strong> — سبب: ${reason}</div>`;
+  toast(`⭐ تم منح ${count} نجمة للطالب ${s?.name}`, 'success');
+}
+
+// لوحة الشرف
+function openHonorBoard() {
+  const now = new Date();
+  const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-7);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const weekStartStr = weekAgo.toISOString().split('T')[0];
+  
+  // ترتيب الطلاب حسب النجوم الكلية
+  const ranked = STATE.students.map(s => ({
+    ...s,
+    totalStars: getStudentStars(s.id),
+    monthStars: getMonthStars(s.id),
+    quality: getHifzQuality(s.id),
+    badges: getStudentBadges(s.id),
+    group: STATE.groups.find(g=>g.id===s.group_id)
+  })).sort((a,b)=>b.totalStars-a.totalStars);
+  
+  const top3 = ranked.slice(0,3);
+  const monthTop = [...ranked].sort((a,b)=>b.monthStars-a.monthStars).slice(0,1)[0];
+  
+  const podium = (s, rank) => {
+    if(!s) return '';
+    const medals = {1:'🥇',2:'🥈',3:'🥉'};
+    const colors = {1:'linear-gradient(135deg,#fbbf24,#d97706)',2:'linear-gradient(135deg,#94a3b8,#64748b)',3:'linear-gradient(135deg,#cd7f32,#a16207)'};
+    return `
+    <div style="text-align:center;flex:1">
+      <div style="font-size:28px;margin-bottom:6px">${medals[rank]}</div>
+      <div style="width:56px;height:56px;border-radius:50%;background:${colors[rank]};display:flex;align-items:center;justify-content:center;color:white;font-size:20px;font-weight:800;margin:0 auto 8px">${s.name?.[0]||'؟'}</div>
+      <div style="font-weight:700;font-size:13px;color:#1e2d42">${s.name}</div>
+      <div style="font-size:11px;color:#718096">${s.group?.name||'—'}</div>
+      <div style="font-size:18px;font-weight:800;color:#d97706;margin-top:4px">${'⭐'.repeat(Math.min(s.totalStars,5))} ${s.totalStars}</div>
+    </div>`;
+  };
+  
+  const html = `
+    <div style="background:linear-gradient(135deg,#0a1628,#1565c0);padding:24px;color:white;text-align:center">
+      <div style="font-size:22px;font-weight:800;margin-bottom:4px"><i class="fas fa-trophy" style="color:#fbbf24;margin-left:8px"></i>لوحة الشرف</div>
+      <div style="font-size:12px;opacity:.7">دار القرآن الكريم — الوفاق</div>
+      ${monthTop?`<div style="margin-top:12px;background:rgba(255,255,255,0.1);border-radius:10px;padding:8px 16px;display:inline-block;font-size:13px">
+        🌟 نجم الشهر: <strong>${monthTop.name}</strong> — ${monthTop.monthStars} ⭐ هذا الشهر</div>`:''}
+    </div>
+    <div style="padding:24px">
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:24px;align-items:flex-end">
+        ${ranked.length>=2?podium(ranked[1],2):''}
+        ${ranked.length>=1?podium(ranked[0],1):''}
+        ${ranked.length>=3?podium(ranked[2],3):''}
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:12px">ترتيب كامل الطلبة</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${ranked.map((s,i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${i<3?'#fef9c3':'#f8fafc'};border-radius:10px;border:1px solid ${i<3?'#fde68a':'var(--border)'}">
+          <div style="width:24px;text-align:center;font-size:13px;font-weight:700;color:${i<3?'#d97706':'var(--text3)'}">${i+1}</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:700;flex-shrink:0">${s.name?.[0]||'؟'}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700">${s.name}</div>
+            <div style="font-size:11px;color:var(--text3)">${s.group?.name||'—'}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:16px;font-weight:800;color:#d97706">${s.totalStars} ⭐</div>
+            <div style="font-size:10px;color:var(--text3)">كلي</div>
+          </div>
+          ${s.quality!==null?`<div style="text-align:center;min-width:60px">
+            <div style="font-size:12px;font-weight:700;color:${qualityColor(s.quality).color}">${s.quality}%</div>
+            <div style="font-size:10px;color:var(--text3)">جودة</div>
+          </div>`:''}
+          <div style="display:flex;gap:3px;flex-wrap:wrap;max-width:120px">
+            ${s.badges.slice(0,2).map(b=>`<span class="achievement-badge ${b.cls}" style="font-size:10px">${b.icon} ${b.label}</span>`).join('')}
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  
+  document.getElementById('honor-board-content').innerHTML = html;
+  openModal('modal-honor');
 }
 
 async function deleteRecitation(id) {
@@ -3880,32 +4356,54 @@ function openStudentDetail(id) {
   const sRec = STATE.recitations.filter(r=>r.student_id===id&&r.type==='حفظ جديد');
   const totalV = sRec.reduce((a,r)=>a+(r.verses_count||0),0);
   
+  const totalStars = getStudentStars(id);
+  const quality = getHifzQuality(id);
+  const badges = getStudentBadges(id);
+  const qualityInfo = quality !== null ? qualityColor(quality) : null;
+  
   document.getElementById('student-detail-content').innerHTML = `
-    <div class="profile-header" style="margin-bottom:20px">
+    <div class="profile-header" style="margin-bottom:16px">
       <div class="profile-avatar">${s.photo_url?`<img src="${s.photo_url}">`:s.name?.[0]||'؟'}</div>
-      <div>
+      <div style="flex:1">
         <h2 style="font-size:20px;font-weight:800">${s.name}</h2>
-        <p style="opacity:.7">${g?.name||'—'} • ${s.level||'—'}</p>
+        <p style="opacity:.75">${g?.name||'—'} • ${s.level||'—'}</p>
         ${s.phone?`<p style="opacity:.6;font-size:13px">📞 ${s.phone}</p>`:''}
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">
+          ${badges.slice(0,4).map(b=>`<span class="achievement-badge ${b.cls}">${b.icon} ${b.label}</span>`).join('')}
+        </div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:32px;font-weight:800;color:#fbbf24">${totalStars}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6)">⭐ نجمة</div>
       </div>
     </div>
-    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">
       <div class="stat-card"><div class="stat-icon green"><i class="fas fa-quran"></i></div>
-        <div class="stat-content"><h3>${totalV}</h3><p>آيات</p></div></div>
+        <div class="stat-content"><h3>${totalV}</h3><p>آيات محفوظة</p></div></div>
       <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-percentage"></i></div>
         <div class="stat-content"><h3>${attRate}%</h3><p>الحضور</p></div></div>
+      <div class="stat-card"><div class="stat-icon gold"><i class="fas fa-star"></i></div>
+        <div class="stat-content"><h3>${totalStars}</h3><p>النجوم</p></div></div>
       <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div>
         <div class="stat-content"><h3>${sRec.length}</h3><p>جلسات</p></div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
-      <div><strong>تاريخ الميلاد:</strong> ${s.dob||'—'}</div>
-      <div><strong>تاريخ الالتحاق:</strong> ${s.join_date||'—'}</div>
-      <div><strong>ولي الأمر:</strong> ${s.parent_name||'—'}</div>
-      <div><strong>الجنس:</strong> ${s.gender||'—'}</div>
+    ${qualityInfo ? `<div style="margin-bottom:12px;padding:12px 16px;background:${qualityInfo.color}11;border-radius:10px;border:1px solid ${qualityInfo.color}33">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:600">جودة الحفظ</span>
+        <span style="font-size:13px;font-weight:700;color:${qualityInfo.color}">${quality}% — ${qualityInfo.label}</span>
+      </div>
+      <div class="quality-bar"><div class="quality-fill ${qualityInfo.cls}" style="width:${quality}%"></div></div>
+    </div>` : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px">
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px"><strong>ولي الأمر:</strong> ${s.parent_name||'—'}</div>
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px"><strong>الجنس:</strong> ${s.gender||'—'}</div>
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px"><strong>تاريخ الالتحاق:</strong> ${s.join_date||'—'}</div>
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px"><strong>المستوى:</strong> ${s.level||'—'}</div>
     </div>
-    ${s.notes?`<div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--text2)">${s.notes}</div>`:''}
-    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+    ${s.notes?`<div style="margin-bottom:12px;padding:10px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--text2)">${s.notes}</div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
       <button class="btn btn-outline btn-sm" onclick="editStudent('${id}');closeModal('modal-student-detail')"><i class="fas fa-edit"></i> تعديل</button>
+      <button class="btn btn-warning btn-sm" onclick="closeModal('modal-student-detail');setTimeout(()=>{openStarsModal('${s.group_id}');setTimeout(()=>{document.getElementById('stars-student').value='${id}'},100)},300)"><i class="fas fa-star"></i> منح نجوم</button>
       ${s.phone?`<button class="btn-wa" onclick="sendWhatsApp('${s.phone}','${s.name}')"><i class="fab fa-whatsapp"></i> واتساب</button>`:''}
     </div>
   `;
