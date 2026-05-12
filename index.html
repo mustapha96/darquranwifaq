@@ -1207,6 +1207,118 @@ const SURAHS=[
 ];
 const SURAH_OPTS = SURAHS.map(s=>`<option value="${s.n}">${s.name}</option>`).join('');
 
+// ===================== أحزاب معتمدة =====================
+// كل حزب يُعرَّف بأول سورة تبدأ فيه (رقم السورة التصاعدي)
+// الحزب 1 → الفاتحة(1) | الحزب 2-5 → البقرة(2) | إلخ
+const HIZB_START = [
+  1,   // حزب 1: الفاتحة
+  2,   // حزب 2: البقرة (أول)     — البقرة تحتوي أحزاب 2-5
+  2,   // حزب 3
+  2,   // حزب 4
+  2,   // حزب 5
+  3,   // حزب 6: آل عمران (6-8)
+  3,   // حزب 7
+  3,   // حزب 8
+  4,   // حزب 9: النساء (9-11)
+  4,   // حزب 10
+  4,   // حزب 11
+  5,   // حزب 12: المائدة (12-13)
+  5,   // حزب 13
+  6,   // حزب 14: الأنعام (14-15)
+  6,   // حزب 15
+  7,   // حزب 16: الأعراف (16-18)
+  7,   // حزب 17
+  7,   // حزب 18
+  8,   // حزب 19: الأنفال
+  9,   // حزب 20: التوبة (20-21)
+  9,   // حزب 21
+  10,  // حزب 22: يونس
+  11,  // حزب 23: هود (23-24)
+  11,  // حزب 24
+  12,  // حزب 25: يوسف
+  13,  // حزب 26: الرعد
+  15,  // حزب 27: الحجر
+  16,  // حزب 28: النحل
+  17,  // حزب 29: الإسراء (29-30)
+  17,  // حزب 30
+  18,  // حزب 31: الكهف
+  20,  // حزب 32: طه
+  21,  // حزب 33: الأنبياء
+  22,  // حزب 34: الحج
+  23,  // حزب 35: المؤمنون
+  24,  // حزب 36: النور
+  25,  // حزب 37: الفرقان
+  26,  // حزب 38: الشعراء
+  27,  // حزب 39: النمل
+  28,  // حزب 40: القصص
+  29,  // حزب 41: العنكبوت
+  31,  // حزب 42: لقمان
+  33,  // حزب 43: الأحزاب
+  34,  // حزب 44: سبأ
+  36,  // حزب 45: يس
+  37,  // حزب 46: الصافات
+  39,  // حزب 47: الزمر
+  40,  // حزب 48: غافر
+  41,  // حزب 49: فصلت
+  43,  // حزب 50: الزخرف
+  46,  // حزب 51: الأحقاف
+  48,  // حزب 52: الفتح
+  51,  // حزب 53: الذاريات
+  55,  // حزب 54: الرحمن
+  58,  // حزب 55: المجادلة
+  62,  // حزب 56: الجمعة
+  67,  // حزب 57: الملك
+  72,  // حزب 58: الجن
+  78,  // حزب 59: النبأ
+  87   // حزب 60: الأعلى
+]; // length = 60
+
+/**
+ * يحسب عدد الأحزاب الكاملة المحفوظة لطالب معيّن.
+ * المنطق: نجمع كل السور التي حفظها الطالب كاملاً (حفظ جديد)
+ * ثم نتحقق أي الأحزاب تحققت كاملاً وفق HIZB_START.
+ * حزب مكتمل = جميع السور الواقعة بين بداية هذا الحزب وبداية الحزب التالي محفوظة.
+ */
+function calcHizb(sid){
+  // نجمع الآيات المحفوظة لكل سورة
+  const surahV={};
+  S.recitations.filter(r=>r.student_id===sid&&r.type==='حفظ جديد').forEach(r=>{
+    // نعالج كل سجل: من surah_from/verse_from إلى surah_to/verse_to
+    // نحتسب السور الكاملة فقط (لأن verse_from=1 وverse_to=عدد آياتها)
+    for(let sn=Math.min(r.surah_from||r.surah_to,r.surah_to||r.surah_from);
+            sn<=Math.max(r.surah_from||r.surah_to,r.surah_to||r.surah_from);sn++){
+      const sr=SURAHS.find(x=>x.n===sn);
+      if(!sr)continue;
+      surahV[sn]=(surahV[sn]||0)+(r.verses_count||0);
+    }
+  });
+  // مجموعة السور الكاملة (بنسبة ≥ 95% من آياتها لاستيعاب الفروق)
+  const done=new Set();
+  SURAHS.forEach(sr=>{if((surahV[sr.n]||0)>=Math.ceil(sr.v*0.95))done.add(sr.n)});
+  // نحسب كم حزباً مكتملاً
+  let count=0;
+  for(let h=0;h<60;h++){
+    const startSurah=HIZB_START[h];
+    const endSurah=(h<59)?HIZB_START[h+1]-1:114;
+    // السور التي يشملها هذا الحزب
+    let allDone=true;
+    for(let sn=startSurah;sn<=endSurah;sn++){
+      if(!SURAHS.find(x=>x.n===sn))continue; // سورة غير موجودة في القائمة تُتجاوز
+      if(!done.has(sn)){allDone=false;break;}
+    }
+    if(allDone)count++;
+  }
+  return count;
+}
+
+/**
+ * نسخة مبسطة للإحصائيات الإجمالية: مجموع الأحزاب عبر جميع الطلبة.
+ * تستخدم تقديراً بسيطاً بدلاً من حساب الأحزاب الكاملة فرداً فرداً.
+ */
+function calcTotalHizb(studentsList){
+  return studentsList.reduce((a,s)=>a+calcHizb(s.id),0);
+}
+
 // ===================== UTILS =====================
 function $(id){return document.getElementById(id)}
 function fmtDate(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('ar-MA',{day:'2-digit',month:'2-digit',year:'numeric'})}catch{return d}}
@@ -1464,13 +1576,22 @@ function renderDash(){
   $('dash-title').textContent='مرحباً، '+(S.profile?.name?.split(' ')[0]||'')+' 👋';
   $('dash-date').textContent=now.toLocaleDateString('ar-MA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const todayStr=today();
-  const todayAtt=S.attendance.filter(a=>a.date===todayStr);
-  const totalV=S.recitations.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
+  const myS=myStudents();
+  const myG=myGroups();
+  const myGroupIds=new Set(myG.map(g=>g.id));
+  // حضور اليوم مقيّد بحلقات المستخدم
+  const todayAtt=S.attendance.filter(a=>a.date===todayStr&&myGroupIds.has(a.group_id));
+  const presentToday=todayAtt.filter(a=>a.status==='حاضر').length;
+  const absentToday=todayAtt.filter(a=>a.status==='غائب'||a.status==='بعذر').length;
+  const totalV=S.recitations.filter(r=>r.type==='حفظ جديد'&&myS.some(s=>s.id===r.student_id)).reduce((a,r)=>a+(r.verses_count||0),0);
+  const totalHizb=calcTotalHizb(myS);
   $('dash-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-user-graduate"></i></div><div><div class="stat-h">${myStudents().length}</div><div class="stat-p">الطلبة</div></div></div>
-    <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-users"></i></div><div><div class="stat-h">${myGroups().length}</div><div class="stat-p">الحلقات</div></div></div>
-    <div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-clipboard-check"></i></div><div><div class="stat-h">${todayAtt.filter(a=>a.status==='حاضر').length}</div><div class="stat-p">حاضرون اليوم</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-user-graduate"></i></div><div><div class="stat-h">${myS.length}</div><div class="stat-p">الطلبة</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-users"></i></div><div><div class="stat-h">${myG.length}</div><div class="stat-p">الحلقات</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-clipboard-check"></i></div><div><div class="stat-h">${presentToday}</div><div class="stat-p">حاضرون اليوم</div></div></div>
+    <div class="stat-card" style="border-right:3px solid #ef4444"><div class="stat-ic" style="background:#fee2e2"><i class="fas fa-user-times" style="color:#dc2626"></i></div><div><div class="stat-h" style="color:#dc2626">${absentToday}</div><div class="stat-p">غائبون اليوم</div></div></div>
     <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-quran"></i></div><div><div class="stat-h">${totalV.toLocaleString()}</div><div class="stat-p">آيات محفوظة</div></div></div>
+    <div class="stat-card" style="border-right:3px solid var(--primary)"><div class="stat-ic ic-purple"><i class="fas fa-book-reader"></i></div><div><div class="stat-h">${totalHizb}</div><div class="stat-p">أحزاب محفوظة</div></div></div>
   `;
   // Chart
   const days7=[];
@@ -1944,7 +2065,8 @@ function renderReports(){
 
   const totalV=myRecs.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
   const avgAtt=myAtt.length?Math.round(myAtt.filter(a=>a.status==='حاضر').length/myAtt.length*100):0;
-  $('rep-stats').innerHTML=`<div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-quran"></i></div><div><div class="stat-h">${totalV.toLocaleString()}</div><div class="stat-p">آيات محفوظة</div></div></div><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-book"></i></div><div><div class="stat-h">${Math.floor(totalV/600)}</div><div class="stat-p">أحزاب</div></div></div><div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-percentage"></i></div><div><div class="stat-h">${avgAtt}%</div><div class="stat-p">متوسط الحضور</div></div></div><div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-star"></i></div><div><div class="stat-h">${myRecs.length}</div><div class="stat-p">جلسات التسميع</div></div></div>`;
+  const totalHizb=calcTotalHizb(myS);
+  $('rep-stats').innerHTML=`<div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-quran"></i></div><div><div class="stat-h">${totalV.toLocaleString()}</div><div class="stat-p">آيات محفوظة</div></div></div><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-book-reader"></i></div><div><div class="stat-h">${totalHizb}</div><div class="stat-p">أحزاب محفوظة</div></div></div><div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-percentage"></i></div><div><div class="stat-h">${avgAtt}%</div><div class="stat-p">متوسط الحضور</div></div></div><div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-star"></i></div><div><div class="stat-h">${myRecs.length}</div><div class="stat-p">جلسات التسميع</div></div></div>`;
   $('rep-charts').innerHTML=`<div class="card"><div class="card-head"><h3>نسبة الحضور حسب الحلقة</h3></div><div class="card-body">${myG.map(g=>{const ga=myAtt.filter(a=>a.group_id===g.id);const rate=ga.length?Math.round(ga.filter(a=>a.status==='حاضر').length/ga.length*100):0;return`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${g.name}</span><span style="font-weight:700;color:var(--primary)">${rate}%</span></div><div class="prog"><div class="prog-bar" style="width:${rate}%"></div></div></div>`}).join('')||'<p style="color:var(--text3)">لا توجد بيانات</p>'}</div></div>
   <div class="card"><div class="card-head"><h3>الحفظ حسب الحلقة</h3></div><div class="card-body">${myG.map(g=>{const gs=myS.filter(s=>s.group_id===g.id);const tv=myRecs.filter(r=>r.type==='حفظ جديد'&&gs.some(s=>s.id===r.student_id)).reduce((a,r)=>a+(r.verses_count||0),0);return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9"><span style="font-size:13px">${g.name}</span><span class="bx bx-g">${tv.toLocaleString()} آية</span></div>`}).join('')||'<p style="color:var(--text3)">لا توجد بيانات</p>'}</div></div>`;
   $('rep-s-sel').innerHTML='<option value="">—</option>'+myS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
@@ -1965,7 +2087,7 @@ function loadStudentRep(){
 function loadGroupRep(){
   const gid=$('rep-g-sel').value;if(!gid){$('rep-g-content').innerHTML='';return}
   const g=S.groups.find(x=>x.id===gid);const gs=S.students.filter(s=>s.group_id===gid);
-  $('rep-g-content').innerHTML=`<div class="card"><div class="card-head"><h3>${g?.name}</h3></div><div class="tbl-wrap"><table><thead><tr><th>الطالب</th><th>المستوى</th><th>الآيات</th><th>الأحزاب</th><th>الحضور</th><th>النجوم</th></tr></thead><tbody>${gs.map(s=>{const v=getTotalV(s.id),att=getAttRate(s.id),stars=getStars(s.id);return`<tr><td><strong>${s.name}</strong></td><td>${s.level||'—'}</td><td>${v}</td><td>${Math.floor(v/600)}</td><td><div style="display:flex;align-items:center;gap:6px"><div class="prog" style="width:60px"><div class="prog-bar" style="width:${att}%"></div></div>${att}%</div></td><td style="color:#d97706;font-weight:700">${stars}⭐</td></tr>`}).join('')}</tbody></table></div></div>`;
+  $('rep-g-content').innerHTML=`<div class="card"><div class="card-head"><h3>${g?.name}</h3></div><div class="tbl-wrap"><table><thead><tr><th>الطالب</th><th>المستوى</th><th>الآيات</th><th>الأحزاب</th><th>الحضور</th><th>النجوم</th></tr></thead><tbody>${gs.map(s=>{const v=getTotalV(s.id),att=getAttRate(s.id),stars=getStars(s.id);return`<tr><td><strong>${s.name}</strong></td><td>${s.level||'—'}</td><td>${v}</td><td>${calcHizb(s.id)}</td><td><div style="display:flex;align-items:center;gap:6px"><div class="prog" style="width:60px"><div class="prog-bar" style="width:${att}%"></div></div>${att}%</div></td><td style="color:#d97706;font-weight:700">${stars}⭐</td></tr>`}).join('')}</tbody></table></div></div>`;
 }
 function loadHifzMap(){
   const sid=$('rep-h-sel').value;if(!sid){$('rep-h-content').innerHTML='';return}
@@ -2142,7 +2264,7 @@ function exportStudentPDF(){
 function exportGroupPDF(){
   const gid=$('rep-g-sel').value;if(!gid){toast('اختر حلقة','warn');return}
   const g=S.groups.find(x=>x.id===gid);const gs=S.students.filter(s=>s.group_id===gid);
-  const rows=gs.map(s=>{const v=getTotalV(s.id),att=getAttRate(s.id),stars=getStars(s.id);return`<tr><td>${s.name}</td><td>${s.level||'—'}</td><td>${v}</td><td>${Math.floor(v/600)}</td><td>${att}%</td><td>${stars}</td></tr>`}).join('');
+  const rows=gs.map(s=>{const v=getTotalV(s.id),att=getAttRate(s.id),stars=getStars(s.id);return`<tr><td>${s.name}</td><td>${s.level||'—'}</td><td>${v}</td><td>${calcHizb(s.id)}</td><td>${att}%</td><td>${stars}</td></tr>`}).join('');
   makePDF(`تقرير حلقة: ${g?.name}`,`<div><span class="sb"><h3>${gs.length}</h3><p>الطلبة</p></span></div><table><thead><tr><th>الطالب</th><th>المستوى</th><th>الآيات</th><th>الأحزاب</th><th>الحضور</th><th>النجوم</th></tr></thead><tbody>${rows}</tbody></table>`);
 }
 
