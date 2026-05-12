@@ -958,7 +958,7 @@ textarea{resize:vertical;min-height:80px}
       <input type="hidden" id="s-id">
       <div class="fgrid">
         <div class="fg"><label>الاسم الكامل *</label><input id="s-name" placeholder="اسم الطالب"></div>
-        <div class="fg"><label>الحلقة *</label><select id="s-group"><option value="">— اختر الحلقة —</option></select></div>
+        <div class="fg"><label>الحلقة *</label><select id="s-group" onchange="onGroupSelectChange()"><option value="">— اختر الحلقة —</option></select><small id="s-teacher-hint" style="color:var(--primary);font-size:12px;margin-top:4px;display:block"></small></div>
         <div class="fg"><label>هاتف ولي الأمر</label><input id="s-phone" type="tel" placeholder="0612345678"></div>
         <div class="fg"><label>اسم ولي الأمر</label><input id="s-parent" placeholder="اسم الأب/الأم"></div>
         <div class="fg"><label>تاريخ الميلاد</label><input id="s-dob" type="date"></div>
@@ -1341,7 +1341,10 @@ function myGroups(){
 }
 function myStudents(){
   const r=S.profile?.role;
-  return(r==='admin'||r==='supervisor')?S.students:S.students.filter(s=>s.teacher_id===S.profile?.id);
+  if(r==='admin'||r==='supervisor')return S.students;
+  // الأستاذ يرى طلبة حلقاته فقط — الربط عبر group_id
+  const myGroupIds=new Set(myGroups().map(g=>g.id));
+  return S.students.filter(s=>myGroupIds.has(s.group_id));
 }
 function groupName(id){return S.groups.find(g=>g.id===id)?.name||'—'}
 function teacherName(id){return S.teachers.find(t=>t.id===id)?.name||'—'}
@@ -1388,11 +1391,31 @@ async function doLogin(){
     S.user=data.user;
     await loadProfile();
     await loadData();
+    await fixStudentTeacherLinks();
     showApp();
   }catch(e){err.textContent='خطأ في الاتصال: '+e.message;err.style.display='block'}
   finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-sign-in-alt"></i> دخول'}
 }
 
+/**
+ * يُصلح الربط القديم: يُحدّث teacher_id لكل الطلبة
+ * بناءً على teacher_id الحلقة التي ينتمون إليها.
+ * تُستدعى تلقائياً عند أول دخول للمشرف/المدير بعد التحديث.
+ */
+async function fixStudentTeacherLinks(){
+  try{
+    const r=S.profile?.role;
+    if(r!=='admin'&&r!=='supervisor')return;
+    for(const g of S.groups){
+      if(!g.teacher_id)continue;
+      // طلبة هذه الحلقة الذين teacher_id الخاص بهم مختلف
+      const wrong=S.students.filter(s=>s.group_id===g.id&&s.teacher_id!==g.teacher_id);
+      if(wrong.length===0)continue;
+      await db.from('students').update({teacher_id:g.teacher_id}).eq('group_id',g.id);
+      S.students=S.students.map(s=>s.group_id===g.id?{...s,teacher_id:g.teacher_id}:s);
+    }
+  }catch(e){console.warn('fixStudentTeacherLinks:',e.message)}
+}
 async function doLogout(){
   try{await db.auth.signOut()}catch(e){}
   if(S._sessionInterval){clearInterval(S._sessionInterval);S._sessionInterval=null;}
@@ -1435,11 +1458,20 @@ async function loadData(){
     // Teachers
     const{data:t}=await db.from('profiles').select('*');
     S.teachers=t||[];
-    // Students
+    // Students — الأستاذ يرى طلبة حلقاته عبر group_id وليس teacher_id مباشرة
     let sq=db.from('students').select('*').eq('is_summer',false).order('name');
-    if(!isAdmin&&S.profile?.id)sq=sq.eq('teacher_id',S.profile.id);
-    const{data:s}=await sq;
-    S.students=s||[];
+    if(!isAdmin&&S.profile?.id){
+      // نجلب أولاً معرّفات حلقاته
+      const myGroupIds=(S.groups||[]).filter(g=>g.teacher_id===S.profile.id).map(g=>g.id);
+      if(myGroupIds.length>0){
+        sq=sq.in('group_id',myGroupIds);
+      }else{
+        // لا حلقات له → لا طلبة
+        S.students=[];
+        sq=null;
+      }
+    }
+    if(sq){const{data:s}=await sq;S.students=s||[];}
     // Attendance last 30 days
     const d30=new Date();d30.setDate(d30.getDate()-30);
     const{data:a}=await db.from('attendance').select('*').gte('date',d30.toISOString().split('T')[0]).order('date',{ascending:false});
@@ -1491,6 +1523,7 @@ async function checkAuth(){
       S.user=session.user;
       await loadProfile();
       await loadData();
+      await fixStudentTeacherLinks();
       showApp();
     }
   }catch(e){console.error('checkAuth:',e)}
@@ -1683,10 +1716,22 @@ async function saveGroup(){
   const schedule=getSchedule();
   const days=schedule.map(s=>s.day);
   if(!days.length){toast('اختر يوماً واحداً على الأقل','warn');return}
-  const data={name,teacher_id:$('g-teacher').value||null,level:$('g-level').value,schedule,days,notes:$('g-notes').value};
+  const newTeacherId=$('g-teacher').value||null;
+  const data={name,teacher_id:newTeacherId,level:$('g-level').value,schedule,days,notes:$('g-notes').value};
   try{
-    if(id){const{error}=await db.from('groups').update(data).eq('id',id);if(error)throw error;S.groups=S.groups.map(g=>g.id===id?{...g,...data}:g)}
-    else{const{data:ng,error}=await db.from('groups').insert({...data,is_summer:false}).select().single();if(error)throw error;S.groups.push(ng)}
+    if(id){
+      const{error}=await db.from('groups').update(data).eq('id',id);
+      if(error)throw error;
+      S.groups=S.groups.map(g=>g.id===id?{...g,...data}:g);
+      // تحديث teacher_id لجميع طلبة هذه الحلقة تلقائياً
+      if(newTeacherId){
+        await db.from('students').update({teacher_id:newTeacherId}).eq('group_id',id);
+        S.students=S.students.map(s=>s.group_id===id?{...s,teacher_id:newTeacherId}:s);
+      }
+    }else{
+      const{data:ng,error}=await db.from('groups').insert({...data,is_summer:false}).select().single();
+      if(error)throw error;S.groups.push(ng);
+    }
     closeM('m-group');renderGroups();fillSelects();toast('تم حفظ الحلقة','ok');
   }catch(e){toast('خطأ: '+e.message,'err')}
 }
@@ -1758,9 +1803,16 @@ function openStudentModal(id){
       $('s-dob').value=s.dob||'';$('s-gender').value=s.gender||'ذكر';$('s-level').value=s.level||'تمهيدي';
       $('s-join').value=s.join_date||'';$('s-photo').value=s.photo_url||'';$('s-notes').value=s.notes||'';
       $('s-group').value=s.group_id||'';
+      onGroupSelectChange();
     }
   }
   openM('m-student');
+}
+function onGroupSelectChange(){
+  const gid=$('s-group').value;
+  const g=S.groups.find(x=>x.id===gid);
+  const hint=$('s-teacher-hint');
+  if(hint){hint.textContent=g&&g.teacher_id?'الأستاذ: '+teacherName(g.teacher_id):'';}
 }
 async function saveStudent(){
   const id=$('s-id').value;
@@ -1768,7 +1820,10 @@ async function saveStudent(){
   if(!name){toast('أدخل اسم الطالب','warn');return}
   const gid=$('s-group').value;
   if(!gid){toast('اختر الحلقة','warn');return}
-  const data={name,group_id:gid,phone:$('s-phone').value.trim(),parent_name:$('s-parent').value.trim(),dob:$('s-dob').value||null,gender:$('s-gender').value,level:$('s-level').value,join_date:$('s-join').value||null,photo_url:$('s-photo').value.trim()||null,notes:$('s-notes').value,teacher_id:S.profile?.id,is_summer:false};
+  // teacher_id يُؤخذ من الحلقة المختارة وليس من المستخدم الحالي
+  const selectedGroup=S.groups.find(g=>g.id===gid);
+  const teacherId=selectedGroup?.teacher_id||S.profile?.id||null;
+  const data={name,group_id:gid,phone:$('s-phone').value.trim(),parent_name:$('s-parent').value.trim(),dob:$('s-dob').value||null,gender:$('s-gender').value,level:$('s-level').value,join_date:$('s-join').value||null,photo_url:$('s-photo').value.trim()||null,notes:$('s-notes').value,teacher_id:teacherId,is_summer:false};
   try{
     if(id){const{error}=await db.from('students').update(data).eq('id',id);if(error)throw error;S.students=S.students.map(s=>s.id===id?{...s,...data}:s)}
     else{const{data:ns,error}=await db.from('students').insert(data).select().single();if(error)throw error;S.students.push(ns)}
