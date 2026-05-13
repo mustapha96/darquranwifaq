@@ -856,6 +856,7 @@ textarea{resize:vertical;min-height:80px}
           <div class="fg" style="flex:1;min-width:160px"><label>التاريخ</label><input type="date" id="att-date" onchange="loadAttList()"></div>
           <button class="btn btn-s" onclick="saveAtt()"><i class="fas fa-save"></i> حفظ الحضور</button>
           <button class="btn btn-g" onclick="setAllAtt('حاضر')"><i class="fas fa-check-double"></i> الكل حاضر</button>
+          <button class="btn" style="background:#25d366;color:#fff" onclick="sendAbsenceBulk()" title="إرسال تنبيه غياب لجميع الغائبين"><i class="fab fa-whatsapp"></i> إرسال تنبيه الغياب</button>
         </div></div></div>
         <div id="att-summary" style="margin-bottom:12px"></div>
         <div class="card"><div class="card-head"><h3 id="att-title">قائمة الطلبة</h3></div><div id="att-list"></div></div>
@@ -893,7 +894,7 @@ textarea{resize:vertical;min-height:80px}
         <div class="tab-pane" id="rep-student">
           <div class="card" style="margin-bottom:16px"><div class="card-body"><div class="fg"><label>اختر الطالب</label><select id="rep-s-sel" onchange="loadStudentRep()"><option value="">—</option></select></div></div></div>
           <div id="rep-s-content"></div>
-          <div style="margin-top:12px"><button class="btn btn-p btn-sm" onclick="exportStudentPDF()"><i class="fas fa-file-pdf"></i> تصدير PDF</button></div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" onclick="exportStudentPDF()"><i class="fas fa-file-pdf"></i> تصدير PDF</button><button class="btn btn-sm" style="background:#25d366;color:#fff" onclick="sendRepWA()"><i class="fab fa-whatsapp"></i> إرسال تقرير واتساب</button></div>
         </div>
         <div class="tab-pane" id="rep-group">
           <div class="card" style="margin-bottom:16px"><div class="card-body"><div class="fg"><label>اختر الحلقة</label><select id="rep-g-sel" onchange="loadGroupRep()"><option value="">—</option></select></div></div></div>
@@ -1380,6 +1381,33 @@ const S = {
   manualStars:[], sessionGroupId:null, _sessionInterval:null,
   _certs:[]
 };
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   إنشاء جدول الامتحانات في Supabase — نفّذ هذا SQL مرة واحدة:
+
+   create table if not exists public.exams (
+     id            text primary key,
+     student_id    uuid references public.students(id) on delete cascade,
+     student_name  text,
+     group_id      uuid references public.groups(id) on delete set null,
+     group_name    text,
+     teacher_id    uuid references public.profiles(id) on delete set null,
+     date          date not null default current_date,
+     questions_count int default 0,
+     total_itqan   numeric default 0,
+     total_adaa    numeric default 0,
+     avg_itqan     numeric default 0,
+     avg_adaa      numeric default 0,
+     avg           numeric default 0,
+     pct           int default 0,
+     max_per_q     int default 20,
+     details       jsonb default '[]',
+     created_at    timestamptz default now()
+   );
+   alter table public.exams enable row level security;
+   create policy "auth users can manage exams"
+     on public.exams for all using (auth.uid() is not null);
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 let EXAMS_DB = []; // سجل محلي للامتحانات - يُحمَّل من Supabase عند الدخول
 
 // ===================== IMAGE FALLBACK =====================
@@ -1498,30 +1526,48 @@ const HIZB_START = [
  * حزب مكتمل = جميع السور الواقعة بين بداية هذا الحزب وبداية الحزب التالي محفوظة.
  */
 function calcHizb(sid){
-  // نجمع الآيات المحفوظة لكل سورة
+  // نجمع الآيات المحفوظة لكل سورة بشكل صحيح
   const surahV={};
   S.recitations.filter(r=>r.student_id===sid&&r.type==='حفظ جديد').forEach(r=>{
-    // نعالج كل سجل: من surah_from/verse_from إلى surah_to/verse_to
-    // نحتسب السور الكاملة فقط (لأن verse_from=1 وverse_to=عدد آياتها)
-    for(let sn=Math.min(r.surah_from||r.surah_to,r.surah_to||r.surah_from);
-            sn<=Math.max(r.surah_from||r.surah_to,r.surah_to||r.surah_from);sn++){
-      const sr=SURAHS.find(x=>x.n===sn);
-      if(!sr)continue;
-      surahV[sn]=(surahV[sn]||0)+(r.verses_count||0);
+    const from=r.surah_from||r.surah_to;
+    const to=r.surah_to||r.surah_from;
+    if(!from||!to) return;
+    const sMin=Math.min(from,to), sMax=Math.max(from,to);
+    if(sMin===sMax){
+      // نفس السورة — نضيف الآيات مباشرة
+      surahV[sMin]=(surahV[sMin]||0)+(r.verses_count||0);
+    } else {
+      // نطاق سور — نحتسب كل سورة كاملة ما عدا الأولى والأخيرة
+      const srFirst=SURAHS.find(x=>x.n===sMin);
+      const srLast=SURAHS.find(x=>x.n===sMax);
+      // السورة الأولى: آيات من verse_from إلى نهايتها
+      if(srFirst){
+        const vFrom=r.verse_from||1;
+        surahV[sMin]=(surahV[sMin]||0)+(srFirst.v-vFrom+1);
+      }
+      // السور الوسطى: كاملة
+      for(let sn=sMin+1;sn<sMax;sn++){
+        const sr=SURAHS.find(x=>x.n===sn);
+        if(sr) surahV[sn]=(surahV[sn]||0)+sr.v;
+      }
+      // السورة الأخيرة: من البداية إلى verse_to
+      if(srLast){
+        const vTo=r.verse_to||srLast.v;
+        surahV[sMax]=(surahV[sMax]||0)+vTo;
+      }
     }
   });
-  // مجموعة السور الكاملة (بنسبة ≥ 95% من آياتها لاستيعاب الفروق)
+  // السور التي اكتمل حفظها (≥ 95% من آياتها)
   const done=new Set();
   SURAHS.forEach(sr=>{if((surahV[sr.n]||0)>=Math.ceil(sr.v*0.95))done.add(sr.n)});
-  // نحسب كم حزباً مكتملاً
+  // عدد الأحزاب المكتملة
   let count=0;
   for(let h=0;h<60;h++){
     const startSurah=HIZB_START[h];
     const endSurah=(h<59)?HIZB_START[h+1]-1:114;
-    // السور التي يشملها هذا الحزب
     let allDone=true;
     for(let sn=startSurah;sn<=endSurah;sn++){
-      if(!SURAHS.find(x=>x.n===sn))continue; // سورة غير موجودة في القائمة تُتجاوز
+      if(!SURAHS.find(x=>x.n===sn))continue;
       if(!done.has(sn)){allDone=false;break;}
     }
     if(allDone)count++;
@@ -1530,12 +1576,17 @@ function calcHizb(sid){
 }
 
 /**
- * نسخة مبسطة للإحصائيات الإجمالية: مجموع الأحزاب عبر جميع الطلبة.
- * تستخدم تقديراً بسيطاً بدلاً من حساب الأحزاب الكاملة فرداً فرداً.
+ * مجموع الأحزاب لقائمة طلبة — مع cache لتجنب الحسابات المتكررة
  */
 function calcTotalHizb(studentsList){
-  return studentsList.reduce((a,s)=>a+calcHizb(s.id),0);
+  if(!S._hizbCache) S._hizbCache={};
+  return studentsList.reduce((a,s)=>{
+    if(S._hizbCache[s.id]===undefined) S._hizbCache[s.id]=calcHizb(s.id);
+    return a+S._hizbCache[s.id];
+  },0);
 }
+// مسح الـ cache عند تحديث البيانات
+function clearHizbCache(){S._hizbCache={}}
 
 // ===================== UTILS =====================
 function $(id){return document.getElementById(id)}
@@ -1548,8 +1599,8 @@ function toast(msg,type=''){
   $('toasts').appendChild(el);
   setTimeout(()=>el.remove(),3500);
 }
-function openM(id){$(id).classList.add('open')}
-function closeM(id){$(id).classList.remove('open')}
+function openM(id){const el=$(id)||document.querySelector('#'+id);if(el)el.classList.add('open')}
+function closeM(id){const el=$(id)||document.querySelector('#'+id);if(el)el.classList.remove('open')}
 // close overlay on click outside
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 
@@ -1705,11 +1756,35 @@ async function loadData(){
     if(isAdmin){const{data:f}=await db.from('finance').select('*').order('date',{ascending:false}).limit(200);S.finance=f||[]}
     // Stars
     try{const{data:ms}=await db.from('student_stars').select('*').order('date',{ascending:false}).limit(500);S.manualStars=ms||[]}catch{S.manualStars=[]}
-    // Exams - تحميل نتائج الامتحانات المحفوظة
+    // Exams — يُجلب من جدول exams مع تصفية بالصلاحيات
     try{
-      const{data:exData}=await db.from('settings').select('*').like('key','exam_%').order('created_at',{ascending:false}).limit(200);
-      if(exData&&exData.length){
-        EXAMS_DB=exData.map(row=>{try{return JSON.parse(row.value)}catch{return null}}).filter(Boolean);
+      const isAdminOrSup = S.profile?.role==='admin'||S.profile?.role==='supervisor';
+      let exQ = db.from('exams').select('*').order('date',{ascending:false}).limit(500);
+      // الأستاذ يرى امتحانات طلبته فقط (عبر teacher_id)
+      if(!isAdminOrSup && S.profile?.id){
+        exQ = exQ.eq('teacher_id', S.profile.id);
+      }
+      const {data:exRows, error:exErr} = await exQ;
+      if(!exErr && exRows?.length){
+        // جدول exams موجود ويعمل
+        EXAMS_DB = exRows.map(row=>({
+          ...row,
+          details: Array.isArray(row.details) ? row.details : (typeof row.details==='string'?JSON.parse(row.details):[])
+        }));
+      } else {
+        // fallback: جلب من settings (للبيانات القديمة)
+        const {data:exData} = await db.from('settings')
+          .select('*').like('key','exam_%')
+          .order('created_at',{ascending:false}).limit(200);
+        if(exData?.length){
+          let allExams = exData.map(row=>{try{return JSON.parse(row.value)}catch{return null}}).filter(Boolean);
+          // تصفية يدوية للأستاذ باستخدام group_id
+          if(!isAdminOrSup && S.profile?.id){
+            const myGids = new Set((S.groups||[]).filter(g=>g.teacher_id===S.profile.id).map(g=>g.id));
+            allExams = allExams.filter(e=>myGids.has(e.group_id)||e.teacher_id===S.profile.id);
+          }
+          EXAMS_DB = allExams;
+        }
       }
     }catch(e){console.log('exams load:',e.message)}
   }catch(e){console.error('loadData:',e);toast('تحذير: '+e.message,'warn')}
@@ -2079,14 +2154,14 @@ function renderStudents(){
     $('students-grid').innerHTML=list.length?list.map(s=>{
       const g=S.groups.find(x=>x.id===s.group_id);
       const att=getAttRate(s.id),v=getTotalV(s.id),stars=getStars(s.id);
-      return`<div class="s-card" onclick="openSDetail('${s.id}')"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="s-av">${s.photo_url?`<img src="${s.photo_url}">`:(s.name[0]||'؟')}</div><div><h4 style="font-size:14px;font-weight:700">${s.name}</h4><p style="font-size:12px;color:var(--text3)">${g?.name||'—'}</p></div></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="bx bx-b" style="font-size:10px">${s.level||'—'}</span><span style="font-size:13px;color:#d97706;font-weight:700">${stars}⭐</span></div><div style="margin-bottom:4px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>الحضور</span><span>${att}%</span></div><div class="prog"><div class="prog-bar" style="width:${att}%"></div></div></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px;color:var(--text3)"><span><i class="fas fa-quran" style="color:var(--accent)"></i> ${v} آية</span><button onclick="event.stopPropagation();sendWA('${s.phone||''}','${s.name.replace(/'/g,'')}')" style="background:none;border:none;cursor:pointer;color:#25d366;font-size:16px"><i class="fab fa-whatsapp"></i></button></div></div>`;
+      return`<div class="s-card" onclick="openSDetail('${s.id}')"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="s-av">${s.photo_url?`<img src="${s.photo_url}">`:(s.name[0]||'؟')}</div><div><h4 style="font-size:14px;font-weight:700">${s.name}</h4><p style="font-size:12px;color:var(--text3)">${g?.name||'—'}</p></div></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="bx bx-b" style="font-size:10px">${s.level||'—'}</span><span style="font-size:13px;color:#d97706;font-weight:700">${stars}⭐</span></div><div style="margin-bottom:4px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>الحضور</span><span>${att}%</span></div><div class="prog"><div class="prog-bar" style="width:${att}%"></div></div></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px;color:var(--text3)"><span><i class="fas fa-quran" style="color:var(--accent)"></i> ${v} آية</span>${s.phone?`<button onclick="event.stopPropagation();openWAReportModal('${s.id}')" style="background:none;border:none;cursor:pointer;color:#25d366;font-size:16px" title="إرسال تقرير واتساب"><i class="fab fa-whatsapp"></i></button>`:'<span></span>'}</div></div>`;
     }).join(''):'<div class="empty" style="grid-column:1/-1"><i class="fas fa-user-graduate"></i><p>لا يوجد طلبة</p></div>';
   }else{
     $('s-thead').innerHTML='<tr><th>الاسم</th><th>الحلقة</th><th>المستوى</th><th>الحضور</th><th>الآيات</th><th>النجوم</th><th>إجراءات</th></tr>';
     $('s-tbody').innerHTML=list.map(s=>{
       const g=S.groups.find(x=>x.id===s.group_id);
       const att=getAttRate(s.id),v=getTotalV(s.id),stars=getStars(s.id);
-      return`<tr><td><div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="openSDetail('${s.id}')"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${s.name[0]}</div><strong>${s.name}</strong></div></td><td>${g?.name||'—'}</td><td><span class="bx bx-b">${s.level||'—'}</span></td><td><div style="display:flex;align-items:center;gap:6px"><div class="prog" style="width:60px"><div class="prog-bar" style="width:${att}%"></div></div>${att}%</div></td><td>${v}</td><td style="color:#d97706;font-weight:700">${stars}⭐</td><td><div style="display:flex;gap:3px"><button class="btn btn-g btn-sm btn-ic" onclick="openStudentModal('${s.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-g btn-sm btn-ic" style="color:#25d366" onclick="sendWA('${s.phone||''}','${s.name}')"><i class="fab fa-whatsapp"></i></button><button class="btn btn-g btn-sm btn-ic" style="color:var(--danger)" onclick="delStudent('${s.id}')"><i class="fas fa-trash"></i></button></div></td></tr>`;
+      return`<tr><td><div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="openSDetail('${s.id}')"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${s.name[0]}</div><strong>${s.name}</strong></div></td><td>${g?.name||'—'}</td><td><span class="bx bx-b">${s.level||'—'}</span></td><td><div style="display:flex;align-items:center;gap:6px"><div class="prog" style="width:60px"><div class="prog-bar" style="width:${att}%"></div></div>${att}%</div></td><td>${v}</td><td style="color:#d97706;font-weight:700">${stars}⭐</td><td><div style="display:flex;gap:3px"><button class="btn btn-g btn-sm btn-ic" onclick="openStudentModal('${s.id}')"><i class="fas fa-edit"></i></button>${s.phone?`<button class="btn btn-sm btn-ic" style="background:#25d366;color:#fff" onclick="openWAReportModal('${s.id}')" title="إرسال تقرير"><i class="fab fa-whatsapp"></i></button>`:'<div style="width:34px"></div>'}<button class="btn btn-g btn-sm btn-ic" style="color:var(--danger)" onclick="delStudent('${s.id}')"><i class="fas fa-trash"></i></button></div></td></tr>`;
     }).join('');
   }
 }
@@ -2098,7 +2173,7 @@ function openSDetail(id){
   <div style="padding:20px"><div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-quran"></i></div><div><div class="stat-h">${v}</div><div class="stat-p">آيات</div></div></div><div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-percentage"></i></div><div><div class="stat-h">${att}%</div><div class="stat-p">الحضور</div></div></div><div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-star"></i></div><div><div class="stat-h">${stars}</div><div class="stat-p">نجوم</div></div></div><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-clipboard"></i></div><div><div class="stat-h">${S.recitations.filter(r=>r.student_id===id).length}</div><div class="stat-p">جلسات</div></div></div></div>
   ${q!==null?`<div style="margin-bottom:14px;padding:12px 16px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:600">جودة الحفظ</span><span style="font-size:13px;font-weight:700;color:#16a34a">${q}%</span></div><div class="prog"><div class="prog-bar grn" style="width:${q}%"></div></div></div>`:''}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:14px"><div style="padding:8px 12px;background:var(--bg);border-radius:8px"><b>ولي الأمر:</b> ${s.parent_name||'—'}</div><div style="padding:8px 12px;background:var(--bg);border-radius:8px"><b>الهاتف:</b> ${s.phone||'—'}</div><div style="padding:8px 12px;background:var(--bg);border-radius:8px"><b>الجنس:</b> ${s.gender||'—'}</div><div style="padding:8px 12px;background:var(--bg);border-radius:8px"><b>الالتحاق:</b> ${fmtDate(s.join_date)}</div></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-o btn-sm" onclick="openStudentModal('${id}');closeM('m-sdetail')"><i class="fas fa-edit"></i> تعديل</button>${s.phone?`<button class="wa-btn" onclick="sendWA('${s.phone}','${s.name}')"><i class="fab fa-whatsapp"></i> واتساب</button>`:''}</div></div>`;
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-o btn-sm" onclick="openStudentModal('${id}');closeM('m-sdetail')"><i class="fas fa-edit"></i> تعديل</button>${s.phone?`<button class="wa-btn" onclick="openWAReportModal('${id}')"><i class="fab fa-whatsapp"></i> تقرير واتساب</button><button class="wa-btn" style="background:#128c7e" onclick="openWAAbsenceModal('${id}')"><i class="fas fa-bell"></i> تنبيه غياب</button>`:''}</div></div>`;
   openM('m-sdetail');
 }
 
@@ -2126,7 +2201,7 @@ function loadAttList(){
   const p=todayAtt.filter(a=>a.status==='حاضر').length,l=todayAtt.filter(a=>a.status==='متأخر').length,ab=todayAtt.filter(a=>a.status==='غائب').length,ex=todayAtt.filter(a=>a.status==='بعذر').length;
   $('att-summary').innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><span class="bx bx-g" style="font-size:13px;padding:6px 14px">✅ ${p}</span><span class="bx bx-y" style="font-size:13px;padding:6px 14px">🕐 ${l}</span><span class="bx bx-r" style="font-size:13px;padding:6px 14px">❌ ${ab}</span><span class="bx bx-b" style="font-size:13px;padding:6px 14px">📝 ${ex}</span></div>`;
   if(!gStudents.length){$('att-list').innerHTML='<div class="empty" style="padding:30px"><i class="fas fa-user-graduate"></i><p>لا يوجد طلبة في هذا الحلقة</p></div>';return}
-  $('att-list').innerHTML=`<div style="padding:16px">${gStudents.map(s=>{const ex2=todayAtt.find(a=>a.student_id===s.id);const st=ex2?.status||'';return`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f1f5f9" data-sid="${s.id}"><div style="width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">${s.name[0]}</div><div style="flex:1;font-size:14px;font-weight:500">${s.name}</div><div style="display:flex;gap:5px"><button class="att-btn present ${st==='حاضر'?'on':''}" onclick="setAtt(this,'حاضر','${s.id}')" title="حاضر">✅</button><button class="att-btn late ${st==='متأخر'?'on':''}" onclick="setAtt(this,'متأخر','${s.id}')" title="متأخر">🕐</button><button class="att-btn absent ${st==='غائب'?'on':''}" onclick="setAtt(this,'غائب','${s.id}')" title="غائب">❌</button><button class="att-btn excused ${st==='بعذر'?'on':''}" onclick="setAtt(this,'بعذر','${s.id}')" title="بعذر">📝</button></div></div>`;}).join('')}</div>`;
+  $('att-list').innerHTML=`<div style="padding:16px">${gStudents.map(s=>{const ex2=todayAtt.find(a=>a.student_id===s.id);const st=ex2?.status||'';const isAbsent=st==='غائب'||st==='بعذر';return`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f1f5f9;${isAbsent?'background:#fff5f5;margin:0 -16px;padding:11px 16px;':''}" data-sid="${s.id}"><div style="width:34px;height:34px;border-radius:50%;background:${isAbsent?'#dc2626':'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">${s.name[0]}</div><div style="flex:1;font-size:14px;font-weight:500">${s.name}${s.phone&&isAbsent?`<span style="font-size:10px;color:#16a34a;margin-right:6px;vertical-align:middle" title="يوجد رقم"><i class="fab fa-whatsapp"></i></span>`:''}</div><div style="display:flex;gap:5px;align-items:center"><button class="att-btn present ${st==='حاضر'?'on':''}" onclick="setAtt(this,'حاضر','${s.id}')" title="حاضر">✅</button><button class="att-btn late ${st==='متأخر'?'on':''}" onclick="setAtt(this,'متأخر','${s.id}')" title="متأخر">🕐</button><button class="att-btn absent ${st==='غائب'?'on':''}" onclick="setAtt(this,'غائب','${s.id}')" title="غائب">❌</button><button class="att-btn excused ${st==='بعذر'?'on':''}" onclick="setAtt(this,'بعذر','${s.id}')" title="بعذر">📝</button>${s.phone&&isAbsent?`<button onclick="openWAAbsenceModal('${s.id}','${dt}')" style="width:30px;height:30px;background:#25d366;border:none;border-radius:50%;cursor:pointer;color:#fff;font-size:12px;flex-shrink:0" title="إرسال تنبيه الغياب"><i class="fab fa-whatsapp"></i></button>`:'<div style="width:30px"></div>'}</div></div>`;}).join('')}</div>`;
 }
 function setAtt(btn,status,sid){
   btn.closest('[data-sid]').querySelectorAll('.att-btn').forEach(b=>b.classList.remove('on'));
@@ -2157,6 +2232,14 @@ async function saveAtt(){
     records.forEach(r=>{const i=S.attendance.findIndex(a=>a.student_id===r.student_id&&a.date===r.date);if(i>=0)S.attendance[i]={...S.attendance[i],...r};else S.attendance.unshift(r)});
     toast(`✅ تم حفظ الحضور (${records.length} طالب)`,'ok');
     loadAttList();
+    // إذا كان هناك غائبون ولديهم أرقام → نعرض اقتراح إرسال التنبيهات
+    const absentWithPhone = records.filter(r=>{
+      if(r.status!=='غائب'&&r.status!=='بعذر') return false;
+      return S.students.find(s=>s.id===r.student_id)?.phone;
+    });
+    if(absentWithPhone.length){
+      toast(`📲 ${absentWithPhone.length} غائب — اضغط "إرسال تنبيه الغياب" لإخطار أولياء الأمور`,'warn');
+    }
   }catch(e){toast('خطأ: '+e.message,'err')}
 }
 
@@ -2253,6 +2336,7 @@ async function saveRec(){
       try{const{data:ms}=await db.from('student_stars').insert({student_id:sid,stars,reason:type,teacher_id:S.profile?.id,date:dt}).select().single();if(ms)S.manualStars.unshift(ms)}catch{}
     }
     closeM('m-rec');
+    clearHizbCache();
     toast(`✅ تم حفظ التسميع — ${grade}${stars>0?' | '+'⭐'.repeat(stars):''}`, 'ok');
     loadRecs();
   }catch(e){toast('خطأ: '+e.message,'err')}
@@ -2374,7 +2458,8 @@ function loadStudentRep(){
   $('rep-s-content').innerHTML=`<div style="background:linear-gradient(135deg,#0a1628,#1565c0);border-radius:12px;padding:24px;color:#fff;display:flex;align-items:center;gap:16px;margin-bottom:16px"><div style="width:60px;height:60px;border-radius:50%;border:3px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);font-size:22px;font-weight:800">${s.name[0]}</div><div style="flex:1"><h2 style="font-size:18px;font-weight:800">${s.name}</h2><p style="opacity:.75">${g?.name||'—'} • ${s.level||'—'}</p></div><div style="text-align:center"><div style="font-size:28px;font-weight:800;color:#fbbf24">${stars}⭐</div></div></div>
   <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-quran"></i></div><div><div class="stat-h">${v}</div><div class="stat-p">آيات</div></div></div><div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-percentage"></i></div><div><div class="stat-h">${att}%</div><div class="stat-p">الحضور</div></div></div><div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-star"></i></div><div><div class="stat-h">${stars}</div><div class="stat-p">نجوم</div></div></div><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-clipboard"></i></div><div><div class="stat-h">${recs.length}</div><div class="stat-p">جلسات</div></div></div></div>
   ${q!==null?`<div style="margin-bottom:14px;padding:12px 16px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:600">جودة الحفظ</span><span style="font-size:13px;font-weight:700;color:#16a34a">${q}%</span></div><div class="prog"><div class="prog-bar grn" style="width:${q}%"></div></div></div>`:''}
-  <div class="card"><div class="card-head"><h3>آخر سجلات الحفظ</h3></div><div class="tbl-wrap"><table><thead><tr><th>النوع</th><th>من</th><th>إلى</th><th>الآيات</th><th>التقييم</th><th>التاريخ</th></tr></thead><tbody>${recs.slice(0,10).map(r=>{const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);return`<tr><td><span class="bx ${r.type==='حفظ جديد'?'bx-g':'bx-b'}">${r.type}</span></td><td>${fs?.name||'—'} (${r.verse_from})</td><td>${ts?.name||'—'} (${r.verse_to})</td><td><strong>${r.verses_count}</strong></td><td>${r.grade||'—'}</td><td>${fmtDate(r.date)}</td></tr>`}).join('')}</tbody></table></div></div>`;
+  <div class="card"><div class="card-head"><h3>آخر سجلات الحفظ</h3></div><div class="tbl-wrap"><table><thead><tr><th>النوع</th><th>من</th><th>إلى</th><th>الآيات</th><th>التقييم</th><th>التاريخ</th></tr></thead><tbody>${recs.slice(0,10).map(r=>{const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);return`<tr><td><span class="bx ${r.type==='حفظ جديد'?'bx-g':'bx-b'}">${r.type}</span></td><td>${fs?.name||'—'} (${r.verse_from})</td><td>${ts?.name||'—'} (${r.verse_to})</td><td><strong>${r.verses_count}</strong></td><td>${r.grade||'—'}</td><td>${fmtDate(r.date)}</td></tr>`}).join('')}</tbody></table></div></div>
+  ${s.phone?`<div style="margin-top:12px;padding:14px 16px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><i class="fab fa-whatsapp" style="font-size:22px;color:#25d366"></i><span style="flex:1;font-size:13px;color:#166534">إرسال التقرير لولي الأمر: <strong>${s.parent_name||'ولي الأمر'}</strong> — ${s.phone}</span><button class="wa-btn" onclick="openWAReportModal('${sid}')"><i class="fab fa-whatsapp"></i> إرسال التقرير</button></div>`:'<div style="margin-top:8px" class="alert alert-w"><i class="fas fa-exclamation-triangle"></i> لا يوجد رقم هاتف لولي الأمر — أضفه في ملف الطالب</div>'}`;
 }
 function loadGroupRep(){
   const gid=$('rep-g-sel').value;if(!gid){$('rep-g-content').innerHTML='';return}
@@ -2544,6 +2629,11 @@ function exportGeneralPDF(){
   const rows=myG.map(g=>{const gs=myS.filter(s=>s.group_id===g.id);const gv=myRecs.filter(r=>r.type==='حفظ جديد'&&gs.some(s=>s.id===r.student_id)).reduce((a,r)=>a+(r.verses_count||0),0);const ga=myAtt.filter(a=>a.group_id===g.id);const gr=ga.length?Math.round(ga.filter(a=>a.status==='حاضر').length/ga.length*100):0;return`<tr><td>${g.name}</td><td>${gs.length}</td><td>${gv.toLocaleString()}</td><td>${gr}%</td></tr>`}).join('');
   makePDF('التقرير الإجمالي العام',`<div><span class="sb"><h3>${myS.length}</h3><p>الطلبة</p></span><span class="sb"><h3>${myG.length}</h3><p>الحلقات</p></span><span class="sb"><h3>${tv.toLocaleString()}</h3><p>الآيات</p></span><span class="sb"><h3>${aa}%</h3><p>الحضور</p></span></div><table><thead><tr><th>الحلقة</th><th>الطلبة</th><th>الآيات</th><th>الحضور</th></tr></thead><tbody>${rows}</tbody></table>`);
 }
+function sendRepWA(){
+  const sid=$('rep-s-sel').value;
+  if(!sid){toast('اختر طالباً أولاً','warn');return}
+  openWAReportModal(sid);
+}
 function exportStudentPDF(){
   const sid=$('rep-s-sel').value;if(!sid){toast('اختر طالباً','warn');return}
   const s=S.students.find(x=>x.id===sid);if(!s)return;
@@ -2566,12 +2656,22 @@ let EXAM_STATE = {
   maxPerQ: 20, answers: {}
 };
 
+function getMyExams(){
+  // تصفية الامتحانات بالصلاحيات محلياً (الـ loadData يجلبها مصفاة من DB)
+  const r=S.profile?.role;
+  if(r==='admin'||r==='supervisor') return EXAMS_DB;
+  // الأستاذ — تصفية إضافية بالـ group_id احتياطاً
+  const myGids=new Set(myGroups().map(g=>g.id));
+  return EXAMS_DB.filter(e=>myGids.has(e.group_id)||e.teacher_id===S.profile?.id);
+}
+
 function renderExams(){
+  const myExams = getMyExams();
   // إحصائيات
-  const total = EXAMS_DB.length;
-  const today_exams = EXAMS_DB.filter(e=>e.date===today()).length;
-  const avgScore = total ? (EXAMS_DB.reduce((a,e)=>a+e.avg,0)/total).toFixed(1) : 0;
-  const best = total ? Math.max(...EXAMS_DB.map(e=>e.avg)).toFixed(1) : 0;
+  const total = myExams.length;
+  const today_exams = myExams.filter(e=>e.date===today()).length;
+  const avgScore = total ? (myExams.reduce((a,e)=>a+e.avg,0)/total).toFixed(1) : 0;
+  const best = total ? Math.max(...myExams.map(e=>e.avg)).toFixed(1) : 0;
   $('exam-stats').innerHTML = `
     <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-graduation-cap"></i></div><div><div class="stat-h">${total}</div><div class="stat-p">إجمالي الامتحانات</div></div></div>
     <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-calendar-day"></i></div><div><div class="stat-h">${today_exams}</div><div class="stat-p">امتحانات اليوم</div></div></div>
@@ -2762,6 +2862,7 @@ function finishExam(){
     id: Date.now().toString(),
     student_id: student.id, student_name: student.name,
     group_id: group?.id, group_name: group?.name,
+    teacher_id: S.profile?.id || null,
     date: today(), questions_count: count,
     total_itqan: totalItqan, total_adaa: totalAdaa,
     avg_itqan: parseFloat(avgItqan), avg_adaa: parseFloat(avgAdaa),
@@ -2785,11 +2886,38 @@ function finishExam(){
 
 async function saveExamToDB(result){
   try{
-    await db.from('settings').insert({
-      key: 'exam_'+result.id,
-      value: JSON.stringify(result)
-    });
-  }catch(e){ console.log('exam save (local only):', e.message); }
+    // نضيف teacher_id للربط بالصلاحيات
+    const examRow = {
+      id:           result.id,
+      student_id:   result.student_id,
+      student_name: result.student_name,
+      group_id:     result.group_id,
+      group_name:   result.group_name,
+      teacher_id:   S.profile?.id || null,
+      date:         result.date,
+      questions_count: result.questions_count,
+      total_itqan:  result.total_itqan,
+      total_adaa:   result.total_adaa,
+      avg_itqan:    result.avg_itqan,
+      avg_adaa:     result.avg_adaa,
+      avg:          result.avg,
+      pct:          result.pct,
+      max_per_q:    result.max_per_q,
+      details:      result.details  // JSONB
+    };
+    const {error} = await db.from('exams').upsert(examRow, {onConflict:'id'});
+    if(error){
+      // إذا لم يوجد جدول exams بعد — نحفظ في settings كـ fallback
+      console.warn('exams table not ready, falling back to settings:', error.message);
+      await db.from('settings').upsert(
+        {key:'exam_'+result.id, value:JSON.stringify({...result, teacher_id:S.profile?.id})},
+        {onConflict:'key'}
+      );
+    }
+  }catch(e){
+    console.error('saveExamToDB:', e.message);
+    toast('تحذير: لم يتم حفظ الامتحان في قاعدة البيانات','warn');
+  }
 }
 
 function showExamResultModal(r){
@@ -2843,7 +2971,7 @@ function loadExamResultsList(){
   const gf = $('res-group')?.value||'';
   const fd = $('res-from')?.value||'';
   const td = $('res-to')?.value||'';
-  let list = EXAMS_DB;
+  let list = getMyExams();
   if(gf) list = list.filter(e=>e.group_id===gf);
   if(fd) list = list.filter(e=>e.date>=fd);
   if(td) list = list.filter(e=>e.date<=td);
@@ -2874,7 +3002,7 @@ function loadExamResultsList(){
               <div style="font-size:18px;font-weight:800;color:${r.pct>=80?'#16a34a':r.pct>=60?'#d97706':'#dc2626'}">${r.avg}</div>
               <div style="font-size:10px;color:var(--text3)">${r.pct}%</div>
             </div>
-            <button class="btn btn-g btn-sm btn-ic" onclick="showExamResultModal(EXAMS_DB.find(x=>x.id==='${r.id}'))"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-g btn-sm btn-ic" onclick="showExamById('${r.id}')"><i class="fas fa-eye"></i></button>
           </div>`;
         }).join('')}
       </div>
@@ -2883,13 +3011,14 @@ function loadExamResultsList(){
 }
 
 function loadExamHistory(){
-  if(!EXAMS_DB.length){
+  const myExams = getMyExams();
+  if(!myExams.length){
     $('history-content').innerHTML='<div class="empty"><i class="fas fa-history"></i><p>لا يوجد سجل امتحانات بعد</p></div>';
     return;
   }
   $('history-content').innerHTML=`<div class="card"><div class="tbl-wrap"><table>
     <thead><tr><th>الطالب</th><th>الحلقة</th><th>التاريخ</th><th>الأسئلة</th><th>الإتقان</th><th>الأداء</th><th>المعدل</th><th>إجراء</th></tr></thead>
-    <tbody>${EXAMS_DB.map(r=>`<tr>
+    <tbody>${myExams.map(r=>`<tr>
       <td><strong>${r.student_name}</strong></td>
       <td>${r.group_name||'—'}</td>
       <td>${fmtDate(r.date)}</td>
@@ -2898,7 +3027,7 @@ function loadExamHistory(){
       <td>${r.avg_adaa}/${r.max_per_q}</td>
       <td style="font-weight:700;color:${r.pct>=80?'#16a34a':r.pct>=60?'#d97706':'#dc2626'}">${r.avg} (${r.pct}%)</td>
       <td><div style="display:flex;gap:3px">
-        <button class="btn btn-g btn-sm btn-ic" onclick="showExamResultModal(EXAMS_DB.find(x=>x.id==='${r.id}'))"><i class="fas fa-eye"></i></button>
+        <button class="btn btn-g btn-sm btn-ic" onclick="showExamById('${r.id}')"><i class="fas fa-eye"></i></button>
         <button class="btn btn-g btn-sm btn-ic" onclick="exportExamPDF('${r.id}')"><i class="fas fa-file-pdf"></i></button>
       </div></td>
     </tr>`).join('')}</tbody>
@@ -2910,6 +3039,13 @@ function showExamResults(){
 }
 function startNewExam(){
   switchTab('exams','start',document.querySelectorAll('#page-exams .tab')[0]);
+}
+
+/** جلب امتحان بـ ID من EXAMS_DB وعرضه */
+function showExamById(eid){
+  const r = EXAMS_DB.find(x=>x.id===eid);
+  if(!r){ toast('لم يتم إيجاد نتيجة الامتحان — قد تحتاج إعادة تحميل الصفحة','warn'); return; }
+  showExamResultModal(r);
 }
 
 function exportExamPDF(eid){
@@ -2942,13 +3078,290 @@ function exportExamPDF(eid){
   `);
 }
 
-// ===================== WHATSAPP =====================
-function sendWA(phone,name){
-  if(!phone){toast('لا يوجد رقم هاتف','warn');return}
-  let p=phone.replace(/\D/g,'');
-  if(p.startsWith('0'))p='212'+p.substring(1);
-  const msg=encodeURIComponent(`السلام عليكم، هذه رسالة من دار القرآن الكريم — الوفاق بخصوص الطالب/ة ${name}.`);
-  window.open(`https://wa.me/${p}?text=${msg}`,'_blank');
+// ===================== WHATSAPP SYSTEM =====================
+
+/** تنسيق رقم الهاتف للمغرب */
+function fmtPhone(phone){
+  if(!phone) return null;
+  let p = phone.toString().replace(/\D/g,'');
+  if(p.startsWith('00212')) p = p.substring(2);
+  else if(p.startsWith('212')) p = p;
+  else if(p.startsWith('0')) p = '212' + p.substring(1);
+  else p = '212' + p;
+  return p;
+}
+
+/** فتح واتساب مع رسالة */
+function openWA(phone, msg){
+  const p = fmtPhone(phone);
+  if(!p){ toast('⚠️ لا يوجد رقم هاتف لولي الأمر','warn'); return; }
+  window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+/** رسالة بسيطة قديمة - للتوافق */
+function sendWA(phone, name){
+  if(!phone){ toast('لا يوجد رقم هاتف','warn'); return; }
+  const s = S.students.find(x=>x.phone===phone||x.id===phone);
+  if(s){ openWAReportModal(s.id); }
+  else { openWA(phone, `السلام عليكم، رسالة من دار القرآن الكريم — الوفاق بخصوص الطالب/ة ${name}.`); }
+}
+
+// ── رسالة التقرير الشامل ──────────────────────────────
+function buildReportMsg(sid){
+  const s = S.students.find(x=>x.id===sid); if(!s) return '';
+  const g = S.groups.find(x=>x.id===s.group_id);
+  const attAll = S.attendance.filter(a=>a.student_id===sid);
+  const present = attAll.filter(a=>a.status==='حاضر').length;
+  const absent  = attAll.filter(a=>a.status==='غائب'||a.status==='بعذر').length;
+  const attRate = getAttRate(sid);
+  const v = getTotalV(sid);
+  const hizb = calcHizb(sid);
+  const stars = getStars(sid);
+  const q = getQuality(sid);
+  const lastRecs = S.recitations.filter(r=>r.student_id===sid&&r.type==='حفظ جديد').slice(0,3);
+  const lastHifz = lastRecs.length
+    ? lastRecs.map(r=>{
+        const fs=SURAHS.find(x=>x.n===r.surah_from), ts=SURAHS.find(x=>x.n===r.surah_to);
+        return `${fs?.name||'—'}(${r.verse_from}) → ${ts?.name||'—'}(${r.verse_to})`;
+      }).join('\n      ')
+    : 'لا يوجد سجل بعد';
+  const qLabel = q===null?'—': q>=90?'ممتاز ⭐⭐⭐': q>=75?'جيد جداً ⭐⭐': q>=60?'جيد ⭐':'يحتاج متابعة';
+  const attLabel = attRate>=85?'ممتاز ✅': attRate>=70?'جيد 👍': attRate>=50?'متوسط ⚠️':'ضعيف ❌';
+  const notes = s.notes ? `\n${s.notes}` : '\nلا توجد ملاحظات خاصة.';
+  const dt = new Date().toLocaleDateString('ar-MA',{day:'2-digit',month:'long',year:'numeric'});
+
+  return `السلام عليكم ورحمة الله وبركاته 🌷
+
+يسرنا إطلاعكم على تقرير الطالب:
+👤 ${s.name}
+
+📘 الحلقة: ${g?.name||'—'}
+📅 تاريخ التقرير: ${dt}
+
+━━━━━━━━━━━━━━
+📖 الحفظ
+━━━━━━━━━━━━━━
+
+✅ آخر ما تم تسميعه:
+      ${lastHifz}
+
+📊 مجموع الآيات المحفوظة: ${v} آية
+📚 عدد الأحزاب: ${hizb} حزب
+📈 مستوى الحفظ: ${qLabel}
+
+━━━━━━━━━━━━━━
+🕌 الحضور والانضباط
+━━━━━━━━━━━━━━
+
+✅ أيام الحضور: ${present} يوم
+❌ أيام الغياب: ${absent} يوم
+📊 نسبة الحضور: ${attRate}% — ${attLabel}
+⭐ النجوم المكتسبة: ${stars} نجمة
+
+━━━━━━━━━━━━━━
+📝 ملاحظات الأستاذ
+━━━━━━━━━━━━━━
+${notes}
+
+━━━━━━━━━━━━━━
+🌟 نسأل الله أن يبارك في ابنكم وينفع به،
+ونشكر لكم متابعتكم وحرصكم.
+
+📍 دار القرآن الكريم — جمعية الوفاق
+الوفاق الكبير، بنسركاو، المغرب`;
+}
+
+// ── رسالة الغياب ──────────────────────────────────────
+function buildAbsenceMsg(sid, date){
+  const s = S.students.find(x=>x.id===sid); if(!s) return '';
+  const g = S.groups.find(x=>x.id===s.group_id);
+  const absCount = S.attendance.filter(a=>a.student_id===sid&&(a.status==='غائب'||a.status==='بعذر')).length;
+  const dt = date
+    ? new Date(date).toLocaleDateString('ar-MA',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+    : new Date().toLocaleDateString('ar-MA',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+
+  return `السلام عليكم ورحمة الله وبركاته 🌷
+
+نحيطكم علمًا بأن الطالب:
+👤 ${s.name}
+
+قد سُجّل عليه غياب عن الحلقة القرآنية.
+
+📅 التاريخ: ${dt}
+📘 الحلقة: ${g?.name||'—'}
+📌 عدد مرات الغياب الحالية: ${absCount} مرة
+
+نرجو منكم متابعة الابن والحرص على المواظبة،
+لما لذلك من أثر كبير في ثبات الحفظ والتقدم.
+
+${absCount>=3?`⚠️ تنبيه: وصل عدد الغيابات إلى ${absCount} مرات.
+في حال تجاوز العدد المحدد، قد يتم تعويض الطالب من لائحة الانتظار، حفاظًا على انتظام الحلقات.\n\n`:''}جزاكم الله خيرًا على تعاونكم واهتمامكم 🌹
+
+📍 دار القرآن الكريم — جمعية الوفاق
+الوفاق الكبير، بنسركاو، المغرب`;
+}
+
+// ── رسالة تهنئة بالإنجاز ──────────────────────────────
+function buildAchievMsg(sid, achievement){
+  const s = S.students.find(x=>x.id===sid); if(!s) return '';
+  const g = S.groups.find(x=>x.id===s.group_id);
+  const dt = new Date().toLocaleDateString('ar-MA',{day:'2-digit',month:'long',year:'numeric'});
+  return `السلام عليكم ورحمة الله وبركاته 🌷
+
+يسعدنا مشاركتكم هذا الخبر السار 🎉
+
+الطالب: 👤 ${s.name}
+📘 الحلقة: ${g?.name||'—'}
+📅 التاريخ: ${dt}
+
+🏆 ${achievement}
+
+نهنئكم بهذا الإنجاز المميز، ونسأل الله
+أن يزيده توفيقًا وعلمًا نافعًا.
+
+جزاكم الله خيرًا على حرصكم ومتابعتكم 🌹
+
+📍 دار القرآن الكريم — جمعية الوفاق`;
+}
+
+// ── نافذة معاينة الرسالة ──────────────────────────────
+function openWAReportModal(sid){
+  const s = S.students.find(x=>x.id===sid); if(!s) return;
+  if(!s.phone){ toast('⚠️ لا يوجد رقم هاتف لولي الأمر','warn'); return; }
+  const msg = buildReportMsg(sid);
+  showWAPreview({
+    title: `📊 تقرير الطالب — ${s.name}`,
+    phone: s.phone,
+    parent: s.parent_name||'ولي الأمر',
+    msg,
+    sid
+  });
+}
+
+function openWAAbsenceModal(sid, date){
+  const s = S.students.find(x=>x.id===sid); if(!s) return;
+  if(!s.phone){ toast('⚠️ لا يوجد رقم هاتف لولي الأمر','warn'); return; }
+  const msg = buildAbsenceMsg(sid, date);
+  showWAPreview({
+    title: `🔔 تنبيه غياب — ${s.name}`,
+    phone: s.phone,
+    parent: s.parent_name||'ولي الأمر',
+    msg,
+    sid
+  });
+}
+
+function showWAPreview({title, phone, parent, msg, sid}){
+  // إنشاء نافذة المعاينة ديناميكياً
+  let modal = $('m-wa-preview');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'm-wa-preview';
+    modal.className = 'overlay';
+    modal.innerHTML = `
+      <div class="modal modal-lg">
+        <div class="mh" style="background:linear-gradient(135deg,#075e54,#128c7e)">
+          <h3 id="wa-modal-title" style="color:#fff"></h3>
+          <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-wa-preview')">✕</button>
+        </div>
+        <div class="mbody" style="padding:0">
+          <!-- معلومات المستلم -->
+          <div id="wa-recipient" style="padding:14px 20px;background:#f0fdf4;border-bottom:1px solid #86efac;display:flex;align-items:center;gap:12px">
+            <div style="width:42px;height:42px;background:#128c7e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0">
+              <i class="fab fa-whatsapp"></i>
+            </div>
+            <div style="flex:1">
+              <div id="wa-parent-name" style="font-weight:700;font-size:14px"></div>
+              <div id="wa-phone-display" style="font-size:12px;color:#16a34a;direction:ltr"></div>
+            </div>
+            <div id="wa-phone-edit-btn"></div>
+          </div>
+          <!-- معاينة الرسالة بتصميم واتساب -->
+          <div style="background:#e5ddd5;padding:16px;min-height:200px;max-height:380px;overflow-y:auto">
+            <div style="display:flex;justify-content:flex-end">
+              <div style="background:#dcf8c6;border-radius:12px 2px 12px 12px;padding:12px 16px;max-width:88%;box-shadow:0 1px 3px rgba(0,0,0,.15)">
+                <pre id="wa-msg-preview" style="white-space:pre-wrap;font-family:'Tajawal',sans-serif;font-size:13px;line-height:1.7;color:#111;margin:0;direction:rtl"></pre>
+                <div style="text-align:left;font-size:10px;color:#888;margin-top:6px">
+                  ${new Date().toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})} ✓✓
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- تعديل الرسالة -->
+          <div style="padding:14px 20px;border-top:1px solid var(--border)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <label style="font-size:13px;font-weight:600;color:var(--text2)">✏️ تعديل الرسالة (اختياري)</label>
+              <button onclick="resetWAMsg()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-family:Tajawal,sans-serif">↩ استعادة الأصل</button>
+            </div>
+            <textarea id="wa-msg-edit" rows="4" oninput="syncWAPreview(this.value)"
+              style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12.5px;resize:vertical;outline:none;direction:rtl;line-height:1.6"></textarea>
+          </div>
+        </div>
+        <div class="mfoot" style="background:#f0fdf4;gap:10px">
+          <button class="btn btn-o" onclick="closeM('m-wa-preview')">إلغاء</button>
+          <button id="wa-copy-btn" class="btn" style="background:#6c757d;color:#fff" onclick="copyWAMsg()">
+            <i class="fas fa-copy"></i> نسخ
+          </button>
+          <button id="wa-send-btn" class="btn" style="background:#25d366;color:#fff;flex:1;font-size:14px" onclick="sendWAMsg()">
+            <i class="fab fa-whatsapp"></i> إرسال عبر واتساب
+          </button>
+        </div>
+      </div>`;
+    modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
+    document.body.appendChild(modal);
+  }
+
+  // تعبئة البيانات
+  $('wa-modal-title').textContent = title;
+  $('wa-parent-name').textContent = parent;
+  $('wa-phone-display').textContent = phone;
+  $('wa-msg-preview').textContent = msg;
+  $('wa-msg-edit').value = msg;
+  // نحفظ البيانات الحالية
+  modal.dataset.phone = phone;
+  modal.dataset.origMsg = msg;
+  modal.dataset.sid = sid||'';
+
+  openM('m-wa-preview');
+}
+
+function syncWAPreview(val){
+  $('wa-msg-preview').textContent = val;
+}
+function resetWAMsg(){
+  const modal = $('m-wa-preview');
+  const orig = modal.dataset.origMsg;
+  $('wa-msg-edit').value = orig;
+  $('wa-msg-preview').textContent = orig;
+}
+function copyWAMsg(){
+  const msg = $('wa-msg-edit').value;
+  navigator.clipboard.writeText(msg).then(()=>toast('✅ تم نسخ الرسالة','ok')).catch(()=>toast('تعذّر النسخ','warn'));
+}
+function sendWAMsg(){
+  const modal = $('m-wa-preview');
+  const phone = modal.dataset.phone;
+  const msg = $('wa-msg-edit').value;
+  openWA(phone, msg);
+}
+
+// ── إرسال تنبيه غياب لجميع الغائبين في يوم ──────────
+function sendAbsenceBulk(){
+  const gid = $('att-group').value;
+  const dt  = $('att-date').value;
+  if(!gid||!dt){ toast('اختر الحلقة والتاريخ','warn'); return; }
+  const absent = S.attendance.filter(a=>a.group_id===gid&&a.date===dt&&(a.status==='غائب'||a.status==='بعذر'));
+  if(!absent.length){ toast('لا يوجد غياب مسجل في هذا اليوم','warn'); return; }
+  const withPhone = absent.filter(a=>{ const s=S.students.find(x=>x.id===a.student_id); return s?.phone; });
+  if(!withPhone.length){ toast('لا يوجد أرقام هاتف للطلبة الغائبين','warn'); return; }
+  // إرسال الأول مباشرة، الباقون بعد تأخير بسيط
+  withPhone.forEach((a,i)=>{
+    setTimeout(()=>{
+      const s = S.students.find(x=>x.id===a.student_id);
+      if(s) openWA(s.phone, buildAbsenceMsg(s.id, dt));
+    }, i*1200);
+  });
+  toast(`📲 جاري فتح واتساب لـ ${withPhone.length} طالب...`,'ok');
 }
 
 // ===================== SEARCH =====================
