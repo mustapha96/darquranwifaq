@@ -157,8 +157,11 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);fon
 .login-card{background:#fff;border-radius:20px;padding:48px 40px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative;z-index:1}
 .login-logo{text-align:center;margin-bottom:28px}
 .login-logo img{width:72px;height:72px;border-radius:16px;object-fit:cover}
+.login-logo img[src=""]{display:none}
 .login-logo h1{font-size:20px;font-weight:800;color:var(--primary);margin-top:12px;font-family:'Amiri',serif}
 .login-logo p{color:var(--text3);font-size:13px;margin-top:4px}
+/* إخفاء نص alt عند فشل تحميل الصورة */
+img{font-size:0;color:transparent}
 .lf{margin-bottom:16px}
 .lf label{display:block;font-weight:600;margin-bottom:6px;color:var(--text);font-size:13px}
 .lf input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--text);transition:border-color .2s;outline:none}
@@ -412,19 +415,113 @@ textarea{resize:vertical;min-height:80px}
 }
 .result-rank { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0; }
 
-/* Responsive */
+/* ===== MOBILE OVERLAY ===== */
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:998;backdrop-filter:blur(2px)}
+@media(max-width:768px){.mob-overlay.show{display:block}}
+
+/* ===== NOTIFICATIONS ===== */
+.notif-btn{position:relative;width:40px;height:40px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:16px;transition:all .2s;flex-shrink:0}
+.notif-btn:hover{background:#fff;color:var(--primary);box-shadow:var(--sh)}
+.notif-badge{position:absolute;top:-5px;left:-5px;min-width:18px;height:18px;background:var(--danger);color:#fff;font-size:10px;font-weight:800;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #fff;animation:pulse-badge .8s ease-in-out infinite alternate}
+@keyframes pulse-badge{from{transform:scale(1)}to{transform:scale(1.15)}}
+.notif-dropdown{position:absolute;top:calc(100% + 10px);left:0;width:340px;background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(26,60,110,.18);border:1px solid var(--border);z-index:9999;overflow:hidden;display:none;animation:dropIn .2s ease}
+@keyframes dropIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.notif-dropdown.open{display:block}
+.notif-head{padding:14px 18px;background:linear-gradient(135deg,var(--primary),var(--primary-l));color:#fff;display:flex;align-items:center;justify-content:space-between}
+.notif-head h4{font-size:14px;font-weight:700}
+.notif-mark{font-size:11px;opacity:.8;cursor:pointer;background:rgba(255,255,255,.15);border:none;color:#fff;padding:4px 10px;border-radius:6px;font-family:'Tajawal',sans-serif;cursor:pointer}
+.notif-mark:hover{background:rgba(255,255,255,.25)}
+.notif-list{max-height:320px;overflow-y:auto}
+.notif-item{display:flex;align-items:flex-start;gap:11px;padding:13px 16px;border-bottom:1px solid #f0f4f8;cursor:pointer;transition:background .15s;position:relative}
+.notif-item:hover{background:#f8faff}
+.notif-item.unread{background:#fafcff}
+.notif-item.unread::before{content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background:var(--primary-l);border-radius:0 2px 2px 0}
+.notif-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.notif-ic.att{background:#fff7ed;color:#ea580c}
+.notif-ic.hifz{background:#f0fdf4;color:#16a34a}
+.notif-ic.exam{background:#eff6ff;color:#2563eb}
+.notif-ic.admin{background:#faf5ff;color:#7c3aed}
+.notif-ic.cert{background:#fefce8;color:#ca8a04}
+.notif-txt{flex:1;min-width:0}
+.notif-txt p{font-size:13px;color:var(--text);font-weight:500;line-height:1.4}
+.notif-txt span{font-size:11px;color:var(--text3);margin-top:3px;display:block}
+.notif-empty{padding:40px;text-align:center;color:var(--text3)}
+.notif-empty i{font-size:32px;margin-bottom:8px;display:block;opacity:.4}
+
+/* ===== CERTIFICATES ===== */
+.cert-types{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.cert-type-card{padding:16px;border-radius:12px;border:2px solid var(--border);background:#fff;cursor:pointer;text-align:center;transition:all .22s;position:relative}
+.cert-type-card:hover{border-color:var(--primary-l);box-shadow:0 4px 16px rgba(26,60,110,.1);transform:translateY(-2px)}
+.cert-type-card.selected{border-color:var(--primary);background:#f0f6ff;box-shadow:0 0 0 3px rgba(26,60,110,.1)}
+.cert-type-card i{font-size:26px;margin-bottom:8px;display:block}
+.cert-type-card h4{font-size:13px;font-weight:700;color:var(--text)}
+.cert-type-card small{font-size:11px;color:var(--text3)}
+/* Certificate print preview */
+.cert-preview-wrap{background:#f0f4f8;border-radius:16px;padding:20px;margin-top:20px;display:flex;justify-content:center}
+.cert-paper{width:100%;max-width:720px;background:#fff;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.15);overflow:hidden;position:relative;font-family:'Amiri',serif;aspect-ratio:1.414}
+/* Archive list */
+.cert-arch-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;background:#fff;border:1px solid var(--border);margin-bottom:8px;transition:all .2s}
+.cert-arch-item:hover{border-color:var(--primary-l);box-shadow:0 2px 10px rgba(26,60,110,.08)}
+.cert-arch-ic{width:40px;height:40px;border-radius:10px;background:#fefce8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+
+/* ===== MOBILE IMPROVEMENTS ===== */
 @media(max-width:768px){
-  :root{--sw:0px}
-  .sidebar{transform:translateX(260px)}
-  .sidebar.mob-open{transform:translateX(0);width:260px}
+  :root{--sw:0px;--hh:60px}
+  .sidebar{transform:translateX(260px);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:none;z-index:999}
+  .sidebar.mob-open{transform:translateX(0);width:260px;box-shadow:-8px 0 32px rgba(0,0,0,.18)}
   .main{margin-right:0}
-  .content{padding:16px}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .lp-hero-inner,.about-grid,.cnt-grid{grid-template-columns:1fr;gap:36px}
-  .aud-grid,.plat-grid{grid-template-columns:1fr}
-  #menu-btn{display:flex!important}
+  .header{padding:0 14px;gap:10px}
+  .content{padding:14px 12px}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-card{padding:14px 12px;gap:10px}
+  .stat-ic{width:38px;height:38px;font-size:16px}
+  .stat-h{font-size:20px}
+  /* Dashboard cards stack */
+  #page-dashboard [style*="grid-template-columns:1fr 1fr"]{display:flex!important;flex-direction:column!important;gap:12px!important}
+  /* Page headers */
+  .ph{flex-direction:column;align-items:flex-start;gap:10px}
+  .ph button{width:100%;justify-content:center}
+  /* Tables → card style on mobile */
+  .tbl-wrap{border-radius:10px;overflow:hidden}
+  table thead{display:none}
+  table tbody tr{display:flex;flex-direction:column;border-bottom:6px solid var(--bg);padding:12px 14px;border-radius:10px;margin-bottom:6px;background:#fff;box-shadow:0 2px 8px rgba(26,60,110,.06)}
+  table tbody td{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;border:none}
+  table tbody td::before{content:attr(data-label);font-weight:700;color:var(--text3);font-size:11px;min-width:80px;flex-shrink:0}
+  /* Cards full width */
+  .card{border-radius:12px}
+  /* Modals full screen on mobile */
+  .overlay .modal{margin:0;border-radius:16px 16px 0 0;max-height:92vh;width:100%;position:absolute;bottom:0}
+  /* Forms */
+  .fg-row{flex-direction:column}
+  .fg-row .fg{min-width:unset}
+  /* Tabs */
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .tabs::-webkit-scrollbar{display:none}
+  /* Header search hidden on mobile */
+  .header-search{display:none}
+  /* Breadcrumb shorter */
+  #menu-btn{display:flex!important;align-items:center;justify-content:center}
+  /* Notification dropdown width */
+  .notif-dropdown{width:calc(100vw - 24px);left:auto;right:-10px}
+  /* Hifz map grid */
+  [style*="grid-template-columns:repeat(auto-fill,minmax(100px"]{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))!important}
+  /* Cert types */
+  .cert-types{grid-template-columns:repeat(2,1fr)}
 }
-@media(max-width:600px){.lp-navlinks .lp-nl{display:none}}
+@media(max-width:600px){
+  .lp-navlinks .lp-nl{display:none}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:400px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .stat-card{padding:12px 10px}
+}
+@media print{
+  body *{visibility:hidden}
+  .cert-paper,
+  .cert-paper *{visibility:visible}
+  .cert-paper{position:fixed;inset:0;width:100%;height:100%;max-width:none;border-radius:0;box-shadow:none}
+}
 </style>
 </head>
 <body>
@@ -596,6 +693,9 @@ textarea{resize:vertical;min-height:80px}
   </div>
 </div>
 
+<!-- MOBILE OVERLAY -->
+<div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
+
 <!-- ===================== APP ===================== -->
 <div id="app">
   <!-- SIDEBAR -->
@@ -637,6 +737,7 @@ textarea{resize:vertical;min-height:80px}
       <div class="nav-sec-title">برامج خاصة</div>
       <div class="nav-item" onclick="nav('exams')"><i class="fas fa-graduation-cap"></i> الامتحانات</div>
       <div class="nav-item" onclick="nav('summer')"><i class="fas fa-sun"></i> الدورة الصيفية</div>
+      <div class="nav-item" onclick="nav('certificates')"><i class="fas fa-scroll"></i> الشهادات</div>
     </div>
     <div class="nav-sec" id="nav-settings">
       <div class="nav-sec-title">الإعدادات</div>
@@ -659,11 +760,29 @@ textarea{resize:vertical;min-height:80px}
 
     <!-- HEADER -->
     <div class="header">
-      <button id="menu-btn" class="btn btn-g btn-ic" style="display:none" onclick="document.getElementById('sidebar').classList.toggle('mob-open')"><i class="fas fa-bars"></i></button>
+      <button id="menu-btn" class="btn btn-g btn-ic" style="display:none" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
       <div class="breadcrumb"><i class="fas fa-home"></i> <b id="breadcrumb-txt">لوحة التحكم</b></div>
-      <div class="hd-user">
-        <div class="hd-avatar" id="hd-av">م</div>
-        <div class="hd-info"><h4 id="hd-name">—</h4><span id="hd-role">—</span></div>
+      <div style="margin-right:auto;display:flex;align-items:center;gap:10px">
+        <!-- NOTIFICATIONS -->
+        <div style="position:relative" id="notif-wrap">
+          <button class="notif-btn" onclick="toggleNotifications()" title="التنبيهات">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+          </button>
+          <div class="notif-dropdown" id="notif-dropdown">
+            <div class="notif-head">
+              <h4><i class="fas fa-bell" style="margin-left:6px"></i>التنبيهات</h4>
+              <button class="notif-mark" onclick="markAllRead()">تحديد الكل كمقروء</button>
+            </div>
+            <div class="notif-list" id="notif-list">
+              <div class="notif-empty"><i class="fas fa-check-circle"></i><p>لا توجد تنبيهات</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="hd-user">
+          <div class="hd-avatar" id="hd-av">م</div>
+          <div class="hd-info"><h4 id="hd-name">—</h4><span id="hd-role">—</span></div>
+        </div>
       </div>
       <div class="header-search"><i class="fas fa-search"></i><input type="text" id="search-input" placeholder="بحث..." oninput="doSearch(this.value)"></div>
     </div>
@@ -753,7 +872,7 @@ textarea{resize:vertical;min-height:80px}
           </div>
         </div>
         <div class="card" style="margin-bottom:16px"><div class="card-body"><div style="display:flex;gap:12px;flex-wrap:wrap">
-          <div class="fg" style="flex:1"><label>الحلقة</label><select id="rf-group" onchange="loadRecs()"></select></div>
+          <div class="fg" style="flex:1"><label>الحلقة</label><select id="rf-group" onchange="onRfGroupChange()"></select></div>
           <div class="fg" style="flex:1"><label>الطالب</label><select id="rf-student" onchange="loadRecs()"><option value="">الكل</option></select></div>
           <div class="fg" style="flex:1"><label>من</label><input type="date" id="rf-from" onchange="loadRecs()"></div>
           <div class="fg" style="flex:1"><label>إلى</label><input type="date" id="rf-to" onchange="loadRecs()"></div>
@@ -913,6 +1032,94 @@ textarea{resize:vertical;min-height:80px}
           </div>
           <div style="margin-top:16px"><button class="btn btn-p" onclick="toast('تم حفظ الإعدادات','ok')"><i class="fas fa-save"></i> حفظ</button></div>
         </div></div>
+      </div>
+
+      <!-- CERTIFICATES -->
+      <div class="page" id="page-certificates">
+        <div class="ph">
+          <div><h1>📜 الشهادات</h1><p>إنشاء وأرشفة شهادات الطلبة</p></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <!-- Left: Form -->
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-head"><h3><i class="fas fa-plus-circle" style="color:var(--primary-l);margin-left:6px"></i>إنشاء شهادة جديدة</h3></div>
+              <div class="card-body">
+                <div class="fg" style="margin-bottom:12px">
+                  <label>الطالب *</label>
+                  <select id="cert-student"><option value="">— اختر الطالب —</option></select>
+                </div>
+                <div class="fg" style="margin-bottom:12px">
+                  <label>نوع الشهادة *</label>
+                  <div class="cert-types" id="cert-types-grid">
+                    <div class="cert-type-card selected" data-type="حفظ" onclick="selectCertType(this)">
+                      <i class="fas fa-quran" style="color:#16a34a"></i>
+                      <h4>شهادة حفظ</h4><small>سورة أو حزب</small>
+                    </div>
+                    <div class="cert-type-card" data-type="تفوق" onclick="selectCertType(this)">
+                      <i class="fas fa-trophy" style="color:#d97706"></i>
+                      <h4>شهادة تفوق</h4><small>أعلى المعدلات</small>
+                    </div>
+                    <div class="cert-type-card" data-type="مواظبة" onclick="selectCertType(this)">
+                      <i class="fas fa-calendar-check" style="color:#2563eb"></i>
+                      <h4>شهادة مواظبة</h4><small>تميز في الحضور</small>
+                    </div>
+                    <div class="cert-type-card" data-type="مشاركة" onclick="selectCertType(this)">
+                      <i class="fas fa-star" style="color:#7c3aed"></i>
+                      <h4>شهادة مشاركة</h4><small>مسابقات وأنشطة</small>
+                    </div>
+                    <div class="cert-type-card" data-type="ختم" onclick="selectCertType(this)">
+                      <i class="fas fa-crown" style="color:#b45309"></i>
+                      <h4>شهادة ختم</h4><small>ختم القرآن الكريم</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="fg" style="margin-bottom:12px">
+                  <label>المناسبة</label>
+                  <input type="text" id="cert-occasion" placeholder="مثال: إتمام حفظ سورة البقرة">
+                </div>
+                <div class="fg" style="margin-bottom:12px">
+                  <label>التاريخ</label>
+                  <input type="date" id="cert-date">
+                </div>
+                <div class="fg" style="margin-bottom:16px">
+                  <label>ملاحظات (اختياري)</label>
+                  <textarea id="cert-notes" placeholder="أي تفاصيل إضافية..." rows="2" style="resize:none"></textarea>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-p" style="flex:1" onclick="generateCert()"><i class="fas fa-scroll"></i> إنشاء الشهادة</button>
+                  <button class="btn btn-g" onclick="printCert()"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Right: Preview + Archive -->
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-head"><h3><i class="fas fa-eye" style="color:var(--info);margin-left:6px"></i>معاينة الشهادة</h3></div>
+              <div class="card-body" id="cert-preview-area">
+                <div style="text-align:center;padding:40px;color:var(--text3)">
+                  <i class="fas fa-scroll" style="font-size:40px;opacity:.3;display:block;margin-bottom:10px"></i>
+                  <p>اختر طالباً ونوع الشهادة ثم اضغط "إنشاء"</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Archive -->
+        <div class="card" style="margin-top:16px">
+          <div class="card-head">
+            <h3><i class="fas fa-archive" style="color:var(--gold);margin-left:6px"></i>أرشيف الشهادات</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="cert-filter-student" onchange="renderCertArchive()" style="padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:13px">
+                <option value="">كل الطلبة</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body" id="cert-archive-list">
+            <div class="empty"><i class="fas fa-scroll"></i><p>لا توجد شهادات مُصدرة بعد</p></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1170,8 +1377,19 @@ const S = {
   user:null, profile:null,
   groups:[], teachers:[], students:[],
   attendance:[], recitations:[], holidays:[], finance:[],
-  manualStars:[], sessionGroupId:null, _sessionInterval:null
+  manualStars:[], sessionGroupId:null, _sessionInterval:null,
+  _certs:[]
 };
+let EXAMS_DB = []; // سجل محلي للامتحانات - يُحمَّل من Supabase عند الدخول
+
+// ===================== IMAGE FALLBACK =====================
+// شعار SVG بديل عند فشل تحميل الصورة
+const LOGO_FALLBACK = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%231565c0'/%3E%3Ctext x='40' y='52' text-anchor='middle' font-size='36' fill='white' font-family='serif'%3E%D9%88%3C/text%3E%3C/svg%3E`;
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('img[src*="imgur"]').forEach(img=>{
+    img.onerror = function(){ this.src = LOGO_FALLBACK; this.onerror=null; };
+  });
+});
 
 // ===================== SURAHS =====================
 const SURAHS=[
@@ -1420,7 +1638,8 @@ async function doLogout(){
   try{await db.auth.signOut()}catch(e){}
   if(S._sessionInterval){clearInterval(S._sessionInterval);S._sessionInterval=null;}
   S.user=null;S.profile=null;S.groups=[];S.teachers=[];S.students=[];
-  S.attendance=[];S.recitations=[];S.holidays=[];S.finance=[];S.manualStars=[];
+  S.attendance=[];S.recitations=[];S.holidays=[];S.finance=[];S.manualStars=[];S._certs=[];
+  EXAMS_DB=[];
   $('app').style.display='none';
   $('login-page').style.display='none';
   $('landing').style.display='block';
@@ -1486,6 +1705,13 @@ async function loadData(){
     if(isAdmin){const{data:f}=await db.from('finance').select('*').order('date',{ascending:false}).limit(200);S.finance=f||[]}
     // Stars
     try{const{data:ms}=await db.from('student_stars').select('*').order('date',{ascending:false}).limit(500);S.manualStars=ms||[]}catch{S.manualStars=[]}
+    // Exams - تحميل نتائج الامتحانات المحفوظة
+    try{
+      const{data:exData}=await db.from('settings').select('*').like('key','exam_%').order('created_at',{ascending:false}).limit(200);
+      if(exData&&exData.length){
+        EXAMS_DB=exData.map(row=>{try{return JSON.parse(row.value)}catch{return null}}).filter(Boolean);
+      }
+    }catch(e){console.log('exams load:',e.message)}
   }catch(e){console.error('loadData:',e);toast('تحذير: '+e.message,'warn')}
 }
 
@@ -1514,6 +1740,7 @@ function showApp(){
   checkSession();
   S._sessionInterval = setInterval(checkSession,60000);
   nav('dashboard');
+  setTimeout(buildNotifications,1500);
 }
 
 async function checkAuth(){
@@ -1530,7 +1757,7 @@ async function checkAuth(){
 }
 
 // ===================== NAV =====================
-const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات'};
+const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات',certificates:'الشهادات'};
 
 function nav(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1549,6 +1776,9 @@ function nav(page){
   if(page==='holidays')renderHolidays();
   if(page==='finance')renderFinance();
   if(page==='exams')renderExams();
+  if(page==='certificates')renderCertificatesPage();
+  // إغلاق القائمة الجانبية في الجوال تلقائياً عند الانتقال
+  closeSidebar();
 }
 
 // ===================== SESSION ALERT =====================
@@ -2035,9 +2265,16 @@ async function delRec(id){
 function renderRecs(){
   const mg=myGroups();
   $('rf-group').innerHTML='<option value="">كل الحلقات</option>'+mg.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  onRfGroupChange();
   const now=new Date();const m=new Date(now);m.setMonth(m.getMonth()-1);
   if(!$('rf-from').value)$('rf-from').value=m.toISOString().split('T')[0];
   if(!$('rf-to').value)$('rf-to').value=today();
+  loadRecs();
+}
+function onRfGroupChange(){
+  const gid=$('rf-group').value;
+  const list=gid?S.students.filter(s=>s.group_id===gid):myStudents();
+  $('rf-student').innerHTML='<option value="">الكل</option>'+list.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   loadRecs();
 }
 function loadRecs(){
@@ -2103,8 +2340,8 @@ function openHonorBoard(){
 
 // ===================== REPORTS =====================
 function switchTab(prefix,pane,tab){
-  document.querySelectorAll(`#page-${prefix}>.tabs .tab`).forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll(`#page-${prefix}>.tab-pane`).forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll(`#page-${prefix} .tabs .tab`).forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll(`#page-${prefix} .tab-pane`).forEach(p=>p.classList.remove('active'));
   tab.classList.add('active');
   $(`${prefix}-${pane}`)?.classList.add('active');
 }
@@ -2328,7 +2565,6 @@ let EXAM_STATE = {
   questions: [], student: null, group: null,
   maxPerQ: 20, answers: {}
 };
-let EXAMS_DB = []; // سجل محلي للامتحانات
 
 function renderExams(){
   // إحصائيات
@@ -2732,6 +2968,286 @@ function fillSelects(){
 
 // ===================== INIT =====================
 checkAuth();
+
+// ===================== MOBILE SIDEBAR =====================
+function toggleSidebar(){
+  const sb=$('sidebar');
+  const ov=$('mob-overlay');
+  sb.classList.toggle('mob-open');
+  ov.classList.toggle('show');
+}
+function closeSidebar(){
+  $('sidebar').classList.remove('mob-open');
+  $('mob-overlay').classList.remove('show');
+}
+// إغلاق القائمة عند الضغط خارجها
+document.addEventListener('click',function(e){
+  const sb=$('sidebar');
+  const btn=$('menu-btn');
+  if(window.innerWidth<=768&&sb.classList.contains('mob-open')&&!sb.contains(e.target)&&e.target!==btn&&!btn?.contains(e.target)){
+    closeSidebar();
+  }
+});
+
+// ===================== NOTIFICATIONS =====================
+const NOTIFS_KEY='wafaq_notifs';
+let notifications=[];
+let notifsRead=new Set();
+
+function buildNotifications(){
+  const list=[];
+  const todayStr=today();
+  const myS=myStudents();
+  const myG=myGroups();
+  const myGroupIds=new Set(myG.map(g=>g.id));
+
+  // تنبيه: حلقات لم يُسجَّل حضورها اليوم
+  const noAtt=myG.filter(g=>!S.attendance.some(a=>a.date===todayStr&&a.group_id===g.id));
+  noAtt.forEach(g=>list.push({id:'noatt-'+g.id,type:'att',icon:'fas fa-clipboard',title:'حلقة بدون حضور',body:g.name+' — لم يُسجَّل الحضور اليوم',time:'اليوم'}));
+
+  // تنبيه: طلبة غابوا 3 أيام متتالية
+  myS.forEach(s=>{
+    const absences=S.attendance.filter(a=>a.student_id===s.id&&a.status==='غائب').map(a=>a.date).sort().reverse();
+    if(absences.length>=3){
+      const d1=new Date(absences[0]),d2=new Date(absences[1]),d3=new Date(absences[2]);
+      const diff1=Math.abs(d1-d2)/(1000*60*60*24);
+      const diff2=Math.abs(d2-d3)/(1000*60*60*24);
+      if(diff1<=3&&diff2<=3)list.push({id:'abs3-'+s.id,type:'att',icon:'fas fa-user-times',title:'غياب متكرر',body:s.name+' — غاب 3 مرات متتالية',time:'تنبيه'});
+    }
+  });
+
+  // تنبيه: طالب أتم حزباً
+  myS.forEach(s=>{
+    const hizb=calcHizb(s.id);
+    if(hizb>0)list.push({id:'hizb-'+s.id+'-'+hizb,type:'hifz',icon:'fas fa-quran',title:'إتمام أحزاب',body:s.name+' — أتم '+hizb+' حزباً',time:'تنبيه'});
+  });
+
+  // تنبيه: شهادات مقترحة (من أتم 5 أحزاب أو أكثر)
+  myS.forEach(s=>{
+    const hizb=calcHizb(s.id);
+    if(hizb>=5){
+      const alreadyCerted=(S._certs||[]).some(c=>c.student_id===s.id&&c.type==='حفظ');
+      if(!alreadyCerted)list.push({id:'certsugg-'+s.id,type:'cert',icon:'fas fa-scroll',title:'شهادة مقترحة',body:s.name+' يستحق شهادة حفظ! ('+hizb+' أحزاب)',time:'اقتراح'});
+    }
+  });
+
+  notifications=list.slice(0,15);
+  renderNotifications();
+}
+
+function renderNotifications(){
+  const unread=notifications.filter(n=>!notifsRead.has(n.id));
+  const badge=$('notif-badge');
+  if(unread.length>0){badge.style.display='flex';badge.textContent=unread.length>9?'9+':unread.length}
+  else{badge.style.display='none'}
+
+  const list=$('notif-list');
+  if(!notifications.length){
+    list.innerHTML='<div class="notif-empty"><i class="fas fa-check-circle"></i><p>لا توجد تنبيهات</p></div>';
+    return;
+  }
+  const typeClass={att:'att',hifz:'hifz',exam:'exam',admin:'admin',cert:'cert'};
+  list.innerHTML=notifications.map(n=>`
+    <div class="notif-item ${notifsRead.has(n.id)?'':'unread'}" onclick="readNotif('${n.id}')">
+      <div class="notif-ic ${typeClass[n.type]||'admin'}"><i class="${n.icon}"></i></div>
+      <div class="notif-txt">
+        <p><strong>${n.title}</strong> — ${n.body}</p>
+        <span>${n.time}</span>
+      </div>
+    </div>`).join('');
+}
+
+function toggleNotifications(){
+  const dd=$('notif-dropdown');
+  dd.classList.toggle('open');
+  // إغلاق عند الضغط خارجها
+  if(dd.classList.contains('open')){
+    setTimeout(()=>document.addEventListener('click',closeNotifHandler,{once:true}),10);
+  }
+}
+function closeNotifHandler(e){
+  const wrap=$('notif-wrap');
+  if(!wrap.contains(e.target))$('notif-dropdown').classList.remove('open');
+}
+function readNotif(id){
+  notifsRead.add(id);
+  renderNotifications();
+}
+function markAllRead(){
+  notifications.forEach(n=>notifsRead.add(n.id));
+  renderNotifications();
+}
+
+// ===================== CERTIFICATES =====================
+// أرشيف الشهادات في الذاكرة (يُستبدل لاحقاً بقاعدة بيانات)
+if(!S._certs)S._certs=[];
+
+function renderCertificatesPage(){
+  // تعبئة قائمة الطلبة
+  const students=myStudents();
+  $('cert-student').innerHTML='<option value="">— اختر الطالب —</option>'+students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  $('cert-filter-student').innerHTML='<option value="">كل الطلبة</option>'+students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  // تعيين تاريخ اليوم
+  $('cert-date').value=today();
+  renderCertArchive();
+  // اقتراح تلقائي
+  autosuggestCerts();
+}
+
+function selectCertType(el){
+  document.querySelectorAll('.cert-type-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function getSelectedCertType(){
+  return document.querySelector('.cert-type-card.selected')?.dataset.type||'حفظ';
+}
+
+function autosuggestCerts(){
+  const suggestions=[];
+  myStudents().forEach(s=>{
+    const hizb=calcHizb(s.id);
+    const att=getAttRate(s.id);
+    if(hizb>=5&&!(S._certs||[]).some(c=>c.student_id===s.id&&c.type==='حفظ'))
+      suggestions.push({student:s,type:'حفظ',reason:'أتم '+hizb+' أحزاب'});
+    if(att>=90&&!(S._certs||[]).some(c=>c.student_id===s.id&&c.type==='مواظبة'))
+      suggestions.push({student:s,type:'مواظبة',reason:'نسبة حضور '+att+'%'});
+  });
+  if(!suggestions.length)return;
+  const box=document.createElement('div');
+  box.style.cssText='background:#fefce8;border:1.5px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:16px';
+  box.innerHTML='<div style="font-weight:700;color:#92400e;margin-bottom:10px"><i class="fas fa-lightbulb" style="margin-left:6px"></i>شهادات مقترحة تلقائياً</div>'+suggestions.map(sg=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:13px;flex:1">${sg.student.name} — ${sg.reason}</span><button class="btn btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-family:Tajawal,sans-serif;cursor:pointer" onclick="quickCert('${sg.student.id}','${sg.type}','${sg.reason}')">إنشاء</button></div>`).join('');
+  const previewArea=$('cert-preview-area');
+  const existingBox=document.querySelector('#cert-suggest-box');
+  if(existingBox)existingBox.remove();
+  box.id='cert-suggest-box';
+  previewArea.parentElement.insertBefore(box,$('cert-preview-area').closest('.card'));
+}
+
+function quickCert(sid,type,reason){
+  $('cert-student').value=sid;
+  document.querySelector(`.cert-type-card[data-type="${type}"]`)?.click();
+  $('cert-occasion').value=reason;
+  $('cert-date').value=today();
+  generateCert();
+}
+
+function generateCert(){
+  const sid=$('cert-student').value;
+  if(!sid){toast('اختر الطالب أولاً','warn');return}
+  const student=S.students.find(s=>s.id===sid);
+  if(!student){return}
+  const type=getSelectedCertType();
+  const occasion=$('cert-occasion').value||typeOccasion(type,student);
+  const date=$('cert-date').value||today();
+  const notes=$('cert-notes').value;
+  const dateFormatted=new Date(date).toLocaleDateString('ar-MA',{year:'numeric',month:'long',day:'numeric'});
+  const group=S.groups.find(g=>g.id===student.group_id);
+  const teacher=S.teachers.find(t=>t.id===group?.teacher_id);
+  const hizb=calcHizb(student.id);
+  const att=getAttRate(student.id);
+
+  // توليد محتوى الشهادة
+  const certHTML=buildCertHTML({student,type,occasion,dateFormatted,notes,group,teacher,hizb,att});
+  $('cert-preview-area').innerHTML=`<div class="cert-preview-wrap"><div class="cert-paper" id="cert-output">${certHTML}</div></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:center"><button class="btn btn-p" onclick="printCert()"><i class="fas fa-print"></i> طباعة</button><button class="btn btn-s" onclick="saveCertToArchive('${sid}','${type}','${occasion}','${date}')"><i class="fas fa-save"></i> حفظ في الأرشيف</button></div>`;
+}
+
+function typeOccasion(type,student){
+  const hizb=calcHizb(student.id);
+  if(type==='حفظ')return'إتمام حفظ '+(hizb>0?hizb+' حزباً من القرآن الكريم':'سورة من القرآن الكريم');
+  if(type==='تفوق')return'التفوق والتميز في حلقة تحفيظ القرآن الكريم';
+  if(type==='مواظبة')return'المواظبة والتميز في الحضور';
+  if(type==='مشاركة')return'المشاركة الفعّالة في الأنشطة والمسابقات القرآنية';
+  if(type==='ختم')return'ختم القرآن الكريم كاملاً';
+  return'التميز في دار القرآن الكريم';
+}
+
+function buildCertHTML({student,type,occasion,dateFormatted,notes,group,teacher,hizb,att}){
+  const colors={حفظ:['#0f4c2e','#16a34a','#dcfce7'],تفوق:['#78350f','#d97706','#fef3c7'],مواظبة:['#1e3a8a','#2563eb','#dbeafe'],مشاركة:['#4a1d96','#7c3aed','#ede9fe'],ختم:['#7c2d12','#c2410c','#ffedd5']};
+  const [dark,mid,light]=colors[type]||colors['حفظ'];
+  const icons={حفظ:'📖',تفوق:'🏆',مواظبة:'📅',مشاركة:'⭐',ختم:'🌟'};
+  const icon=icons[type]||'📜';
+  return `
+  <div style="width:100%;height:100%;background:linear-gradient(145deg,${light} 0%,#fff 40%,${light} 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5%;position:relative;font-family:'Amiri',serif;text-align:center">
+    <!-- زخرفة إطار -->
+    <div style="position:absolute;inset:12px;border:2.5px solid ${mid};border-radius:12px;opacity:.35;pointer-events:none"></div>
+    <div style="position:absolute;inset:18px;border:1px solid ${mid};border-radius:8px;opacity:.18;pointer-events:none"></div>
+    <!-- رأس -->
+    <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار" style="width:70px;height:70px;border-radius:50%;border:3px solid ${mid};object-fit:cover;margin-bottom:8px;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+    <div style="font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:${dark};letter-spacing:.5px;margin-bottom:4px">جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية</div>
+    <div style="font-family:'Tajawal',sans-serif;font-size:11px;color:${mid};margin-bottom:16px">دار القرآن الكريم — الوفاق الكبير، بنسركاو</div>
+    <!-- فاصل -->
+    <div style="width:60%;height:2px;background:linear-gradient(90deg,transparent,${mid},transparent);margin-bottom:16px"></div>
+    <!-- العنوان -->
+    <div style="font-size:11px;color:${mid};font-family:'Tajawal',sans-serif;font-weight:700;letter-spacing:2px;margin-bottom:6px;text-transform:uppercase">شهـادة تقديريـة</div>
+    <div style="font-size:28px;font-weight:700;color:${dark};margin-bottom:4px">${icon} شهادة ${type}</div>
+    <!-- جسم -->
+    <div style="font-size:14px;color:#4a5568;line-height:1.8;margin:16px 0 12px;max-width:80%">تُقدِّم إدارة دار القرآن الكريم هذه الشهادة التقديرية إلى</div>
+    <div style="font-size:30px;font-weight:700;color:${dark};border-bottom:2px dotted ${mid};padding-bottom:4px;margin-bottom:12px;min-width:200px">${student.name}</div>
+    ${group?`<div style="font-size:12px;color:#718096;font-family:'Tajawal',sans-serif;margin-bottom:10px">حلقة: <strong>${group.name}</strong>${teacher?' — الأستاذ: <strong>'+teacher.name+'</strong>':''}</div>`:''}
+    <div style="font-size:15px;color:#374151;line-height:1.9;max-width:75%;margin-bottom:10px">وذلك تقديرًا على</div>
+    <div style="font-size:17px;font-weight:700;color:${dark};margin-bottom:8px">${occasion}</div>
+    ${notes?`<div style="font-size:13px;color:#718096;font-style:italic;margin-bottom:8px">${notes}</div>`:''}
+    <!-- إحصائية صغيرة -->
+    <div style="display:flex;gap:20px;background:${light};border-radius:10px;padding:10px 20px;margin:10px 0;border:1px solid ${mid}40">
+      ${hizb>0?`<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:${dark}">${hizb}</div><div style="font-size:10px;color:${mid};font-family:'Tajawal',sans-serif">حزباً</div></div>`:''}
+      ${att>0?`<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:${dark}">${att}%</div><div style="font-size:10px;color:${mid};font-family:'Tajawal',sans-serif">حضور</div></div>`:''}
+    </div>
+    <!-- تاريخ وتوقيع -->
+    <div style="width:60%;height:1px;background:linear-gradient(90deg,transparent,${mid},transparent);margin:14px 0"></div>
+    <div style="display:flex;justify-content:space-between;width:80%;align-items:flex-end">
+      <div style="text-align:center">
+        <div style="font-family:'Tajawal',sans-serif;font-size:11px;color:#718096;margin-bottom:16px">توقيع المشرف العام</div>
+        <div style="border-top:1.5px solid ${mid};width:100px;margin:0 auto"></div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:'Tajawal',sans-serif;font-size:12px;color:#374151">${dateFormatted}</div>
+        <div style="font-family:'Tajawal',sans-serif;font-size:10px;color:#718096;margin-top:4px">تاريخ الإصدار</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:'Tajawal',sans-serif;font-size:11px;color:#718096;margin-bottom:16px">ختم المؤسسة</div>
+        <div style="width:50px;height:50px;border:1.5px solid ${mid};border-radius:50%;margin:0 auto"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function printCert(){
+  const certEl=$('cert-output');
+  if(!certEl){toast('أنشئ الشهادة أولاً','warn');return}
+  window.print();
+}
+
+function saveCertToArchive(sid,type,occasion,date){
+  if(!S._certs)S._certs=[];
+  const student=S.students.find(s=>s.id===sid);
+  S._certs.unshift({id:Date.now(),student_id:sid,student_name:student?.name||'—',type,occasion,date,created_at:new Date().toISOString()});
+  renderCertArchive();
+  toast('تم حفظ الشهادة في الأرشيف ✅','ok');
+}
+
+function renderCertArchive(){
+  const filter=$('cert-filter-student')?.value||'';
+  const list=(S._certs||[]).filter(c=>!filter||c.student_id===filter);
+  const el=$('cert-archive-list');
+  if(!list.length){el.innerHTML='<div class="empty"><i class="fas fa-scroll"></i><p>لا توجد شهادات في الأرشيف</p></div>';return}
+  const typeColors={حفظ:'#16a34a',تفوق:'#d97706',مواظبة:'#2563eb',مشاركة:'#7c3aed',ختم:'#c2410c'};
+  el.innerHTML=list.map(c=>`
+    <div class="cert-arch-item">
+      <div class="cert-arch-ic"><i class="fas fa-scroll" style="color:${typeColors[c.type]||'#666'}"></i></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px">${c.student_name}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${c.type} — ${c.occasion}</div>
+      </div>
+      <div style="text-align:left">
+        <span class="bx" style="background:${typeColors[c.type]||'#666'}15;color:${typeColors[c.type]||'#666'}">${c.type}</span>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">${fmtDate(c.date)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ملاحظة: buildNotifications تُستدعى من showApp مباشرة (انظر أعلاه)
+
 </script>
 </body>
 </html>
