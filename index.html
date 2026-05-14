@@ -1018,7 +1018,7 @@ textarea{resize:vertical;min-height:80px}
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
                 <div class="fg"><label>الحلقة</label><select id="ex-group" onchange="loadExamStudents()"></select></div>
                 <div class="fg"><label>الطالب</label><select id="ex-student"><option value="">— اختر —</option></select></div>
-                <div class="fg"><label>عدد الأسئلة</label><select id="ex-count"><option value="10">10 أسئلة</option><option value="15">15 سؤال</option><option value="20" selected>20 سؤال</option><option value="25">25 سؤال</option><option value="30">30 سؤال</option></select></div>
+                <div class="fg"><label>عدد الأسئلة</label><input type="number" id="ex-count" min="1" max="100" value="10" placeholder="أدخل العدد" style="font-size:15px;font-weight:700;text-align:center"><small style="color:var(--text3);font-size:11px;margin-top:3px;display:block">أدخل العدد الذي تريده (1–100)</small></div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
                 <div>
@@ -1032,7 +1032,7 @@ textarea{resize:vertical;min-height:80px}
                   <input type="number" id="ex-v-to" min="1" value="10" placeholder="إلى آية" style="width:100%">
                 </div>
               </div>
-              <button class="btn btn-p" onclick="generateExam()" style="width:100%;padding:12px;font-size:14px">
+              <button class="btn btn-p" onclick="window.SESSION_USED_SEGMENTS=new Set();generateExam()" style="width:100%;padding:12px;font-size:14px">
                 <i class="fas fa-random"></i> توليد أسئلة الامتحان عشوائياً
               </button>
             </div>
@@ -1062,6 +1062,7 @@ textarea{resize:vertical;min-height:80px}
                     <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">الطالب:</div>
                     <div style="font-size:14px;font-weight:700" id="ex-student-name">—</div>
                     <div style="font-size:12px;color:var(--text3)" id="ex-group-name">—</div>
+                  <div id="ex-level-badge" style="margin-top:6px"></div>
                   </div>
                 </div>
               </div>
@@ -2956,79 +2957,222 @@ function loadExamStudents(){
     list.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
 }
 
+/* ============================================================
+   نظام توليد أسئلة الامتحان — المحسَّن
+   ============================================================
+   المبادئ:
+   ١. حجم المقطع: 10 آيات كحدٍّ أدنى (لمقاطع التقييم الحقيقي)
+   ٢. مراعاة مستوى الطالب: كلما ارتفع الحفظ ابتعدنا عن السور القصيرة
+   ٣. تجنّب التكرار بين الطلبة داخل نفس الجلسة (USED_SEGMENTS)
+   ============================================================ */
+
+// سجل المقاطع المستخدمة في الجلسة الحالية (يُمسح مع كل امتحان جديد)
+if(!window.SESSION_USED_SEGMENTS) window.SESSION_USED_SEGMENTS = new Set();
+
+/**
+ * يُقدِّر مستوى الطالب بناءً على آياته المحفوظة:
+ *   < 300  → مبتدئ   (يقتصر على السور القصيرة)
+ *   300-900 → متوسط
+ *   > 900  → متقدم   (يُستهدَف بالسور المتوسطة والطويلة)
+ */
+function getStudentLevel(sid){
+  const v = getTotalV(sid);
+  if(v < 300) return 'beginner';
+  if(v < 900) return 'intermediate';
+  return 'advanced';
+}
+
+/**
+ * يحدِّد الحدَّ الأدنى لعدد آيات كل سؤال حسب مستوى الطالب
+ * والحجم الإجمالي للنطاق المختار:
+ *   - مبتدئ: 10 آيات (أو حجم السورة كاملاً إن كانت أقصر)
+ *   - متوسط: 12 آية
+ *   - متقدم: 15 آية
+ */
+function getMinSegmentSize(level, totalRangeVerses, questionCount){
+  const base = level==='beginner'?10 : level==='intermediate'?12 : 15;
+  // نضمن أن النطاق كافٍ لعدد الأسئلة بالحجم المطلوب
+  const possible = Math.floor(totalRangeVerses / Math.max(questionCount,1));
+  return Math.max(Math.min(base, possible), 5); // 5 آيات كحدٍّ مطلق أدنى
+}
+
+/**
+ * يُرجَّح اختيار سورة حسب مستوى الطالب:
+ *   - مبتدئ:    كل السور متساوية
+ *   - متوسط:   تُخفَّض أوزان السور التي عدد آياتها < 15
+ *   - متقدم:   تُخفَّض بشدة السور التي عدد آياتها < 20
+ */
+function surahWeight(surah, level){
+  const v = surah.v;
+  if(level==='beginner') return 1;
+  if(level==='intermediate') return v < 15 ? 0.25 : 1;
+  // متقدم: يقلل احتمال السور القصيرة جداً
+  if(v < 10) return 0.05;
+  if(v < 20) return 0.15;
+  if(v < 40) return 0.6;
+  return 1;
+}
+
+/**
+ * يختار آية بداية عشوائية مرجَّحة داخل قائمة الآيات المتاحة
+ * بحيث يُمكن بناء مقطع بالحجم المطلوب، ولا يتداخل مع مقطع مستخدم.
+ */
+function pickUniqueSegment(candidateVerses, minSize, maxSize, usedSet, attempts=300){
+  // نبني قائمة نقاط البداية الممكنة
+  const starts = [];
+  for(let i=0; i<candidateVerses.length; i++){
+    const v = candidateVerses[i];
+    // يجب أن يتسع المقطع بالحجم الأدنى
+    const remaining = candidateVerses.filter(c=>c.surahN===v.surahN&&c.verse>=v.verse).length;
+    if(remaining >= minSize) starts.push(i);
+  }
+  if(!starts.length) return null;
+
+  // خلط عشوائي مرجَّح مع تجنّب المستخدم
+  const shuffled = starts.sort(()=>Math.random()-.5);
+  for(const si of shuffled){
+    const sv = candidateVerses[si];
+    // نحدد نهاية المقطع: minSize..maxSize آية ضمن نفس السورة
+    const same = candidateVerses.filter(c=>c.surahN===sv.surahN&&c.verse>=sv.verse);
+    const spread = Math.min(
+      minSize + Math.floor(Math.random()*(maxSize-minSize+1)),
+      same.length
+    );
+    const ev = same[spread-1];
+    const key = `${sv.surahN}_${sv.verse}_${ev.verse}`;
+    if(!usedSet.has(key)){
+      usedSet.add(key);
+      return {
+        id: 0,
+        surahN: sv.surahN, surahName: sv.surahName,
+        verseFrom: sv.verse, verseTo: ev.verse,
+        label: `سورة ${sv.surahName} — من الآية ${sv.verse} إلى الآية ${ev.verse}`
+      };
+    }
+  }
+  return null;
+}
+
 function generateExam(){
   const gid = $('ex-group').value;
   const sid = $('ex-student').value;
-  const count = parseInt($('ex-count').value)||20;
+  const countRaw = parseInt($('ex-count').value);
+  if(isNaN(countRaw)||countRaw<1||countRaw>100){
+    toast('أدخل عدد أسئلة صحيحاً بين 1 و100','warn'); return;
+  }
+  const count = countRaw;
   const sfrom = parseInt($('ex-s-from').value);
   const vfrom = parseInt($('ex-v-from').value)||1;
-  const sto = parseInt($('ex-s-to').value);
-  const vto = parseInt($('ex-v-to').value)||10;
+  const sto   = parseInt($('ex-s-to').value);
+  const vto   = parseInt($('ex-v-to').value)||10;
 
   if(!sid){ toast('اختر الطالب','warn'); return; }
   if(!sfrom||!sto){ toast('اختر نطاق الحفظ','warn'); return; }
 
   const student = S.students.find(x=>x.id===sid);
-  const group = S.groups.find(x=>x.id===gid);
+  const group   = S.groups.find(x=>x.id===gid);
 
-  // بناء قائمة كل الآيات في النطاق
+  // ── بناء قائمة آيات النطاق ──────────────────────────────
   const allVerses = [];
   const fi = SURAHS.findIndex(x=>x.n===sfrom);
   const ti = SURAHS.findIndex(x=>x.n===sto);
-  const [si,ei] = fi<ti?[fi,ti]:[ti,fi];
+  const [si,ei] = fi<=ti ? [fi,ti] : [ti,fi];
   for(let i=si; i<=ei; i++){
     const sr = SURAHS[i];
-    const vStart = i===si ? vfrom : 1;
-    const vEnd = i===ei ? Math.min(vto, sr.v) : sr.v;
+    const vStart = i===si ? Math.max(1,vfrom) : 1;
+    const vEnd   = i===ei ? Math.min(vto,sr.v) : sr.v;
     for(let v=vStart; v<=vEnd; v++){
-      allVerses.push({ surahN: sr.n, surahName: sr.name, verse: v, totalV: sr.v });
+      allVerses.push({ surahN:sr.n, surahName:sr.name, verse:v, totalV:sr.v });
     }
   }
 
-  if(allVerses.length < 3){ toast('النطاق المحدد صغير جداً، اختر نطاقاً أوسع','warn'); return; }
+  const totalVersesInRange = allVerses.length;
+  if(totalVersesInRange < 10){
+    toast('النطاق المحدد صغير جداً (أقل من 10 آيات)، اختر نطاقاً أوسع','warn');
+    return;
+  }
 
-  // توليد أسئلة عشوائية غير متكررة
+  // ── مستوى الطالب ────────────────────────────────────────
+  const level   = getStudentLevel(sid);
+  const minSeg  = getMinSegmentSize(level, totalVersesInRange, count);
+  const maxSeg  = Math.min(minSeg + 8, Math.floor(totalVersesInRange / Math.max(count,1)) + 5);
+
+  // ── ترجيح الآيات حسب السورة ومستوى الطالب ───────────────
+  // نبني قائمة مرجَّحة بإعادة إدراج الآيات ذات الوزن الأعلى
+  const weightedVerses = [];
+  const surahWeightCache = {};
+  allVerses.forEach(v=>{
+    if(surahWeightCache[v.surahN]===undefined){
+      const sr = SURAHS.find(s=>s.n===v.surahN);
+      surahWeightCache[v.surahN] = surahWeight(sr, level);
+    }
+    const w = surahWeightCache[v.surahN];
+    // نضيف الآية بعدد مرات يعكس وزنها (1 أو 4)
+    const times = w>=1 ? 4 : w>=0.5 ? 2 : 1;
+    for(let t=0;t<times;t++) weightedVerses.push(v);
+  });
+
+  // ── توليد الأسئلة مع تجنّب التكرار بين الطلبة ───────────
   const questions = [];
-  const used = new Set();
-  const maxQ = Math.min(count, allVerses.length);
+  const localUsed = new Set(); // تجنّب التكرار داخل نفس الامتحان
+
+  // نُفضّل تجنّب المقاطع المستخدمة في نفس الجلسة
+  const sessionUsed = window.SESSION_USED_SEGMENTS;
+
+  let maxAttempts = count * 30;
   let attempts = 0;
-  while(questions.length < maxQ && attempts < 1000){
+  while(questions.length < count && attempts < maxAttempts){
     attempts++;
-    const idx = Math.floor(Math.random() * allVerses.length);
-    const v = allVerses[idx];
-    const key = `${v.surahN}_${v.verse}`;
-    if(used.has(key)) continue;
-    used.add(key);
-    // السؤال: من الآية X إلى الآية Y (3-5 آيات)
-    const spread = Math.floor(Math.random()*3)+3; // 3-5 آيات
-    const vEnd = Math.min(v.verse + spread - 1, v.totalV);
+    // خلط وإعادة ترتيب المرجَّح
+    const seg = pickUniqueSegment(
+      weightedVerses,
+      minSeg, maxSeg,
+      localUsed,
+      50
+    );
+    if(!seg) break;
+
+    // نضيف في سجل الجلسة أيضاً لتقليل التكرار بين الطلبة
+    sessionUsed.add(`${seg.surahN}_${seg.verseFrom}_${seg.verseTo}`);
+
     questions.push({
-      id: questions.length+1,
-      surahN: v.surahN, surahName: v.surahName,
-      verseFrom: v.verse, verseTo: vEnd,
-      label: `سورة ${v.surahName} — من الآية ${v.verse} إلى الآية ${vEnd}`
+      ...seg,
+      id: questions.length+1
     });
   }
 
+  if(!questions.length){
+    toast('تعذّر توليد أسئلة — النطاق ضيق جداً بالنسبة لعدد الأسئلة المطلوب، قلّل العدد أو وسّع النطاق','warn');
+    return;
+  }
+  if(questions.length < count){
+    toast(`تنبيه: تم توليد ${questions.length} سؤال فقط (النطاق لا يتسع لـ${count})، يمكنك المتابعة`,'warn');
+  }
+
+  // ── معلومات المستوى للعرض ───────────────────────────────
+  const levelLabel = level==='beginner'?'مبتدئ':level==='intermediate'?'متوسط':'متقدم';
+
   EXAM_STATE = { questions, student, group, maxPerQ: 20, answers: {} };
 
-  // عرض الامتحان
   $('exam-area').style.display = 'block';
   $('ex-student-name').textContent = student?.name||'—';
-  $('ex-group-name').textContent = group?.name||'—';
+  $('ex-group-name').textContent = `${group?.name||'—'} · المستوى: ${levelLabel}`;
   renderExamQuestions();
   updateExamSummary();
   $('exam-area').scrollIntoView({behavior:'smooth', block:'start'});
-  toast(`✅ تم توليد ${questions.length} سؤال للطالب ${student?.name}`,'ok');
+  toast(`✅ تم توليد ${questions.length} سؤال للطالب ${student?.name} · مستوى: ${levelLabel} · حجم المقطع: ${minSeg}–${maxSeg} آية`,'ok');
 }
 
 function renderExamQuestions(){
   const {questions, maxPerQ} = EXAM_STATE;
-  $('exam-questions').innerHTML = questions.map(q=>`
+  $('exam-questions').innerHTML = questions.map(q=>{
+    const verseCount = q.verseTo - q.verseFrom + 1;
+    return `
     <div class="exam-q-card" id="qcard-${q.id}">
       <div class="exam-q-title">
         <div class="exam-q-num">${q.id}</div>
         <span>سؤال ${q.id} / ${questions.length}</span>
+        <span class="bx bx-g" style="margin-right:auto;font-size:11px">${verseCount} آية</span>
       </div>
       <div class="exam-q-range"><i class="fas fa-book-open" style="margin-left:5px;color:var(--primary)"></i>${q.label}</div>
       <div class="exam-score-row">
@@ -3044,7 +3188,7 @@ function renderExamQuestions(){
         </div>
       </div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function clampScore(inputId, max){
@@ -3085,6 +3229,14 @@ function updateExamSummary(){
   $('ex-prog-bar').style.width = pct+'%';
   $('ex-prog-bar').style.background = pct>=80?'#16a34a':pct>=60?'#d97706':'#dc2626';
   $('ex-done-display').textContent = `${doneCount} / ${questions.length} سؤال مكتمل`;
+  // شارة المستوى
+  if(EXAM_STATE.student){
+    const lv = getStudentLevel(EXAM_STATE.student.id);
+    const lvMap = {beginner:['مبتدئ','bx-b'],intermediate:['متوسط','bx-y'],advanced:['متقدم','bx-g']};
+    const [lbl,cls] = lvMap[lv]||['—','bx-gray'];
+    const badge = $('ex-level-badge');
+    if(badge) badge.innerHTML = `<span class="bx ${cls}" style="font-size:11px">المستوى: ${lbl}</span>`;
+  }
 }
 
 function finishExam(){
