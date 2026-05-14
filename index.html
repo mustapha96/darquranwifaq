@@ -474,6 +474,21 @@ textarea{resize:vertical;min-height:80px}
 .cert-arch-item:hover{border-color:var(--primary-l);box-shadow:0 2px 10px rgba(26,60,110,.08)}
 .cert-arch-ic{width:40px;height:40px;border-radius:10px;background:#fefce8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 
+/* ===== ABSENCE STATS ===== */
+.abs-stat-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);transition:background .15s}
+.abs-stat-bar:hover{background:#f0f6ff}
+.abs-name{flex:1;font-size:13px;font-weight:600}
+.abs-count-badge{min-width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.abs-critical{background:#fee2e2;color:#991b1b;border:2px solid #fca5a5}
+.abs-warn{background:#fef9c3;color:#713f12;border:2px solid #fde047}
+.abs-ok{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.abs-detail-card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:16px;box-shadow:var(--sh)}
+.abs-detail-head{padding:12px 16px;background:linear-gradient(135deg,var(--primary-d),var(--primary));color:#fff;display:flex;align-items:center;gap:10px}
+.abs-filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end}
+/* ===== EXAM EDIT MODAL ===== */
+.exam-edit-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-radius:8px;background:#f8fafc;border:1px solid var(--border);margin-bottom:6px}
+.exam-edit-row:hover{background:#f0f6ff;border-color:var(--primary-l)}
+.exam-edit-label{font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:6px}
 /* ===== MOBILE IMPROVEMENTS ===== */
 @media(max-width:768px){
   :root{--sw:0px;--hh:60px}
@@ -735,6 +750,7 @@ textarea{resize:vertical;min-height:80px}
     <div class="nav-sec">
       <div class="nav-sec-title">المتابعة</div>
       <div class="nav-item" onclick="nav('attendance')"><i class="fas fa-clipboard-check"></i> الحضور والغياب</div>
+      <div class="nav-item" onclick="nav('absence-stats')"><i class="fas fa-user-times"></i> إحصائيات الغياب</div>
       <div class="nav-item" onclick="nav('recitations')"><i class="fas fa-book-open"></i> الحفظ والمراجعة</div>
     </div>
     <div class="nav-sec">
@@ -856,6 +872,53 @@ textarea{resize:vertical;min-height:80px}
         </div>
         <div id="students-grid" class="student-grid"></div>
         <div id="students-table" style="display:none" class="card"><div class="tbl-wrap"><table><thead id="s-thead"></thead><tbody id="s-tbody"></tbody></table></div></div>
+      </div>
+
+      <!-- ABSENCE STATS -->
+      <div class="page" id="page-absence-stats">
+        <div class="ph">
+          <div><h1><i class="fas fa-user-times" style="color:var(--danger);margin-left:8px"></i>إحصائيات الغياب</h1><p>تحليل شامل للغياب والحضور</p></div>
+          <button class="btn btn-p" onclick="exportAbsencePDF()"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+        </div>
+        <!-- فلاتر -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-body">
+            <div class="abs-filter-bar">
+              <div class="fg" style="flex:1;min-width:140px"><label>الحلقة</label><select id="abs-group" onchange="renderAbsStats()"><option value="">كل الحلقات</option></select></div>
+              <div class="fg" style="flex:1;min-width:130px"><label>من تاريخ</label><input type="date" id="abs-from" onchange="renderAbsStats()"></div>
+              <div class="fg" style="flex:1;min-width:130px"><label>إلى تاريخ</label><input type="date" id="abs-to" onchange="renderAbsStats()"></div>
+              <div class="fg" style="flex:1;min-width:140px"><label>حد الغياب الحرج</label><select id="abs-threshold" onchange="renderAbsStats()">
+                <option value="5">5 غيابات</option>
+                <option value="8" selected>8 غيابات</option>
+                <option value="10">10 غيابات</option>
+                <option value="12">12 غياباً</option>
+              </select></div>
+            </div>
+          </div>
+        </div>
+        <!-- إحصائيات علوية -->
+        <div class="stats-grid" id="abs-top-stats"></div>
+        <!-- تبويبات -->
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('absence-stats','overview',this)"><i class="fas fa-chart-bar"></i> نظرة عامة</div>
+          <div class="tab" onclick="switchTab('absence-stats','ranking',this)"><i class="fas fa-sort-amount-down"></i> ترتيب الغياب</div>
+          <div class="tab" onclick="switchTab('absence-stats','critical',this)"><i class="fas fa-exclamation-triangle"></i> الحالات الحرجة</div>
+          <div class="tab" onclick="switchTab('absence-stats','monthly',this)"><i class="fas fa-calendar-alt"></i> الغياب الشهري</div>
+          <div class="tab" onclick="switchTab('absence-stats','details',this)"><i class="fas fa-list"></i> تفاصيل الغياب</div>
+        </div>
+        <div class="tab-pane active" id="absence-stats-overview"><div id="abs-overview-content"></div></div>
+        <div class="tab-pane" id="absence-stats-ranking"><div id="abs-ranking-content"></div></div>
+        <div class="tab-pane" id="absence-stats-critical"><div id="abs-critical-content"></div></div>
+        <div class="tab-pane" id="absence-stats-monthly"><div id="abs-monthly-content"></div></div>
+        <div class="tab-pane" id="absence-stats-details">
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-body">
+              <div class="fg"><label>اختر الطالب لعرض تفاصيل غيابه</label>
+              <select id="abs-detail-student" onchange="renderAbsStudentDetail()"><option value="">— كل الطلبة —</option></select></div>
+            </div>
+          </div>
+          <div id="abs-detail-content"></div>
+        </div>
       </div>
 
       <!-- ATTENDANCE -->
@@ -1373,6 +1436,33 @@ textarea{resize:vertical;min-height:80px}
   </div>
 </div>
 
+<!-- Modal تعديل الامتحان -->
+<div class="overlay" id="m-exam-edit">
+  <div class="modal modal-lg">
+    <div class="mh" style="background:linear-gradient(135deg,#0a1628,#1565c0)">
+      <h3 style="color:#fff"><i class="fas fa-edit" style="color:#fbbf24;margin-left:8px"></i>تعديل الامتحان</h3>
+      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-exam-edit')">✕</button>
+    </div>
+    <div class="mbody" id="exam-edit-content" style="padding:16px;max-height:72vh;overflow-y:auto"></div>
+    <div class="mfoot">
+      <button class="btn btn-o" onclick="closeM('m-exam-edit')">إلغاء</button>
+      <button class="btn btn-d btn-sm" id="exam-edit-del-btn"><i class="fas fa-trash"></i> حذف الامتحان</button>
+      <button class="btn btn-s" onclick="saveExamEdit()"><i class="fas fa-save"></i> حفظ التعديلات</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal تفاصيل الغياب اليومي -->
+<div class="overlay" id="m-abs-day">
+  <div class="modal modal-lg">
+    <div class="mh" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">
+      <h3 style="color:#fff"><i class="fas fa-user-times" style="margin-left:8px"></i>تفاصيل الغياب</h3>
+      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-abs-day')">✕</button>
+    </div>
+    <div class="mbody" id="abs-day-content"></div>
+  </div>
+</div>
+
 <div id="toasts"></div>
 
 <script>
@@ -1805,7 +1895,7 @@ async function checkAuth(){
 }
 
 // ===================== NAV =====================
-const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات',certificates:'الشهادات'};
+const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب','absence-stats':'إحصائيات الغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات',certificates:'الشهادات'};
 
 function nav(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1813,6 +1903,7 @@ function nav(page){
   const pg=$('page-'+page);if(pg)pg.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+page+"'"))n.classList.add('active')});
   $('breadcrumb-txt').textContent=PAGE_TITLES[page]||page;
+  if(page==='absence-stats')initAbsStats();
   if(page==='dashboard')renderDash();
   if(page==='groups')renderGroups();
   if(page==='teachers')renderTeachers();
@@ -3818,6 +3909,679 @@ function renderCertArchive(){
       </div>
     </div>`).join('');
 }
+
+// ===================== ABSENCE STATS (إحصائيات الغياب) =====================
+
+let ABS_EDIT_ID = null; // معرّف الامتحان الذي يُعدَّل
+
+/** تهيئة صفحة إحصائيات الغياب */
+function initAbsStats(){
+  const mg = myGroups();
+  const absFrom = $('abs-from'), absTo = $('abs-to');
+  // تعيين النطاق الافتراضي: بداية الشهر الحالي حتى اليوم
+  if(!absFrom.value){
+    const d = new Date(); d.setDate(1);
+    absFrom.value = d.toISOString().split('T')[0];
+  }
+  if(!absTo.value) absTo.value = today();
+  $('abs-group').innerHTML = '<option value="">كل الحلقات</option>' +
+    mg.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  $('abs-detail-student').innerHTML = '<option value="">— كل الطلبة —</option>' +
+    myStudents().map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  renderAbsStats();
+}
+
+/** جلب سجلات الغياب مع فلترة */
+function getFilteredAbsences(){
+  const gf = $('abs-group')?.value||'';
+  const fd = $('abs-from')?.value||'';
+  const td = $('abs-to')?.value||'';
+  const myS = myStudents();
+  const myGroupIds = new Set(myGroups().map(g=>g.id));
+  let list = S.attendance.filter(a=>
+    (a.status==='غائب'||a.status==='بعذر') &&
+    myGroupIds.has(a.group_id)
+  );
+  if(gf) list = list.filter(a=>a.group_id===gf);
+  if(fd) list = list.filter(a=>a.date>=fd);
+  if(td) list = list.filter(a=>a.date<=td);
+  // ربط اسم الطالب والحلقة
+  return list.map(a=>{
+    const s = S.students.find(x=>x.id===a.student_id);
+    const g = S.groups.find(x=>x.id===a.group_id);
+    return {...a, studentName:s?.name||'—', groupName:g?.name||'—', teacherName:teacherName(g?.teacher_id), phone:s?.phone};
+  }).filter(a=>myS.some(s=>s.id===a.student_id));
+}
+
+/** الدالة الرئيسية لرسم إحصائيات الغياب */
+function renderAbsStats(){
+  const absences = getFilteredAbsences();
+  const threshold = parseInt($('abs-threshold')?.value||'8');
+  const myS = myStudents();
+  const myG = myGroups();
+
+  // حساب الغياب لكل طالب
+  const studentAbs = {};
+  myS.forEach(s=>{ studentAbs[s.id]={count:0,excused:0,dates:[],student:s}; });
+  absences.forEach(a=>{
+    if(!studentAbs[a.student_id]) return;
+    studentAbs[a.student_id].count++;
+    if(a.status==='بعذر') studentAbs[a.student_id].excused++;
+    studentAbs[a.student_id].dates.push(a.date);
+  });
+
+  const critical = Object.values(studentAbs).filter(x=>x.count>=threshold);
+  const warned   = Object.values(studentAbs).filter(x=>x.count>0&&x.count<threshold);
+  const totalDays = new Set(absences.map(a=>a.date)).size;
+
+  // إحصائيات علوية
+  $('abs-top-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-ic ic-red"><i class="fas fa-times-circle"></i></div><div><div class="stat-h" style="color:var(--danger)">${absences.length}</div><div class="stat-p">إجمالي الغيابات</div></div></div>
+    <div class="stat-card"><div class="stat-ic" style="background:#fee2e2"><i class="fas fa-user-times" style="color:#dc2626"></i></div><div><div class="stat-h" style="color:#dc2626">${critical.length}</div><div class="stat-p">حالات حرجة (≥${threshold})</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-exclamation-circle"></i></div><div><div class="stat-h">${warned.length}</div><div class="stat-p">طلبة لديهم غياب</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-calendar-check"></i></div><div><div class="stat-h">${totalDays}</div><div class="stat-p">أيام سُجّل فيها غياب</div></div></div>
+  `;
+
+  renderAbsOverview(absences, studentAbs, myG, threshold);
+  renderAbsRanking(studentAbs, threshold);
+  renderAbsCritical(studentAbs, threshold);
+  renderAbsMonthly(absences);
+}
+
+/** تبويب: نظرة عامة */
+function renderAbsOverview(absences, studentAbs, myG, threshold){
+  // غياب حسب الحلقة
+  const byGroup = myG.map(g=>{
+    const cnt = absences.filter(a=>a.group_id===g.id).length;
+    const students = myStudents().filter(s=>s.group_id===g.id).length;
+    return {g, cnt, rate: students?((cnt/students)*100).toFixed(1):0};
+  }).sort((a,b)=>b.cnt-a.cnt);
+
+  // أيام الأسبوع الأكثر غياباً
+  const byDay = {};
+  AR_DAYS.forEach(d=>byDay[d]=0);
+  absences.forEach(a=>{
+    const d = AR_DAYS[new Date(a.date).getDay()];
+    byDay[d] = (byDay[d]||0)+1;
+  });
+  const daysSorted = Object.entries(byDay).sort((a,b)=>b[1]-a[1]);
+  const maxDay = Math.max(...Object.values(byDay),1);
+
+  $('abs-overview-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card">
+        <div class="card-head"><h3><i class="fas fa-users" style="color:var(--danger);margin-left:6px"></i>الغياب حسب الحلقة</h3></div>
+        <div class="card-body">
+          ${byGroup.map(({g,cnt,rate})=>`
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+                <span><strong>${g.name}</strong> <span style="color:var(--text3);font-size:11px">(${teacherName(g.teacher_id)})</span></span>
+                <span style="font-weight:700;color:${cnt>10?'var(--danger)':cnt>5?'var(--warn)':'var(--text)'}">${cnt} غياب</span>
+              </div>
+              <div class="prog"><div class="prog-bar" style="width:${Math.min(cnt/Math.max(...byGroup.map(x=>x.cnt),1)*100,100)}%;background:${cnt>10?'#dc2626':cnt>5?'#ea580c':'var(--primary)'}"></div></div>
+            </div>`).join('')||'<div class="empty"><i class="fas fa-check"></i><p>لا يوجد غياب</p></div>'}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3><i class="fas fa-calendar-week" style="color:var(--primary);margin-left:6px"></i>أيام الأسبوع الأكثر غياباً</h3></div>
+        <div class="card-body">
+          <div style="display:flex;align-items:flex-end;gap:6px;height:120px;margin-bottom:8px">
+            ${daysSorted.map(([day,cnt])=>`
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                <span style="font-size:10px;font-weight:700;color:${cnt>maxDay*.6?'var(--danger)':'var(--text3)'}">${cnt}</span>
+                <div style="width:100%;background:${cnt>maxDay*.6?'var(--danger)':cnt>maxDay*.3?'var(--warn)':'var(--primary)'};border-radius:4px 4px 0 0;height:${cnt?Math.max(cnt/maxDay*100,4):2}px;min-height:2px"></div>
+                <span style="font-size:9px;color:var(--text3)">${day.substring(0,3)}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3><i class="fas fa-fire" style="color:var(--danger);margin-left:6px"></i>آخر الغيابات المسجّلة</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>الطالب</th><th>الحلقة</th><th>الأستاذ</th><th>التاريخ</th><th>يوم الأسبوع</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody>${absences.slice(0,20).map(a=>`
+            <tr>
+              <td><strong>${a.studentName}</strong></td>
+              <td>${a.groupName}</td>
+              <td>${a.teacherName}</td>
+              <td>${fmtDate(a.date)}</td>
+              <td>${AR_DAYS[new Date(a.date).getDay()]}</td>
+              <td><span class="bx ${a.status==='بعذر'?'bx-b':'bx-r'}">${a.status}</span></td>
+              <td>${a.phone?`<button class="wa-btn" style="padding:4px 10px;font-size:11px" onclick="openWAAbsenceModal('${a.student_id}','${a.date}')"><i class="fab fa-whatsapp"></i></button>`:'—'}</td>
+            </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text3)">لا يوجد غياب في هذه الفترة</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/** تبويب: ترتيب الغياب */
+function renderAbsRanking(studentAbs, threshold){
+  const ranked = Object.values(studentAbs)
+    .filter(x=>x.count>0)
+    .sort((a,b)=>b.count-a.count);
+  if(!ranked.length){
+    $('abs-ranking-content').innerHTML='<div class="empty"><i class="fas fa-smile"></i><p>لا يوجد غياب مسجل 🎉</p></div>';
+    return;
+  }
+  $('abs-ranking-content').innerHTML=`
+    <div class="card">
+      <div class="card-head"><h3>ترتيب الطلبة حسب الغياب</h3><span class="bx bx-b">${ranked.length} طالب</span></div>
+      <div class="card-body">
+        ${ranked.map((x,i)=>{
+          const s = x.student;
+          const g = S.groups.find(gg=>gg.id===s.group_id);
+          const isCrit = x.count>=threshold;
+          const isWarn = x.count>=threshold*0.6 && x.count<threshold;
+          const bg = isCrit?'#fef2f2':isWarn?'#fffbf0':'#f8fafc';
+          const brd = isCrit?'#fca5a5':isWarn?'#fde68a':'var(--border)';
+          const label = isCrit?`<span class="bx bx-r">كثير الغياب ⚠️</span>`:isWarn?`<span class="bx bx-y">تحت المراقبة</span>`:'';
+          return`<div class="abs-stat-bar" style="background:${bg};border-color:${brd}">
+            <div style="width:24px;text-align:center;font-size:12px;font-weight:700;color:${isCrit?'var(--danger)':'var(--text3)'}">${i+1}</div>
+            <div style="width:34px;height:34px;border-radius:50%;background:${isCrit?'#dc2626':isWarn?'#d97706':'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">${s.name[0]}</div>
+            <div style="flex:1">
+              <div class="abs-name">${s.name}</div>
+              <div style="font-size:11px;color:var(--text3)">${g?.name||'—'} | ${teacherName(g?.teacher_id)}</div>
+            </div>
+            ${label}
+            <div style="text-align:center;min-width:50px">
+              <div class="abs-count-badge ${isCrit?'abs-critical':isWarn?'abs-warn':'abs-ok'}">${x.count}</div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px">${x.excused?x.excused+' بعذر':''}</div>
+            </div>
+            ${s.phone?`<button class="btn btn-sm" style="background:#25d366;color:#fff;padding:4px 8px" onclick="openWAAbsenceModal('${s.id}')"><i class="fab fa-whatsapp"></i></button>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+/** تبويب: الحالات الحرجة */
+function renderAbsCritical(studentAbs, threshold){
+  const critical = Object.values(studentAbs)
+    .filter(x=>x.count>=threshold)
+    .sort((a,b)=>b.count-a.count);
+  if(!critical.length){
+    $('abs-critical-content').innerHTML=`
+      <div class="empty card" style="padding:60px">
+        <i class="fas fa-check-circle" style="color:var(--accent)"></i>
+        <p>لا توجد حالات حرجة (الحد = ${threshold} غيابات) 🎉</p>
+      </div>`;
+    return;
+  }
+  $('abs-critical-content').innerHTML=`
+    <div class="alert alert-d" style="margin-bottom:16px">
+      <i class="fas fa-exclamation-triangle"></i>
+      <strong>${critical.length} طالب تجاوز الحد المسموح (${threshold} غيابات)</strong> — يُنصح بالتواصل مع أولياء الأمور فوراً
+    </div>
+    ${critical.map(x=>{
+      const s=x.student;
+      const g=S.groups.find(gg=>gg.id===s.group_id);
+      const lastDate = x.dates.sort().reverse()[0];
+      const rate = getAttRate(s.id);
+      return`<div class="abs-detail-card">
+        <div class="abs-detail-head">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0">${s.name[0]}</div>
+          <div style="flex:1">
+            <div style="font-weight:800;font-size:15px">${s.name}</div>
+            <div style="font-size:12px;opacity:.8">${g?.name||'—'} | أ. ${teacherName(g?.teacher_id)}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:28px;font-weight:800;color:#fbbf24">${x.count}</div>
+            <div style="font-size:11px;opacity:.7">غياب</div>
+          </div>
+        </div>
+        <div style="padding:14px 16px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
+            <div style="text-align:center;padding:10px;background:#fef2f2;border-radius:8px">
+              <div style="font-size:18px;font-weight:800;color:#dc2626">${x.count}</div>
+              <div style="font-size:11px;color:var(--text3)">إجمالي الغياب</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:#fef9c3;border-radius:8px">
+              <div style="font-size:18px;font-weight:800;color:#d97706">${x.excused}</div>
+              <div style="font-size:11px;color:var(--text3)">بعذر</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:#eff6ff;border-radius:8px">
+              <div style="font-size:18px;font-weight:800;color:var(--primary)">${rate}%</div>
+              <div style="font-size:11px;color:var(--text3)">نسبة الحضور</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:10px"><i class="fas fa-calendar" style="margin-left:4px"></i>آخر غياب: ${fmtDate(lastDate)}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${s.phone?`<button class="wa-btn" onclick="openWAAbsenceModal('${s.id}')"><i class="fab fa-whatsapp"></i> تنبيه ولي الأمر</button>`:'<span class="bx bx-r" style="font-size:11px">لا يوجد رقم هاتف</span>'}
+            <button class="btn btn-o btn-sm" onclick="viewStudentAbsDetails('${s.id}')"><i class="fas fa-list"></i> عرض تفاصيل الغيابات</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+/** تبويب: الغياب الشهري */
+function renderAbsMonthly(absences){
+  // تجميع حسب الشهر
+  const byMonth = {};
+  absences.forEach(a=>{
+    const m = a.date.substring(0,7); // YYYY-MM
+    if(!byMonth[m]) byMonth[m] = {total:0, students:new Set()};
+    byMonth[m].total++;
+    byMonth[m].students.add(a.student_id);
+  });
+  const months = Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0]));
+  const maxMonth = Math.max(...months.map(m=>m[1].total),1);
+
+  // تجميع الغياب لكل طالب حسب الشهر (الشهر الأخير فقط)
+  const currentMonth = today().substring(0,7);
+  const thisMonthAbs = absences.filter(a=>a.date.startsWith(currentMonth));
+  const thisMonthByStudent = {};
+  thisMonthAbs.forEach(a=>{
+    if(!thisMonthByStudent[a.student_id]) thisMonthByStudent[a.student_id]={count:0,name:a.studentName,group:a.groupName};
+    thisMonthByStudent[a.student_id].count++;
+  });
+  const monthRanked = Object.entries(thisMonthByStudent).sort((a,b)=>b[1].count-a[1].count);
+
+  $('abs-monthly-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card">
+        <div class="card-head"><h3><i class="fas fa-chart-line" style="color:var(--primary);margin-left:6px"></i>الغياب الشهري</h3></div>
+        <div class="card-body">
+          ${months.length ? months.map(([m,data])=>{
+            const mDate = new Date(m+'-01');
+            const mLabel = mDate.toLocaleDateString('ar-MA',{month:'long',year:'numeric'});
+            return`<div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+                <span><strong>${mLabel}</strong></span>
+                <span style="color:var(--text3)">${data.students.size} طالب — <strong style="color:var(--danger)">${data.total} غياب</strong></span>
+              </div>
+              <div class="prog"><div class="prog-bar" style="width:${data.total/maxMonth*100}%;background:var(--danger)"></div></div>
+            </div>`;
+          }).join('') : '<div class="empty"><i class="fas fa-calendar"></i><p>لا بيانات</p></div>'}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3><i class="fas fa-star" style="color:var(--warn);margin-left:6px"></i>الأكثر غياباً — هذا الشهر</h3></div>
+        <div class="card-body">
+          ${monthRanked.length ? monthRanked.slice(0,10).map(([sid,d],i)=>`
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9">
+              <div style="width:20px;text-align:center;font-size:11px;font-weight:700;color:${i<3?'var(--danger)':'var(--text3)'}">${i+1}</div>
+              <div style="width:28px;height:28px;border-radius:50%;background:${i<3?'var(--danger)':'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">${d.name[0]}</div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:600">${d.name}</div><div style="font-size:11px;color:var(--text3)">${d.group}</div></div>
+              <span class="bx ${d.count>=5?'bx-r':'bx-y'}">${d.count} غياب</span>
+            </div>`).join('') : '<div class="empty"><i class="fas fa-smile"></i><p>لا غياب هذا الشهر 🎉</p></div>'}
+        </div>
+      </div>
+    </div>`;
+}
+
+/** تفاصيل غياب طالب محدد */
+function renderAbsStudentDetail(){
+  const sid = $('abs-detail-student')?.value;
+  const absences = getFilteredAbsences().filter(a=>!sid||a.student_id===sid);
+  if(!absences.length){
+    $('abs-detail-content').innerHTML='<div class="empty card" style="padding:40px"><i class="fas fa-check-circle" style="color:var(--accent)"></i><p>لا يوجد غياب في هذه الفترة</p></div>';
+    return;
+  }
+  // تجميع حسب الطالب إذا لم يتم اختيار طالب معين
+  if(!sid){
+    const byStudent = {};
+    absences.forEach(a=>{
+      if(!byStudent[a.student_id]) byStudent[a.student_id]={name:a.studentName,group:a.groupName,teacher:a.teacherName,phone:a.phone,sid:a.student_id,records:[]};
+      byStudent[a.student_id].records.push(a);
+    });
+    $('abs-detail-content').innerHTML=Object.values(byStudent).sort((a,b)=>b.records.length-a.records.length).map(d=>`
+      <div class="abs-detail-card">
+        <div class="abs-detail-head">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">${d.name[0]}</div>
+          <div style="flex:1"><div style="font-weight:700">${d.name}</div><div style="font-size:11px;opacity:.8">${d.group} | ${d.teacher}</div></div>
+          <span style="background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700">${d.records.length} غياب</span>
+        </div>
+        <div style="padding:12px 16px">
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${d.records.map(r=>`<div style="padding:4px 10px;background:${r.status==='بعذر'?'#dbeafe':'#fee2e2'};border-radius:6px;font-size:11px;font-weight:600;color:${r.status==='بعذر'?'#1e40af':'#991b1b'}">
+              ${AR_DAYS[new Date(r.date).getDay()]} ${fmtDate(r.date)} ${r.status==='بعذر'?'(بعذر)':''}
+            </div>`).join('')}
+          </div>
+          ${d.phone?`<div style="margin-top:10px"><button class="wa-btn btn-sm" style="padding:5px 12px;font-size:12px" onclick="openWAAbsenceModal('${d.sid}')"><i class="fab fa-whatsapp"></i> إرسال تنبيه</button></div>`:''}
+        </div>
+      </div>`).join('');
+    return;
+  }
+  // طالب واحد
+  const s = S.students.find(x=>x.id===sid);
+  const g = S.groups.find(x=>x.id===s?.group_id);
+  const attAll = S.attendance.filter(a=>a.student_id===sid);
+  const presentCount = attAll.filter(a=>a.status==='حاضر').length;
+  $('abs-detail-content').innerHTML=`
+    <div style="background:linear-gradient(135deg,#7f1d1d,#dc2626);border-radius:12px;padding:20px;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:16px">
+      <div style="width:52px;height:52px;border-radius:50%;border:3px solid rgba(255,255,255,.3);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800">${s?.name[0]||'؟'}</div>
+      <div style="flex:1"><h2 style="font-size:17px;font-weight:800;margin-bottom:2px">${s?.name||'—'}</h2><p style="opacity:.75;font-size:12px">${g?.name||'—'}</p></div>
+      <div style="text-align:center"><div style="font-size:32px;font-weight:800;color:#fbbf24">${absences.length}</div><div style="opacity:.7;font-size:11px">غياب</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div style="padding:12px;background:#fef2f2;border-radius:10px;text-align:center;border:1px solid #fca5a5"><div style="font-size:20px;font-weight:800;color:#dc2626">${absences.filter(a=>a.status==='غائب').length}</div><div style="font-size:11px;color:var(--text3)">غياب بدون عذر</div></div>
+      <div style="padding:12px;background:#eff6ff;border-radius:10px;text-align:center;border:1px solid #93c5fd"><div style="font-size:20px;font-weight:800;color:var(--primary)">${absences.filter(a=>a.status==='بعذر').length}</div><div style="font-size:11px;color:var(--text3)">غياب بعذر</div></div>
+      <div style="padding:12px;background:#f0fdf4;border-radius:10px;text-align:center;border:1px solid #86efac"><div style="font-size:20px;font-weight:800;color:var(--accent)">${presentCount}</div><div style="font-size:11px;color:var(--text3)">أيام حضور</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>سجل الغيابات التفصيلي</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>التاريخ</th><th>اليوم</th><th>الحلقة</th><th>الأستاذ</th><th>الحالة</th></tr></thead>
+          <tbody>${absences.map((a,i)=>`<tr>
+            <td>${i+1}</td>
+            <td>${fmtDate(a.date)}</td>
+            <td>${AR_DAYS[new Date(a.date).getDay()]}</td>
+            <td>${a.groupName}</td>
+            <td>${a.teacherName}</td>
+            <td><span class="bx ${a.status==='بعذر'?'bx-b':'bx-r'}">${a.status}</span></td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/** فتح تفاصيل طالب من الحالات الحرجة */
+function viewStudentAbsDetails(sid){
+  // الانتقال لتبويب التفاصيل
+  const tab = document.querySelectorAll('#page-absence-stats .tab');
+  if(tab[4]) switchTab('absence-stats','details',tab[4]);
+  $('abs-detail-student').value = sid;
+  renderAbsStudentDetail();
+}
+
+/** تصدير إحصائيات الغياب PDF */
+function exportAbsencePDF(){
+  const absences = getFilteredAbsences();
+  const threshold = parseInt($('abs-threshold')?.value||'8');
+  const myS = myStudents();
+  const studentAbs = {};
+  myS.forEach(s=>{ studentAbs[s.id]={count:0,excused:0,student:s}; });
+  absences.forEach(a=>{
+    if(!studentAbs[a.student_id]) return;
+    studentAbs[a.student_id].count++;
+    if(a.status==='بعذر') studentAbs[a.student_id].excused++;
+  });
+  const ranked = Object.values(studentAbs).filter(x=>x.count>0).sort((a,b)=>b.count-a.count);
+  const rows = ranked.map(x=>{
+    const s=x.student; const g=S.groups.find(gg=>gg.id===s.group_id);
+    const isCrit=x.count>=threshold;
+    return`<tr style="${isCrit?'background:#fef2f2;':x.count>=threshold*.6?'background:#fffbf0;':''}">
+      <td>${s.name}</td><td>${g?.name||'—'}</td><td>${teacherName(g?.teacher_id)}</td>
+      <td style="text-align:center;font-weight:700;color:${isCrit?'#dc2626':'inherit'}">${x.count}</td>
+      <td style="text-align:center">${x.excused}</td>
+      <td style="text-align:center">${isCrit?'⚠️ حرج':x.count>=threshold*.6?'تحذير':'—'}</td>
+    </tr>`;
+  }).join('');
+  makePDF('تقرير إحصائيات الغياب',
+    `<div><span class="sb"><h3 style="color:#dc2626">${absences.length}</h3><p>إجمالي الغيابات</p></span>
+     <span class="sb"><h3 style="color:#dc2626">${ranked.filter(x=>x.count>=threshold).length}</h3><p>حالات حرجة</p></span>
+     <span class="sb"><h3>${ranked.length}</h3><p>طلبة لديهم غياب</p></span></div>
+    <table><thead><tr><th>الطالب</th><th>الحلقة</th><th>الأستاذ</th><th>الغياب</th><th>بعذر</th><th>الوضع</th></tr></thead><tbody>${rows}</tbody></table>`
+  );
+}
+
+// ===================== EXAM EDIT (تعديل وحذف الامتحانات) =====================
+
+/** فتح مودال تعديل الامتحان */
+function openExamEdit(eid){
+  const r = EXAMS_DB.find(x=>x.id===eid);
+  if(!r){ toast('لم يُوجد الامتحان','warn'); return; }
+  ABS_EDIT_ID = eid;
+  const maxPerQ = r.max_per_q||20;
+  const details = r.details||[];
+
+  $('exam-edit-del-btn').onclick = ()=>deleteExam(eid);
+  $('exam-edit-content').innerHTML=`
+    <div style="background:linear-gradient(135deg,#f0f6ff,#e8f0fe);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <div style="font-weight:800;font-size:15px;color:var(--primary)">${r.student_name}</div>
+        <div style="font-size:12px;color:var(--text3)">${r.group_name||'—'} — ${fmtDate(r.date)}</div>
+      </div>
+      <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text3)">المعدل الحالي</div>
+        <div id="edit-avg-display" style="font-size:20px;font-weight:800;color:var(--primary)">${r.avg}</div>
+        <div id="edit-pct-display" style="font-size:11px;color:var(--text3)">${r.pct}%</div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px"><i class="fas fa-list-ol" style="color:var(--primary);margin-left:6px"></i>تعديل نقاط الأسئلة (${details.length} سؤال)</div>
+    ${details.map((q,i)=>`
+      <div class="exam-edit-row" id="erow-${i}">
+        <div style="grid-column:1/-1">
+          <div class="exam-edit-label"><span style="width:24px;height:24px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${i+1}</span>${q.label||q.surahName||'سؤال '+(i+1)}</div>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--accent);font-weight:600;display:block;margin-bottom:4px"><i class="fas fa-brain" style="margin-left:3px"></i>الإتقان / ${maxPerQ}</label>
+          <input type="number" id="eit-${i}" min="0" max="${maxPerQ}" step="0.5" value="${q.itqan||0}"
+            oninput="updateEditSummary(${details.length},${maxPerQ})" onchange="clampScore('eit-${i}',${maxPerQ})"
+            style="width:100%;padding:8px;border:1.5px solid #86efac;border-radius:7px;font-size:15px;font-weight:700;text-align:center;font-family:Tajawal,sans-serif;background:#f0fdf4;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#2563eb;font-weight:600;display:block;margin-bottom:4px"><i class="fas fa-microphone-alt" style="margin-left:3px"></i>الأداء / ${maxPerQ}</label>
+          <input type="number" id="ead-${i}" min="0" max="${maxPerQ}" step="0.5" value="${q.adaa||0}"
+            oninput="updateEditSummary(${details.length},${maxPerQ})" onchange="clampScore('ead-${i}',${maxPerQ})"
+            style="width:100%;padding:8px;border:1.5px solid #93c5fd;border-radius:7px;font-size:15px;font-weight:700;text-align:center;font-family:Tajawal,sans-serif;background:#eff6ff;outline:none">
+        </div>
+      </div>`).join('')}
+    <div style="margin-top:14px;padding:12px 16px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac;display:flex;justify-content:space-around;text-align:center">
+      <div><div style="font-size:22px;font-weight:800;color:var(--accent)" id="edit-it-total">—</div><div style="font-size:11px;color:var(--text3)">مجموع الإتقان</div></div>
+      <div><div style="font-size:22px;font-weight:800;color:#2563eb" id="edit-ad-total">—</div><div style="font-size:11px;color:var(--text3)">مجموع الأداء</div></div>
+      <div><div style="font-size:22px;font-weight:800;color:var(--primary)" id="edit-new-avg">—</div><div style="font-size:11px;color:var(--text3)">المعدل الجديد</div></div>
+    </div>`;
+
+  updateEditSummary(details.length, maxPerQ);
+  openM('m-exam-edit');
+}
+
+function updateEditSummary(count, maxPerQ){
+  let it=0,ad=0;
+  for(let i=0;i<count;i++){
+    it += parseFloat($(`eit-${i}`)?.value)||0;
+    ad += parseFloat($(`ead-${i}`)?.value)||0;
+  }
+  const avg = count>0 ? ((it+ad)/(count*2)).toFixed(2) : 0;
+  const pct = count>0 ? Math.round((it+ad)/(count*maxPerQ*2)*100) : 0;
+  $('edit-it-total').textContent = it.toFixed(1)+'/'+count*maxPerQ;
+  $('edit-ad-total').textContent = ad.toFixed(1)+'/'+count*maxPerQ;
+  $('edit-new-avg').textContent = avg;
+  $('edit-avg-display').textContent = avg;
+  $('edit-pct-display').textContent = pct+'%';
+  $('edit-avg-display').style.color = pct>=80?'#16a34a':pct>=60?'#d97706':'#dc2626';
+}
+
+/** حفظ تعديلات الامتحان */
+async function saveExamEdit(){
+  const eid = ABS_EDIT_ID;
+  const r = EXAMS_DB.find(x=>x.id===eid);
+  if(!r){ toast('لم يُوجد الامتحان','warn'); return; }
+  const count = r.details?.length||0;
+  const maxPerQ = r.max_per_q||20;
+  const newDetails = (r.details||[]).map((q,i)=>({
+    ...q,
+    itqan: parseFloat($(`eit-${i}`)?.value)||0,
+    adaa:  parseFloat($(`ead-${i}`)?.value)||0
+  }));
+  const totalIt = newDetails.reduce((a,q)=>a+(q.itqan||0),0);
+  const totalAd = newDetails.reduce((a,q)=>a+(q.adaa||0),0);
+  const avg = count>0 ? parseFloat(((totalIt+totalAd)/(count*2)).toFixed(2)) : 0;
+  const pct = count>0 ? Math.round((totalIt+totalAd)/(count*maxPerQ*2)*100) : 0;
+  const updated = {
+    ...r, details:newDetails,
+    total_itqan:totalIt, total_adaa:totalAd,
+    avg_itqan:parseFloat((totalIt/count).toFixed(2)),
+    avg_adaa:parseFloat((totalAd/count).toFixed(2)),
+    avg, pct
+  };
+  try{
+    // محاولة الحفظ في جدول exams
+    const {error} = await db.from('exams').update({
+      total_itqan:updated.total_itqan, total_adaa:updated.total_adaa,
+      avg_itqan:updated.avg_itqan, avg_adaa:updated.avg_adaa,
+      avg:updated.avg, pct:updated.pct, details:updated.details
+    }).eq('id',eid);
+    if(error){
+      // fallback: تحديث settings
+      await db.from('settings').upsert({key:'exam_'+eid, value:JSON.stringify({...updated,teacher_id:S.profile?.id})},{onConflict:'key'});
+    }
+    // تحديث الذاكرة المحلية
+    const idx = EXAMS_DB.findIndex(x=>x.id===eid);
+    if(idx>=0) EXAMS_DB[idx] = updated;
+    closeM('m-exam-edit');
+    toast('✅ تم حفظ التعديلات بنجاح','ok');
+    renderExams();
+  }catch(e){
+    toast('خطأ في الحفظ: '+e.message,'err');
+  }
+}
+
+/** حذف الامتحان */
+async function deleteExam(eid){
+  if(!confirm('هل أنت متأكد من حذف هذا الامتحان؟ لا يمكن التراجع عن هذه العملية.')) return;
+  try{
+    // محاولة الحذف من جدول exams
+    const {error} = await db.from('exams').delete().eq('id',eid);
+    if(error){
+      // fallback: حذف من settings
+      await db.from('settings').delete().eq('key','exam_'+eid);
+    }
+    EXAMS_DB = EXAMS_DB.filter(x=>x.id!==eid);
+    closeM('m-exam-edit');
+    toast('تم حذف الامتحان','ok');
+    renderExams();
+  }catch(e){
+    toast('خطأ في الحذف: '+e.message,'err');
+  }
+}
+
+// ===================== تحسين عرض الغائبين اليوم =====================
+/** عرض تفاصيل غياب يوم محدد في نافذة منبثقة */
+function showAbsDayDetail(date, groupId){
+  const dt = date || today();
+  const absences = S.attendance.filter(a=>
+    a.date===dt && (a.status==='غائب'||a.status==='بعذر') &&
+    (!groupId||a.group_id===groupId)
+  );
+  if(!absences.length){ toast('لا يوجد غياب لهذا اليوم','warn'); return; }
+  const dayName = AR_DAYS[new Date(dt).getDay()];
+  $('abs-day-content').innerHTML=`
+    <div style="padding:16px">
+      <div class="alert alert-d" style="margin-bottom:14px">
+        <i class="fas fa-calendar-times"></i>
+        <strong>${absences.length} طالب غائب</strong> — ${dayName} ${fmtDate(dt)}
+      </div>
+      ${absences.map(a=>{
+        const s=S.students.find(x=>x.id===a.student_id);
+        const g=S.groups.find(x=>x.id===a.group_id);
+        const sch=Array.isArray(g?.schedule)?g.schedule:[];
+        const daysch=sch.find(sc=>sc.day===dayName);
+        return`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f1f5f9">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--danger);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">${s?.name[0]||'؟'}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:14px">${s?.name||'—'}</div>
+            <div style="font-size:12px;color:var(--text3)">${g?.name||'—'} | أ. ${teacherName(g?.teacher_id)}</div>
+            ${daysch?`<div style="font-size:11px;color:var(--info);margin-top:2px"><i class="fas fa-clock" style="margin-left:3px"></i>وقت الحصة: ${daysch.start} — ${daysch.end}</div>`:''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <span class="bx ${a.status==='بعذر'?'bx-b':'bx-r'}">${a.status}</span>
+            ${s?.phone?`<button class="wa-btn" style="padding:4px 10px;font-size:11px" onclick="openWAAbsenceModal('${a.student_id}','${dt}')"><i class="fab fa-whatsapp"></i> تنبيه</button>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  openM('m-abs-day');
+}
+
+// ===================== تحديث showStatDetail للغائبين اليوم =====================
+// نحتفظ بالدالة الأصلية ونضيف تحسينات على قسم absent
+const _origShowStatDetail = showStatDetail;
+// تم تحديث showStatDetail مباشرة أدناه (مدمجة مع الدالة الأصلية)
+
+// تعديل: إضافة زر عرض التفاصيل الكاملة في قسم absent
+function patchAbsentStatDetail(){
+  // هذه الدالة تُستدعى بعد رسم showStatDetail لإضافة زر التفاصيل
+}
+
+// ===================== تحديث fillSelects =====================
+const _origFillSelects = fillSelects;
+fillSelects = function(){
+  _origFillSelects();
+  // تعبئة قوائم صفحة الغياب
+  if($('abs-group')){
+    const mg=myGroups();
+    $('abs-group').innerHTML='<option value="">كل الحلقات</option>'+mg.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  }
+};
+
+// ===================== تحديث قائمة النتائج لإضافة أزرار التعديل والحذف =====================
+const _origLoadExamHistory = loadExamHistory;
+loadExamHistory = function(){
+  const myExams = getMyExams();
+  if(!myExams.length){
+    $('history-content').innerHTML='<div class="empty"><i class="fas fa-history"></i><p>لا يوجد سجل امتحانات بعد</p></div>';
+    return;
+  }
+  $('history-content').innerHTML=`<div class="card"><div class="tbl-wrap"><table>
+    <thead><tr><th>الطالب</th><th>الحلقة</th><th>التاريخ</th><th>الأسئلة</th><th>الإتقان</th><th>الأداء</th><th>المعدل</th><th>إجراء</th></tr></thead>
+    <tbody>${myExams.map(r=>`<tr>
+      <td><strong>${r.student_name}</strong></td>
+      <td>${r.group_name||'—'}</td>
+      <td>${fmtDate(r.date)}</td>
+      <td>${r.questions_count}</td>
+      <td>${r.avg_itqan}/${r.max_per_q}</td>
+      <td>${r.avg_adaa}/${r.max_per_q}</td>
+      <td style="font-weight:700;color:${r.pct>=80?'#16a34a':r.pct>=60?'#d97706':'#dc2626'}">${r.avg} (${r.pct}%)</td>
+      <td><div style="display:flex;gap:3px">
+        <button class="btn btn-g btn-sm btn-ic" onclick="showExamById('${r.id}')" title="عرض النتيجة"><i class="fas fa-eye"></i></button>
+        <button class="btn btn-sm btn-ic" style="background:#dbeafe;color:#1d4ed8" onclick="openExamEdit('${r.id}')" title="تعديل"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-g btn-sm btn-ic" style="color:var(--danger)" onclick="deleteExam('${r.id}')" title="حذف"><i class="fas fa-trash"></i></button>
+        <button class="btn btn-g btn-sm btn-ic" onclick="exportExamPDF('${r.id}')" title="تصدير PDF"><i class="fas fa-file-pdf"></i></button>
+      </div></td>
+    </tr>`).join('')}</tbody>
+  </table></div></div>`;
+};
+
+// كذلك تحديث قائمة النتائج في تبويب النتائج
+const _origLoadExamResultsList = loadExamResultsList;
+loadExamResultsList = function(){
+  const gf = $('res-group')?.value||'';
+  const fd = $('res-from')?.value||'';
+  const td = $('res-to')?.value||'';
+  let list = getMyExams();
+  if(gf) list = list.filter(e=>e.group_id===gf);
+  if(fd) list = list.filter(e=>e.date>=fd);
+  if(td) list = list.filter(e=>e.date<=td);
+  if(!list.length){
+    $('results-content').innerHTML='<div class="empty"><i class="fas fa-graduation-cap"></i><p>لا توجد نتائج بعد</p></div>';
+    return;
+  }
+  const ranked = [...list].sort((a,b)=>b.avg-a.avg);
+  const medals = {0:'🥇',1:'🥈',2:'🥉'};
+  const colors = {0:'#fef9c3',1:'#f1f5f9',2:'#fff7ed'};
+  const borders = {0:'#fbbf24',1:'#94a3b8',2:'#fb923c'};
+  $('results-content').innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><h3>ترتيب الطلبة</h3><span class="bx bx-b">${list.length} نتيجة</span></div>
+      <div class="card-body">
+        ${ranked.map((r,i)=>{
+          const bg=i<3?colors[i]:'#f8fafc';
+          const brd=i<3?borders[i]:'var(--border)';
+          return `<div class="result-row" style="background:${bg};border:1px solid ${brd}">
+            <div class="result-rank" style="background:${brd};color:${i<3?'#fff':'var(--text3)'}">${medals[i]||i+1}</div>
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">${r.student_name[0]}</div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">${r.student_name}</div><div style="font-size:11px;color:var(--text3)">${r.group_name||'—'} • ${fmtDate(r.date)}</div></div>
+            <div style="text-align:center;min-width:80px">
+              <div style="font-size:18px;font-weight:800;color:${r.pct>=80?'#16a34a':r.pct>=60?'#d97706':'#dc2626'}">${r.avg}</div>
+              <div style="font-size:10px;color:var(--text3)">${r.pct}%</div>
+            </div>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-g btn-sm btn-ic" onclick="showExamById('${r.id}')" title="عرض"><i class="fas fa-eye"></i></button>
+              <button class="btn btn-sm btn-ic" style="background:#dbeafe;color:#1d4ed8" onclick="openExamEdit('${r.id}')" title="تعديل"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-g btn-sm btn-ic" style="color:var(--danger)" onclick="deleteExam('${r.id}')" title="حذف"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+};
 
 // ملاحظة: buildNotifications تُستدعى من showApp مباشرة (انظر أعلاه)
 
