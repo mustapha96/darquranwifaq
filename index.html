@@ -425,6 +425,11 @@ textarea{resize:vertical;min-height:80px}
 }
 .result-rank { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0; }
 
+/* ===== HIZB COMPLETE TOGGLE ===== */
+#rt-hizb-complete{transition:all .2s}
+#rt-hizb-complete:hover{border-color:#16a34a!important;background:#f0fdf4!important}
+#hizb-num-row input:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.1)}
+#s-extra-groups .day-cb{cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;padding:5px 10px}
 /* ===== MOBILE OVERLAY ===== */
 .mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:998;backdrop-filter:blur(2px)}
 @media(max-width:768px){.mob-overlay.show{display:block}}
@@ -1018,7 +1023,7 @@ textarea{resize:vertical;min-height:80px}
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
                 <div class="fg"><label>الحلقة</label><select id="ex-group" onchange="loadExamStudents()"></select></div>
                 <div class="fg"><label>الطالب</label><select id="ex-student"><option value="">— اختر —</option></select></div>
-                <div class="fg"><label>عدد الأسئلة</label><input type="number" id="ex-count" min="1" max="100" value="10" placeholder="أدخل العدد" style="font-size:15px;font-weight:700;text-align:center"><small style="color:var(--text3);font-size:11px;margin-top:3px;display:block">أدخل العدد الذي تريده (1–100)</small></div>
+                <div class="fg"><label>عدد الأسئلة</label><select id="ex-count"><option value="10">10 أسئلة</option><option value="15">15 سؤال</option><option value="20" selected>20 سؤال</option><option value="25">25 سؤال</option><option value="30">30 سؤال</option></select></div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
                 <div>
@@ -1032,7 +1037,7 @@ textarea{resize:vertical;min-height:80px}
                   <input type="number" id="ex-v-to" min="1" value="10" placeholder="إلى آية" style="width:100%">
                 </div>
               </div>
-              <button class="btn btn-p" onclick="window.SESSION_USED_SEGMENTS=new Set();generateExam()" style="width:100%;padding:12px;font-size:14px">
+              <button class="btn btn-p" onclick="generateExam()" style="width:100%;padding:12px;font-size:14px">
                 <i class="fas fa-random"></i> توليد أسئلة الامتحان عشوائياً
               </button>
             </div>
@@ -1062,7 +1067,6 @@ textarea{resize:vertical;min-height:80px}
                     <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">الطالب:</div>
                     <div style="font-size:14px;font-weight:700" id="ex-student-name">—</div>
                     <div style="font-size:12px;color:var(--text3)" id="ex-group-name">—</div>
-                  <div id="ex-level-badge" style="margin-top:6px"></div>
                   </div>
                 </div>
               </div>
@@ -1240,7 +1244,17 @@ textarea{resize:vertical;min-height:80px}
       <input type="hidden" id="s-id">
       <div class="fgrid">
         <div class="fg"><label>الاسم الكامل *</label><input id="s-name" placeholder="اسم الطالب"></div>
-        <div class="fg"><label>الحلقة *</label><select id="s-group" onchange="onGroupSelectChange()"><option value="">— اختر الحلقة —</option></select><small id="s-teacher-hint" style="color:var(--primary);font-size:12px;margin-top:4px;display:block"></small></div>
+        <div class="fg"><label>الحلقة الرئيسية *</label><select id="s-group" onchange="onGroupSelectChange()"><option value="">— اختر الحلقة —</option></select><small id="s-teacher-hint" style="color:var(--primary);font-size:12px;margin-top:4px;display:block"></small></div>
+        <div class="fg full">
+          <label style="display:flex;align-items:center;gap:6px">
+            حلقات إضافية
+            <span class="bx bx-b" style="font-size:10px;padding:2px 7px">اختياري</span>
+          </label>
+          <div id="s-extra-groups" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;border:1.5px solid var(--border);border-radius:8px;min-height:42px;background:#f8fafc;margin-top:4px">
+            <span style="font-size:12px;color:var(--text3);align-self:center" id="s-extra-hint">لا توجد حلقات إضافية</span>
+          </div>
+          <small style="color:var(--text3);font-size:11px;margin-top:3px;display:block">الطالب يبقى له ملف واحد موحّد — الحلقات الإضافية للمتابعة فقط</small>
+        </div>
         <div class="fg"><label>هاتف ولي الأمر</label><input id="s-phone" type="tel" placeholder="0612345678"></div>
         <div class="fg"><label>اسم ولي الأمر</label><input id="s-parent" placeholder="اسم الأب/الأم"></div>
         <div class="fg"><label>تاريخ الميلاد</label><input id="s-dob" type="date"></div>
@@ -1278,6 +1292,23 @@ textarea{resize:vertical;min-height:80px}
             <i class="fas fa-redo" style="color:var(--info);font-size:16px"></i>
             <div><div style="font-weight:700;color:var(--text);font-size:13px">مراجعة</div><div style="font-size:11px;color:var(--text3)">مراجعة سابق</div></div>
           </label>
+        </div>
+        <!-- خيار إتمام الحزب -->
+        <div id="rt-hizb-complete-wrap" style="margin-top:10px;display:none">
+          <label id="rt-hizb-complete" style="display:flex;align-items:center;gap:12px;padding:14px 18px;border:2px solid var(--border);border-radius:12px;cursor:pointer;background:#fff;transition:all .2s" onclick="toggleHizbComplete()">
+            <input type="checkbox" id="r-hizb-complete" style="display:none">
+            <div style="width:36px;height:36px;border-radius:50%;background:#f0fdf4;border:2px solid #86efac;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0" id="hizb-ic">📚</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px;color:#166534">أتمّ الطالب حزباً كاملاً</div>
+              <div style="font-size:11px;color:#4ade80;margin-top:2px">سيُسجَّل في سجل الأحزاب مع التاريخ والأستاذ</div>
+            </div>
+            <div id="hizb-check-ic" style="width:26px;height:26px;border-radius:50%;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s">○</div>
+          </label>
+          <div id="hizb-num-row" style="display:none;margin-top:8px;padding:10px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac">
+            <label style="font-size:12px;font-weight:600;color:#166534;display:block;margin-bottom:4px">رقم الحزب المُتَمّ (1–60)</label>
+            <input type="number" id="r-hizb-num" min="1" max="60" placeholder="مثال: 5" style="width:120px;padding:8px 10px;border:1.5px solid #86efac;border-radius:7px;font-family:Tajawal,sans-serif;font-size:15px;font-weight:700;text-align:center;outline:none">
+            <span style="font-size:12px;color:var(--text3);margin-right:8px">من أصل 60 حزباً</span>
+          </div>
         </div>
       </div>
       <div style="background:#f8fafc;border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:14px">
@@ -1461,6 +1492,47 @@ textarea{resize:vertical;min-height:80px}
       <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-abs-day')">✕</button>
     </div>
     <div class="mbody" id="abs-day-content"></div>
+  </div>
+</div>
+
+<!-- Modal سجل الأحزاب -->
+<div class="overlay" id="m-hizb-log">
+  <div class="modal modal-lg">
+    <div class="mh" style="background:linear-gradient(135deg,#0a1628,#166534)">
+      <h3 style="color:#fff"><i class="fas fa-book-reader" style="color:#4ade80;margin-left:8px"></i>سجل إتمام الأحزاب</h3>
+      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-hizb-log')">✕</button>
+    </div>
+    <div class="mbody" style="padding:0">
+      <div style="padding:14px 20px;background:#f0fdf4;border-bottom:1px solid #86efac;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="fg" style="flex:1;min-width:140px"><label>الحلقة</label><select id="hl-group" onchange="renderHizbLog()"><option value="">كل الحلقات</option></select></div>
+        <div class="fg" style="flex:1;min-width:140px"><label>الطالب</label><select id="hl-student" onchange="renderHizbLog()"><option value="">كل الطلبة</option></select></div>
+        <button class="btn btn-p btn-sm" onclick="exportHizbLogPDF()"><i class="fas fa-file-pdf"></i> تصدير</button>
+      </div>
+      <div id="hizb-log-content" style="padding:16px;max-height:60vh;overflow-y:auto"></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-o" onclick="closeM('m-hizb-log')">إغلاق</button></div>
+  </div>
+</div>
+
+<!-- Modal تأكيد الخروج -->
+<div class="overlay" id="m-unsaved">
+  <div class="modal" style="max-width:420px">
+    <div class="mh" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">
+      <h3 style="color:#fff"><i class="fas fa-exclamation-triangle" style="margin-left:8px"></i>بيانات غير محفوظة</h3>
+      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="cancelNavAway()">✕</button>
+    </div>
+    <div class="mbody" style="padding:24px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+      <p style="font-size:15px;font-weight:700;color:var(--danger);margin-bottom:8px">هل تريد الخروج؟</p>
+      <p style="font-size:13px;color:var(--text3);line-height:1.7" id="unsaved-msg">توجد بيانات غير محفوظة. إذا خرجت الآن ستُفقد هذه البيانات.</p>
+      <div id="autosave-info" style="display:none;margin-top:10px;padding:8px 12px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac;font-size:12px;color:#166534">
+        <i class="fas fa-save" style="margin-left:4px"></i>تم حفظ البيانات مؤقتاً — يمكنك استعادتها
+      </div>
+    </div>
+    <div class="mfoot" style="justify-content:center;gap:12px">
+      <button class="btn btn-o" onclick="cancelNavAway()" style="min-width:120px"><i class="fas fa-arrow-right"></i> البقاء</button>
+      <button class="btn btn-d" onclick="confirmNavAway()" style="min-width:120px"><i class="fas fa-sign-out-alt"></i> خروج بدون حفظ</button>
+    </div>
   </div>
 </div>
 
@@ -2957,222 +3029,79 @@ function loadExamStudents(){
     list.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
 }
 
-/* ============================================================
-   نظام توليد أسئلة الامتحان — المحسَّن
-   ============================================================
-   المبادئ:
-   ١. حجم المقطع: 10 آيات كحدٍّ أدنى (لمقاطع التقييم الحقيقي)
-   ٢. مراعاة مستوى الطالب: كلما ارتفع الحفظ ابتعدنا عن السور القصيرة
-   ٣. تجنّب التكرار بين الطلبة داخل نفس الجلسة (USED_SEGMENTS)
-   ============================================================ */
-
-// سجل المقاطع المستخدمة في الجلسة الحالية (يُمسح مع كل امتحان جديد)
-if(!window.SESSION_USED_SEGMENTS) window.SESSION_USED_SEGMENTS = new Set();
-
-/**
- * يُقدِّر مستوى الطالب بناءً على آياته المحفوظة:
- *   < 300  → مبتدئ   (يقتصر على السور القصيرة)
- *   300-900 → متوسط
- *   > 900  → متقدم   (يُستهدَف بالسور المتوسطة والطويلة)
- */
-function getStudentLevel(sid){
-  const v = getTotalV(sid);
-  if(v < 300) return 'beginner';
-  if(v < 900) return 'intermediate';
-  return 'advanced';
-}
-
-/**
- * يحدِّد الحدَّ الأدنى لعدد آيات كل سؤال حسب مستوى الطالب
- * والحجم الإجمالي للنطاق المختار:
- *   - مبتدئ: 10 آيات (أو حجم السورة كاملاً إن كانت أقصر)
- *   - متوسط: 12 آية
- *   - متقدم: 15 آية
- */
-function getMinSegmentSize(level, totalRangeVerses, questionCount){
-  const base = level==='beginner'?10 : level==='intermediate'?12 : 15;
-  // نضمن أن النطاق كافٍ لعدد الأسئلة بالحجم المطلوب
-  const possible = Math.floor(totalRangeVerses / Math.max(questionCount,1));
-  return Math.max(Math.min(base, possible), 5); // 5 آيات كحدٍّ مطلق أدنى
-}
-
-/**
- * يُرجَّح اختيار سورة حسب مستوى الطالب:
- *   - مبتدئ:    كل السور متساوية
- *   - متوسط:   تُخفَّض أوزان السور التي عدد آياتها < 15
- *   - متقدم:   تُخفَّض بشدة السور التي عدد آياتها < 20
- */
-function surahWeight(surah, level){
-  const v = surah.v;
-  if(level==='beginner') return 1;
-  if(level==='intermediate') return v < 15 ? 0.25 : 1;
-  // متقدم: يقلل احتمال السور القصيرة جداً
-  if(v < 10) return 0.05;
-  if(v < 20) return 0.15;
-  if(v < 40) return 0.6;
-  return 1;
-}
-
-/**
- * يختار آية بداية عشوائية مرجَّحة داخل قائمة الآيات المتاحة
- * بحيث يُمكن بناء مقطع بالحجم المطلوب، ولا يتداخل مع مقطع مستخدم.
- */
-function pickUniqueSegment(candidateVerses, minSize, maxSize, usedSet, attempts=300){
-  // نبني قائمة نقاط البداية الممكنة
-  const starts = [];
-  for(let i=0; i<candidateVerses.length; i++){
-    const v = candidateVerses[i];
-    // يجب أن يتسع المقطع بالحجم الأدنى
-    const remaining = candidateVerses.filter(c=>c.surahN===v.surahN&&c.verse>=v.verse).length;
-    if(remaining >= minSize) starts.push(i);
-  }
-  if(!starts.length) return null;
-
-  // خلط عشوائي مرجَّح مع تجنّب المستخدم
-  const shuffled = starts.sort(()=>Math.random()-.5);
-  for(const si of shuffled){
-    const sv = candidateVerses[si];
-    // نحدد نهاية المقطع: minSize..maxSize آية ضمن نفس السورة
-    const same = candidateVerses.filter(c=>c.surahN===sv.surahN&&c.verse>=sv.verse);
-    const spread = Math.min(
-      minSize + Math.floor(Math.random()*(maxSize-minSize+1)),
-      same.length
-    );
-    const ev = same[spread-1];
-    const key = `${sv.surahN}_${sv.verse}_${ev.verse}`;
-    if(!usedSet.has(key)){
-      usedSet.add(key);
-      return {
-        id: 0,
-        surahN: sv.surahN, surahName: sv.surahName,
-        verseFrom: sv.verse, verseTo: ev.verse,
-        label: `سورة ${sv.surahName} — من الآية ${sv.verse} إلى الآية ${ev.verse}`
-      };
-    }
-  }
-  return null;
-}
-
 function generateExam(){
   const gid = $('ex-group').value;
   const sid = $('ex-student').value;
-  const countRaw = parseInt($('ex-count').value);
-  if(isNaN(countRaw)||countRaw<1||countRaw>100){
-    toast('أدخل عدد أسئلة صحيحاً بين 1 و100','warn'); return;
-  }
-  const count = countRaw;
+  const count = parseInt($('ex-count').value)||20;
   const sfrom = parseInt($('ex-s-from').value);
   const vfrom = parseInt($('ex-v-from').value)||1;
-  const sto   = parseInt($('ex-s-to').value);
-  const vto   = parseInt($('ex-v-to').value)||10;
+  const sto = parseInt($('ex-s-to').value);
+  const vto = parseInt($('ex-v-to').value)||10;
 
   if(!sid){ toast('اختر الطالب','warn'); return; }
   if(!sfrom||!sto){ toast('اختر نطاق الحفظ','warn'); return; }
 
   const student = S.students.find(x=>x.id===sid);
-  const group   = S.groups.find(x=>x.id===gid);
+  const group = S.groups.find(x=>x.id===gid);
 
-  // ── بناء قائمة آيات النطاق ──────────────────────────────
+  // بناء قائمة كل الآيات في النطاق
   const allVerses = [];
   const fi = SURAHS.findIndex(x=>x.n===sfrom);
   const ti = SURAHS.findIndex(x=>x.n===sto);
-  const [si,ei] = fi<=ti ? [fi,ti] : [ti,fi];
+  const [si,ei] = fi<ti?[fi,ti]:[ti,fi];
   for(let i=si; i<=ei; i++){
     const sr = SURAHS[i];
-    const vStart = i===si ? Math.max(1,vfrom) : 1;
-    const vEnd   = i===ei ? Math.min(vto,sr.v) : sr.v;
+    const vStart = i===si ? vfrom : 1;
+    const vEnd = i===ei ? Math.min(vto, sr.v) : sr.v;
     for(let v=vStart; v<=vEnd; v++){
-      allVerses.push({ surahN:sr.n, surahName:sr.name, verse:v, totalV:sr.v });
+      allVerses.push({ surahN: sr.n, surahName: sr.name, verse: v, totalV: sr.v });
     }
   }
 
-  const totalVersesInRange = allVerses.length;
-  if(totalVersesInRange < 10){
-    toast('النطاق المحدد صغير جداً (أقل من 10 آيات)، اختر نطاقاً أوسع','warn');
-    return;
-  }
+  if(allVerses.length < 3){ toast('النطاق المحدد صغير جداً، اختر نطاقاً أوسع','warn'); return; }
 
-  // ── مستوى الطالب ────────────────────────────────────────
-  const level   = getStudentLevel(sid);
-  const minSeg  = getMinSegmentSize(level, totalVersesInRange, count);
-  const maxSeg  = Math.min(minSeg + 8, Math.floor(totalVersesInRange / Math.max(count,1)) + 5);
-
-  // ── ترجيح الآيات حسب السورة ومستوى الطالب ───────────────
-  // نبني قائمة مرجَّحة بإعادة إدراج الآيات ذات الوزن الأعلى
-  const weightedVerses = [];
-  const surahWeightCache = {};
-  allVerses.forEach(v=>{
-    if(surahWeightCache[v.surahN]===undefined){
-      const sr = SURAHS.find(s=>s.n===v.surahN);
-      surahWeightCache[v.surahN] = surahWeight(sr, level);
-    }
-    const w = surahWeightCache[v.surahN];
-    // نضيف الآية بعدد مرات يعكس وزنها (1 أو 4)
-    const times = w>=1 ? 4 : w>=0.5 ? 2 : 1;
-    for(let t=0;t<times;t++) weightedVerses.push(v);
-  });
-
-  // ── توليد الأسئلة مع تجنّب التكرار بين الطلبة ───────────
+  // توليد أسئلة عشوائية غير متكررة
   const questions = [];
-  const localUsed = new Set(); // تجنّب التكرار داخل نفس الامتحان
-
-  // نُفضّل تجنّب المقاطع المستخدمة في نفس الجلسة
-  const sessionUsed = window.SESSION_USED_SEGMENTS;
-
-  let maxAttempts = count * 30;
+  const used = new Set();
+  const maxQ = Math.min(count, allVerses.length);
   let attempts = 0;
-  while(questions.length < count && attempts < maxAttempts){
+  while(questions.length < maxQ && attempts < 1000){
     attempts++;
-    // خلط وإعادة ترتيب المرجَّح
-    const seg = pickUniqueSegment(
-      weightedVerses,
-      minSeg, maxSeg,
-      localUsed,
-      50
-    );
-    if(!seg) break;
-
-    // نضيف في سجل الجلسة أيضاً لتقليل التكرار بين الطلبة
-    sessionUsed.add(`${seg.surahN}_${seg.verseFrom}_${seg.verseTo}`);
-
+    const idx = Math.floor(Math.random() * allVerses.length);
+    const v = allVerses[idx];
+    const key = `${v.surahN}_${v.verse}`;
+    if(used.has(key)) continue;
+    used.add(key);
+    // السؤال: من الآية X إلى الآية Y (3-5 آيات)
+    const spread = Math.floor(Math.random()*3)+3; // 3-5 آيات
+    const vEnd = Math.min(v.verse + spread - 1, v.totalV);
     questions.push({
-      ...seg,
-      id: questions.length+1
+      id: questions.length+1,
+      surahN: v.surahN, surahName: v.surahName,
+      verseFrom: v.verse, verseTo: vEnd,
+      label: `سورة ${v.surahName} — من الآية ${v.verse} إلى الآية ${vEnd}`
     });
   }
 
-  if(!questions.length){
-    toast('تعذّر توليد أسئلة — النطاق ضيق جداً بالنسبة لعدد الأسئلة المطلوب، قلّل العدد أو وسّع النطاق','warn');
-    return;
-  }
-  if(questions.length < count){
-    toast(`تنبيه: تم توليد ${questions.length} سؤال فقط (النطاق لا يتسع لـ${count})، يمكنك المتابعة`,'warn');
-  }
-
-  // ── معلومات المستوى للعرض ───────────────────────────────
-  const levelLabel = level==='beginner'?'مبتدئ':level==='intermediate'?'متوسط':'متقدم';
-
   EXAM_STATE = { questions, student, group, maxPerQ: 20, answers: {} };
 
+  // عرض الامتحان
   $('exam-area').style.display = 'block';
   $('ex-student-name').textContent = student?.name||'—';
-  $('ex-group-name').textContent = `${group?.name||'—'} · المستوى: ${levelLabel}`;
+  $('ex-group-name').textContent = group?.name||'—';
   renderExamQuestions();
   updateExamSummary();
   $('exam-area').scrollIntoView({behavior:'smooth', block:'start'});
-  toast(`✅ تم توليد ${questions.length} سؤال للطالب ${student?.name} · مستوى: ${levelLabel} · حجم المقطع: ${minSeg}–${maxSeg} آية`,'ok');
+  toast(`✅ تم توليد ${questions.length} سؤال للطالب ${student?.name}`,'ok');
 }
 
 function renderExamQuestions(){
   const {questions, maxPerQ} = EXAM_STATE;
-  $('exam-questions').innerHTML = questions.map(q=>{
-    const verseCount = q.verseTo - q.verseFrom + 1;
-    return `
+  $('exam-questions').innerHTML = questions.map(q=>`
     <div class="exam-q-card" id="qcard-${q.id}">
       <div class="exam-q-title">
         <div class="exam-q-num">${q.id}</div>
         <span>سؤال ${q.id} / ${questions.length}</span>
-        <span class="bx bx-g" style="margin-right:auto;font-size:11px">${verseCount} آية</span>
       </div>
       <div class="exam-q-range"><i class="fas fa-book-open" style="margin-left:5px;color:var(--primary)"></i>${q.label}</div>
       <div class="exam-score-row">
@@ -3188,7 +3117,7 @@ function renderExamQuestions(){
         </div>
       </div>
     </div>
-  `}).join('');
+  `).join('');
 }
 
 function clampScore(inputId, max){
@@ -3229,14 +3158,6 @@ function updateExamSummary(){
   $('ex-prog-bar').style.width = pct+'%';
   $('ex-prog-bar').style.background = pct>=80?'#16a34a':pct>=60?'#d97706':'#dc2626';
   $('ex-done-display').textContent = `${doneCount} / ${questions.length} سؤال مكتمل`;
-  // شارة المستوى
-  if(EXAM_STATE.student){
-    const lv = getStudentLevel(EXAM_STATE.student.id);
-    const lvMap = {beginner:['مبتدئ','bx-b'],intermediate:['متوسط','bx-y'],advanced:['متقدم','bx-g']};
-    const [lbl,cls] = lvMap[lv]||['—','bx-gray'];
-    const badge = $('ex-level-badge');
-    if(badge) badge.innerHTML = `<span class="bx ${cls}" style="font-size:11px">المستوى: ${lbl}</span>`;
-  }
 }
 
 function finishExam(){
@@ -4736,6 +4657,600 @@ loadExamResultsList = function(){
 };
 
 // ملاحظة: buildNotifications تُستدعى من showApp مباشرة (انظر أعلاه)
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  أولاً: نظام سجل الأحزاب اليدوي                             ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// S._hizbLog : مصفوحة سجلات الأحزاب المُتمَّة
+if(!S._hizbLog) S._hizbLog = [];
+
+/** إظهار/إخفاء خيار "أتم حزباً" عند اختيار طالب في التسميع */
+function onRecStudentChange(){
+  const sid = $('r-student').value;
+  const wrap = $('rt-hizb-complete-wrap');
+  if(!wrap) return;
+  if(sid){ wrap.style.display='block'; }
+  else   { wrap.style.display='none'; resetHizbComplete(); }
+}
+
+/** تبديل حالة checkbox إتمام الحزب */
+function toggleHizbComplete(){
+  const cb  = $('r-hizb-complete');
+  const ic  = $('hizb-check-ic');
+  const row = $('hizb-num-row');
+  const lbl = $('rt-hizb-complete');
+  cb.checked = !cb.checked;
+  if(cb.checked){
+    ic.textContent  = '✅';
+    ic.style.borderColor = '#16a34a';
+    lbl.style.borderColor = '#16a34a';
+    lbl.style.background  = '#f0fdf4';
+    row.style.display = 'block';
+    // اقتراح رقم الحزب التالي تلقائياً
+    const sid = $('r-student').value;
+    if(sid){
+      const done = S._hizbLog.filter(h=>h.student_id===sid).length;
+      const next = done + 1;
+      if(next <= 60) $('r-hizb-num').value = next;
+    }
+  } else {
+    resetHizbComplete();
+  }
+}
+
+/** إعادة تعيين خيار الحزب */
+function resetHizbComplete(){
+  const cb  = $('r-hizb-complete');
+  const ic  = $('hizb-check-ic');
+  const row = $('hizb-num-row');
+  const lbl = $('rt-hizb-complete');
+  if(!cb) return;
+  cb.checked = false;
+  ic.textContent = '○';
+  ic.style.borderColor = '#d1d5db';
+  if(lbl){ lbl.style.borderColor='var(--border)'; lbl.style.background='#fff'; }
+  if(row) row.style.display = 'none';
+  if($('r-hizb-num')) $('r-hizb-num').value = '';
+}
+
+/** حفظ سجل الحزب المُتمَّ في Supabase والذاكرة */
+async function saveHizbCompletion(sid, hizbNum, date, teacherId){
+  const s = S.students.find(x=>x.id===sid);
+  const g = S.groups.find(x=>x.id===s?.group_id);
+  const record = {
+    student_id:   sid,
+    student_name: s?.name||'—',
+    group_id:     s?.group_id||null,
+    group_name:   g?.name||'—',
+    teacher_id:   teacherId,
+    hizb_number:  hizbNum,
+    date,
+    created_at:   new Date().toISOString()
+  };
+  // حفظ في settings كـ fallback (يمكن لاحقاً إنشاء جدول مستقل)
+  try{
+    const key = `hizb_${sid}_${hizbNum}_${date}`;
+    await db.from('settings').upsert({key, value: JSON.stringify(record)}, {onConflict:'key'});
+  }catch(e){ console.warn('saveHizbCompletion:', e.message); }
+  S._hizbLog.unshift(record);
+  clearHizbCache();
+  return record;
+}
+
+/** تحميل سجل الأحزاب من settings عند الدخول */
+async function loadHizbLog(){
+  try{
+    const {data} = await db.from('settings').select('*').like('key','hizb_%').order('created_at',{ascending:false}).limit(500);
+    if(data?.length){
+      S._hizbLog = data.map(r=>{ try{ return JSON.parse(r.value); }catch{ return null; }}).filter(Boolean);
+    }
+  }catch(e){ console.warn('loadHizbLog:', e.message); }
+}
+
+/** فتح نافذة سجل الأحزاب */
+function openHizbLog(){
+  const mg = myGroups();
+  const ms = myStudents();
+  $('hl-group').innerHTML   = '<option value="">كل الحلقات</option>' + mg.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  $('hl-student').innerHTML = '<option value="">كل الطلبة</option>'  + ms.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  renderHizbLog();
+  openM('m-hizb-log');
+}
+
+/** رسم سجل الأحزاب */
+function renderHizbLog(){
+  const gf = $('hl-group')?.value  || '';
+  const sf = $('hl-student')?.value|| '';
+  const myS = myStudents();
+  let list = S._hizbLog.filter(h=> myS.some(s=>s.id===h.student_id));
+  if(gf) list = list.filter(h=>h.group_id===gf);
+  if(sf) list = list.filter(h=>h.student_id===sf);
+
+  const el = $('hizb-log-content');
+  if(!list.length){
+    el.innerHTML = '<div class="empty"><i class="fas fa-book-reader"></i><p>لا يوجد سجل أحزاب بعد</p></div>';
+    return;
+  }
+
+  // ملخص لكل طالب
+  const byStudent = {};
+  list.forEach(h=>{
+    if(!byStudent[h.student_id]) byStudent[h.student_id]={name:h.student_name,group:h.group_name,sid:h.student_id,records:[]};
+    byStudent[h.student_id].records.push(h);
+  });
+
+  el.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="padding:12px 18px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#16a34a">${list.length}</div>
+        <div style="font-size:11px;color:var(--text3)">إجمالي الأحزاب المُتمَّة</div>
+      </div>
+      <div style="padding:12px 18px;background:#eff6ff;border-radius:10px;border:1px solid #93c5fd;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:var(--primary)">${Object.keys(byStudent).length}</div>
+        <div style="font-size:11px;color:var(--text3)">طلبة أتمّوا أحزاباً</div>
+      </div>
+    </div>
+    ${Object.values(byStudent).sort((a,b)=>b.records.length-a.records.length).map(d=>`
+      <div style="margin-bottom:12px;border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="padding:12px 16px;background:linear-gradient(135deg,#0f4c2e,#16a34a);color:#fff;display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800">${d.name[0]}</div>
+          <div style="flex:1"><div style="font-weight:700">${d.name}</div><div style="font-size:11px;opacity:.75">${d.group}</div></div>
+          <span style="background:rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800">${d.records.length} حزب</span>
+        </div>
+        <div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:6px">
+          ${d.records.sort((a,b)=>a.hizb_number-b.hizb_number).map(h=>`
+            <div style="padding:6px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:12px;text-align:center">
+              <div style="font-weight:800;color:#166534">الحزب ${h.hizb_number}</div>
+              <div style="color:var(--text3);font-size:10px;margin-top:2px">${fmtDate(h.date)}</div>
+              <div style="color:var(--text3);font-size:10px">${teacherName(h.teacher_id)}</div>
+            </div>`).join('')}
+        </div>
+      </div>`).join('')}`;
+}
+
+/** تصدير سجل الأحزاب PDF */
+function exportHizbLogPDF(){
+  const gf = $('hl-group')?.value  || '';
+  const sf = $('hl-student')?.value|| '';
+  const myS = myStudents();
+  let list = S._hizbLog.filter(h=> myS.some(s=>s.id===h.student_id));
+  if(gf) list = list.filter(h=>h.group_id===gf);
+  if(sf) list = list.filter(h=>h.student_id===sf);
+  const rows = list.map(h=>`<tr><td>${h.student_name}</td><td>${h.group_name}</td><td style="text-align:center;font-weight:700">الحزب ${h.hizb_number}</td><td>${teacherName(h.teacher_id)}</td><td>${fmtDate(h.date)}</td></tr>`).join('');
+  makePDF('سجل إتمام الأحزاب', `<div><span class="sb"><h3 style="color:#16a34a">${list.length}</h3><p>حزب مُتمّ</p></span></div><table><thead><tr><th>الطالب</th><th>الحلقة</th><th>الحزب</th><th>الأستاذ</th><th>التاريخ</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+/** دالة calcHizb المُحدَّثة: تجمع الحسابي + اليدوي */
+const _origCalcHizb = calcHizb;
+calcHizb = function(sid){
+  // أحزاب مسجّلة يدوياً (الأدق)
+  const manual = S._hizbLog.filter(h=>h.student_id===sid).length;
+  if(manual > 0) return manual;
+  // fallback: الحساب التلقائي
+  return _origCalcHizb(sid);
+};
+
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  تعديل saveRec لدعم تسجيل الحزب المُتمَّ                    ║
+// ╚══════════════════════════════════════════════════════════════╝
+// ── تعريف saveRec المُحسَّن (يستبدل النسخة الأصلية) ──
+saveRec = async function(){
+  // نستدعي الأصل أولاً
+  // نحتاج نعيد كتابة الدالة كاملاً لإضافة منطق الحزب
+  const sid  = $('r-student').value;
+  if(!sid){ toast('اختر الطالب','warn'); return; }
+  const grade= $('r-grade').value;
+  if(!grade){ toast('اختر تقييماً للحفظ','warn'); return; }
+  const sf=parseInt($('r-s-from').value), vf=parseInt($('r-v-from').value)||1;
+  const st=parseInt($('r-s-to').value),   vt=parseInt($('r-v-to').value)||1;
+  if(!sf||!st){ toast('اختر نطاق الحفظ','warn'); return; }
+  const dt = $('r-date').value;
+  if(!dt){ toast('أدخل التاريخ','warn'); return; }
+  const v = calcV()||0;
+  const stars = parseInt($('r-stars').value)||0;
+  const type  = document.querySelector('input[name="r-type"]:checked')?.value||'حفظ جديد';
+  const record= {student_id:sid,type,surah_from:sf,verse_from:vf,surah_to:st,verse_to:vt,verses_count:v,grade,stars,date:dt,notes:$('r-notes').value,teacher_id:S.profile?.id};
+  try{
+    const{data,error}=await db.from('recitations').insert(record).select().single();
+    if(error)throw error;
+    S.recitations.unshift(data);
+    if(stars>0){
+      try{const{data:ms}=await db.from('student_stars').insert({student_id:sid,stars,reason:type,teacher_id:S.profile?.id,date:dt}).select().single();if(ms)S.manualStars.unshift(ms)}catch{}
+    }
+    // ── تسجيل الحزب المُتمَّ إن طُلب ──
+    const hizbChecked = $('r-hizb-complete')?.checked;
+    if(hizbChecked){
+      const hizbNum = parseInt($('r-hizb-num')?.value)||0;
+      if(hizbNum>=1&&hizbNum<=60){
+        // تحقق من عدم التكرار
+        const alreadyDone = S._hizbLog.some(h=>h.student_id===sid&&h.hizb_number===hizbNum);
+        if(alreadyDone){
+          toast(`تنبيه: الحزب ${hizbNum} مسجَّل مسبقاً لهذا الطالب`,'warn');
+        } else {
+          await saveHizbCompletion(sid, hizbNum, dt, S.profile?.id);
+          toast(`🎉 تم تسجيل إتمام الحزب ${hizbNum} — ${S.students.find(s=>s.id===sid)?.name}`,'ok');
+        }
+      } else {
+        toast('أدخل رقم حزب صحيح (1–60)','warn');
+      }
+    }
+    resetHizbComplete();
+    clearHizbCache();
+    closeM('m-rec');
+    clearAutoSave('rec');
+    toast(`✅ تم حفظ التسميع — ${grade}${stars>0?' | '+'⭐'.repeat(stars):''}`,'ok');
+    loadRecs();
+  }catch(e){toast('خطأ: '+e.message,'err')}
+};
+
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  ثانياً: دعم الطالب في أكثر من حلقة                         ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+/** تحميل الحلقات الإضافية للطلبة من settings */
+async function loadStudentExtraGroups(){
+  try{
+    const {data} = await db.from('settings').select('*').like('key','extra_groups_%').limit(500);
+    if(data?.length){
+      S._extraGroups = {};
+      data.forEach(r=>{
+        const sid = r.key.replace('extra_groups_','');
+        try{ S._extraGroups[sid] = JSON.parse(r.value); }catch{}
+      });
+    } else { S._extraGroups = {}; }
+  }catch{ S._extraGroups = {}; }
+}
+
+/** حفظ الحلقات الإضافية لطالب */
+async function saveStudentExtraGroups(sid, extraGroupIds){
+  if(!S._extraGroups) S._extraGroups={};
+  S._extraGroups[sid] = extraGroupIds;
+  try{
+    await db.from('settings').upsert(
+      {key:`extra_groups_${sid}`, value:JSON.stringify(extraGroupIds)},
+      {onConflict:'key'}
+    );
+  }catch(e){ console.warn('saveStudentExtraGroups:', e.message); }
+}
+
+/** الحلقات التي ينتمي إليها الطالب (رئيسية + إضافية) */
+function getStudentAllGroups(sid){
+  const s = S.students.find(x=>x.id===sid);
+  if(!s) return [];
+  const main = s.group_id ? [s.group_id] : [];
+  const extra= (S._extraGroups||{})[sid] || [];
+  return [...new Set([...main, ...extra])];
+}
+
+/** تحديث myStudents لتشمل الطلبة في الحلقات الإضافية */
+const _origMyStudents = myStudents;
+myStudents = function(){
+  const r=S.profile?.role;
+  if(r==='admin'||r==='supervisor') return S.students;
+  const myGroupIds = new Set(myGroups().map(g=>g.id));
+  return S.students.filter(s=>{
+    if(myGroupIds.has(s.group_id)) return true;
+    // تحقق من الحلقات الإضافية
+    const extra = (S._extraGroups||{})[s.id]||[];
+    return extra.some(gid=>myGroupIds.has(gid));
+  });
+};
+
+/** رسم الحلقات الإضافية في modal الطالب */
+function renderExtraGroupsUI(selectedExtraIds=[]){
+  const sid       = $('s-id').value;
+  const mainGid   = $('s-group').value;
+  const allGroups = myGroups();
+  const container = $('s-extra-groups');
+  const hint      = $('s-extra-hint');
+  if(!container) return;
+
+  const available = allGroups.filter(g=>g.id!==mainGid);
+  if(!available.length){
+    container.innerHTML='<span style="font-size:12px;color:var(--text3)">لا توجد حلقات أخرى</span>';
+    return;
+  }
+  // مسح المحتوى
+  container.innerHTML='';
+  if(hint) hint.style.display='none';
+
+  available.forEach(g=>{
+    const isSelected = selectedExtraIds.includes(g.id);
+    const chip = document.createElement('div');
+    chip.dataset.gid = g.id;
+    chip.className   = 'day-cb'+(isSelected?' on':'');
+    chip.style.cssText='font-size:12px;padding:5px 12px';
+    chip.innerHTML   = `${g.name}<span style="font-size:10px;opacity:.7;margin-right:4px"> | ${teacherName(g.teacher_id)}</span>`;
+    chip.onclick     = ()=>{
+      chip.classList.toggle('on');
+    };
+    container.appendChild(chip);
+  });
+}
+
+/** جمع الحلقات الإضافية المختارة */
+function getSelectedExtraGroups(){
+  const chips = document.querySelectorAll('#s-extra-groups .day-cb.on');
+  return Array.from(chips).map(c=>c.dataset.gid).filter(Boolean);
+}
+
+/** تحديث onGroupSelectChange لإعادة رسم الحلقات الإضافية */
+const _origOnGroupSelectChange = onGroupSelectChange;
+onGroupSelectChange = function(){
+  _origOnGroupSelectChange();
+  const sid = $('s-id').value;
+  const existing = sid ? ((S._extraGroups||{})[sid]||[]) : [];
+  renderExtraGroupsUI(existing);
+};
+
+/** تحديث openStudentModal لتعبئة الحلقات الإضافية */
+const _origOpenStudentModal = openStudentModal;
+openStudentModal = function(id){
+  _origOpenStudentModal(id);
+  // بعد فتح المودال نرسم الحلقات الإضافية
+  setTimeout(()=>{
+    const existing = id ? ((S._extraGroups||{})[id]||[]) : [];
+    renderExtraGroupsUI(existing);
+  }, 50);
+};
+
+/** تحديث saveStudent لحفظ الحلقات الإضافية */
+const _origSaveStudent = saveStudent;
+saveStudent = async function(){
+  await _origSaveStudent();
+  // بعد حفظ الطالب نحفظ الحلقات الإضافية
+  // نجلب آخر طالب أُضيف أو المعدَّل
+  const sid = $('s-id').value || S.students[S.students.length-1]?.id;
+  if(!sid) return;
+  const extra = getSelectedExtraGroups();
+  await saveStudentExtraGroups(sid, extra);
+};
+
+/** اسم الحلقات المرتبطة بالطالب (للعرض) */
+function getStudentGroupsLabel(sid){
+  const ids = getStudentAllGroups(sid);
+  if(!ids.length) return '—';
+  return ids.map(id=>groupName(id)).join(' + ');
+}
+
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  ثالثاً: حماية البيانات (تأكيد الخروج + AutoSave)           ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const UNSAVED_CONTEXTS = {
+  exam: false,   // امتحان جارٍ
+  rec:  false,   // تسميع مفتوح
+};
+let _pendingNavCallback = null;
+
+/** تعيين حالة "يوجد بيانات غير محفوظة" */
+function setUnsaved(ctx, val){ UNSAVED_CONTEXTS[ctx]=val; }
+function hasUnsaved(){ return Object.values(UNSAVED_CONTEXTS).some(Boolean); }
+
+/** تنبيه المتصفح عند إغلاق/تحديث الصفحة */
+window.addEventListener('beforeunload', e=>{
+  if(hasUnsaved()){
+    e.preventDefault();
+    e.returnValue='توجد بيانات غير محفوظة. هل تريد المغادرة؟';
+  }
+});
+
+/** اعتراض nav() لعرض تأكيد الخروج إن لزم */
+const _origNav = nav;
+nav = function(page){
+  if(hasUnsaved()){
+    _pendingNavCallback = ()=>{ Object.keys(UNSAVED_CONTEXTS).forEach(k=>UNSAVED_CONTEXTS[k]=false); _origNav(page); };
+    // هل يوجد autosave؟
+    const hasAS = !!localStorage.getItem('autosave_exam')||!!localStorage.getItem('autosave_rec');
+    $('autosave-info').style.display = hasAS?'block':'none';
+    openM('m-unsaved');
+  } else {
+    _origNav(page);
+  }
+};
+
+function cancelNavAway(){ closeM('m-unsaved'); _pendingNavCallback=null; }
+function confirmNavAway(){
+  closeM('m-unsaved');
+  if(_pendingNavCallback){ _pendingNavCallback(); _pendingNavCallback=null; }
+}
+
+// ── AutoSave ────────────────────────────────────────────────────
+const AS_PREFIX = 'wafaq_autosave_';
+
+function autoSave(ctx, data){
+  try{ localStorage.setItem(AS_PREFIX+ctx, JSON.stringify({ts:Date.now(), data})); }catch{}
+}
+function loadAutoSave(ctx){
+  try{ const r=localStorage.getItem(AS_PREFIX+ctx); return r?JSON.parse(r):null; }catch{ return null; }
+}
+function clearAutoSave(ctx){
+  try{ localStorage.removeItem(AS_PREFIX+ctx); }catch{}
+}
+
+/** AutoSave للامتحان: يُشغَّل كل 30 ثانية تلقائياً */
+function startExamAutoSave(){
+  setUnsaved('exam', true);
+  if(window._examASInterval) clearInterval(window._examASInterval);
+  window._examASInterval = setInterval(()=>{
+    if(EXAM_STATE.student && EXAM_STATE.questions.length){
+      autoSave('exam',{
+        student_id: EXAM_STATE.student?.id,
+        group_id:   EXAM_STATE.group?.id,
+        answers:    EXAM_STATE.answers,
+        questions:  EXAM_STATE.questions,
+        maxPerQ:    EXAM_STATE.maxPerQ,
+        ts: Date.now()
+      });
+      // إشعار صامت صغير
+      const bar=document.createElement('div');
+      bar.style.cssText='position:fixed;bottom:70px;left:24px;background:#166534;color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;z-index:9999;opacity:.85';
+      bar.textContent='💾 تم الحفظ التلقائي';
+      document.body.appendChild(bar);
+      setTimeout(()=>bar.remove(), 2000);
+    }
+  }, 30000);
+}
+
+function stopExamAutoSave(){
+  setUnsaved('exam', false);
+  clearAutoSave('exam');
+  if(window._examASInterval){ clearInterval(window._examASInterval); window._examASInterval=null; }
+}
+
+/** AutoSave للتسميع: عند فتح modal */
+function startRecAutoSave(){
+  setUnsaved('rec', true);
+  if(window._recASInterval) clearInterval(window._recASInterval);
+  window._recASInterval = setInterval(()=>{
+    const sid   = $('r-student')?.value;
+    const grade = $('r-grade')?.value;
+    const sf    = $('r-s-from')?.value;
+    const st    = $('r-s-to')?.value;
+    if(sid&&(grade||sf||st)){
+      autoSave('rec',{
+        student_id: sid,
+        group_id:   $('r-group')?.value,
+        grade, sf, vf:$('r-v-from')?.value,
+        st, vt:$('r-v-to')?.value,
+        notes:$('r-notes')?.value,
+        date:$('r-date')?.value,
+        type:document.querySelector('input[name="r-type"]:checked')?.value
+      });
+    }
+  }, 20000);
+}
+
+function stopRecAutoSave(){
+  setUnsaved('rec', false);
+  clearAutoSave('rec');
+  if(window._recASInterval){ clearInterval(window._recASInterval); window._recASInterval=null; }
+}
+
+/** ربط AutoSave بأحداث الامتحان */
+const _origGenerateExam = generateExam;
+generateExam = function(){
+  _origGenerateExam();
+  // نبدأ autosave بعد نجاح التوليد (100ms)
+  setTimeout(()=>{ if(EXAM_STATE.questions.length) startExamAutoSave(); }, 100);
+};
+
+const _origFinishExam = finishExam;
+finishExam = function(){ stopExamAutoSave(); _origFinishExam(); };
+
+/** ربط AutoSave بنافذة التسميع */
+const _origOpenRecModal = openRecModal;
+openRecModal = function(){
+  _origOpenRecModal();
+  // تفعيل خيار "أتم حزباً" ورصد الطالب
+  const recStudentSel = $('r-student');
+  if(recStudentSel && !recStudentSel._hizbListenerAdded){
+    recStudentSel.addEventListener('change', onRecStudentChange);
+    recStudentSel._hizbListenerAdded = true;
+  }
+  startRecAutoSave();
+  // استعادة autosave إن وجد
+  const saved = loadAutoSave('rec');
+  if(saved?.data && saved.data.student_id){
+    const ageMins = (Date.now()-saved.ts)/60000;
+    if(ageMins < 120){ // أقل من ساعتين
+      setTimeout(()=>{
+        if(confirm(`🔄 وُجِد تسميع محفوظ تلقائياً (${Math.round(ageMins)} دقيقة مضت).\nهل تريد استعادته؟`)){
+          const d = saved.data;
+          if($('r-group')&&d.group_id) $('r-group').value=d.group_id;
+          loadRecStudents();
+          setTimeout(()=>{
+            if($('r-student')&&d.student_id){ $('r-student').value=d.student_id; onRecStudentChange(); }
+            if($('r-s-from')&&d.sf)  $('r-s-from').value=d.sf;
+            if($('r-v-from')&&d.vf)  $('r-v-from').value=d.vf;
+            if($('r-s-to')&&d.st)    $('r-s-to').value=d.st;
+            if($('r-v-to')&&d.vt)    $('r-v-to').value=d.vt;
+            if($('r-notes')&&d.notes)$('r-notes').value=d.notes;
+            if($('r-date')&&d.date)  $('r-date').value=d.date;
+            calcV();
+          },100);
+        } else { clearAutoSave('rec'); }
+      },400);
+    } else { clearAutoSave('rec'); }
+  }
+};
+
+// إيقاف autosave التسميع عند الإغلاق
+const _origCloseM = closeM;
+closeM = function(id){
+  if(id==='m-rec') stopRecAutoSave();
+  _origCloseM(id);
+};
+
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  تحديث loadData لتحميل الأحزاب والحلقات الإضافية            ║
+// ╚══════════════════════════════════════════════════════════════╝
+const _origLoadData = loadData;
+loadData = async function(){
+  await _origLoadData();
+  await loadHizbLog();
+  await loadStudentExtraGroups();
+};
+
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  إضافة زر "سجل الأحزاب" في صفحة الحفظ والمراجعة            ║
+// ╚══════════════════════════════════════════════════════════════╝
+const _origRenderRecs = renderRecs;
+renderRecs = function(){
+  _origRenderRecs();
+  // إضافة الزر إن لم يكن موجوداً
+  const ph = document.querySelector('#page-recitations .ph');
+  if(ph && !ph.querySelector('#btn-hizb-log')){
+    const btn = document.createElement('button');
+    btn.id = 'btn-hizb-log';
+    btn.className = 'btn btn-sm';
+    btn.style.cssText = 'background:#f0fdf4;color:#166534;border:1.5px solid #86efac';
+    btn.innerHTML = '<i class="fas fa-book-reader"></i> سجل الأحزاب';
+    btn.onclick = openHizbLog;
+    const btnsDiv = ph.querySelector('div[style*="display:flex"]');
+    if(btnsDiv) btnsDiv.insertBefore(btn, btnsDiv.firstChild);
+    else ph.appendChild(btn);
+  }
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  SQL المطلوب في Supabase (تعليق توضيحي)                      ║
+// ╚══════════════════════════════════════════════════════════════╝
+/*
+  سجل الأحزاب محفوظ حالياً في جدول settings بمفاتيح hizb_*
+  لإنشاء جدول مستقل لاحقاً:
+
+  create table if not exists public.hizb_completions (
+    id           uuid primary key default gen_random_uuid(),
+    student_id   uuid references public.students(id) on delete cascade,
+    student_name text,
+    group_id     uuid references public.groups(id) on delete set null,
+    group_name   text,
+    teacher_id   uuid references public.profiles(id) on delete set null,
+    hizb_number  int not null check(hizb_number between 1 and 60),
+    date         date not null default current_date,
+    created_at   timestamptz default now(),
+    unique(student_id, hizb_number)
+  );
+  alter table public.hizb_completions enable row level security;
+  create policy "auth users manage hizb"
+    on public.hizb_completions for all using (auth.uid() is not null);
+
+  -- الحلقات الإضافية محفوظة في settings بمفاتيح extra_groups_*
+  -- لإنشاء جدول مستقل لاحقاً:
+
+  create table if not exists public.student_group_links (
+    student_id uuid references public.students(id) on delete cascade,
+    group_id   uuid references public.groups(id)   on delete cascade,
+    primary key (student_id, group_id)
+  );
+*/
 
 </script>
 </body>
