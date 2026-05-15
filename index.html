@@ -1262,6 +1262,7 @@ textarea{resize:vertical;min-height:80px}
         <div class="fg"><label>الجنس</label><select id="s-gender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select></div>
         <div class="fg"><label>المستوى</label><select id="s-level"><option value="تمهيدي">تمهيدي</option><option value="مستوى أول">مستوى أول</option><option value="مستوى ثاني">مستوى ثاني</option><option value="مستوى ثالث">مستوى ثالث</option><option value="مستوى رابع (الكبار)">مستوى رابع (الكبار)</option><option value="حافظ">حافظ للقرآن</option></select></div>
         <div class="fg"><label>تاريخ الالتحاق</label><input id="s-join" type="date"></div>
+        <div class="fg"><label><i class="fas fa-book-reader" style="color:#16a34a;margin-left:4px"></i>عدد الأحزاب المحفوظة سابقاً <span style="font-size:10px;color:var(--text3)">(0–60)</span></label><input id="s-hizb-count" type="number" min="0" max="60" step="1" placeholder="0" oninput="validateHizbInput(this)" style="font-size:15px;font-weight:700;text-align:center"></div>
         <div class="fg full"><label>رابط صورة (اختياري)</label><input id="s-photo" placeholder="https://..."></div>
         <div class="fg full"><label>ملاحظات</label><textarea id="s-notes" rows="2"></textarea></div>
       </div>
@@ -1276,9 +1277,18 @@ textarea{resize:vertical;min-height:80px}
     <div class="mh" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-bottom:1px solid #86efac"><h3 style="color:#166534"><i class="fas fa-book-open" style="margin-left:8px;color:#16a34a"></i>تسجيل تسميع</h3><button class="mclose" onclick="closeM('m-rec')">✕</button></div>
     <div class="mbody">
       <input type="hidden" id="r-id">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
         <div class="fg"><label>الحلقة</label><select id="r-group" onchange="loadRecStudents()"></select></div>
-        <div class="fg"><label>الطالب *</label><select id="r-student"><option value="">— اختر —</option></select></div>
+        <div class="fg"><label>الطالب *</label><select id="r-student" onchange="showLastRecInfo()"><option value="">— اختر —</option></select></div>
+      </div>
+      <!-- معلومات آخر تسميع -->
+      <div id="last-rec-info" style="display:none;margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:10px;border:1px solid #86efac">
+        <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:4px"><i class="fas fa-history" style="margin-left:5px"></i>آخر تسميع لهذا الطالب</div>
+        <div id="last-rec-text" style="font-size:13px;color:#1a2e1a;line-height:1.6"></div>
+        <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap">
+          <span id="last-rec-hizb" style="background:#e8faf0;border:1px solid #4ade80;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;color:#166534"></span>
+          <span id="last-rec-stars" style="font-size:12px;color:#d97706"></span>
+        </div>
       </div>
       <div style="margin-bottom:14px">
         <label style="display:block;margin-bottom:8px">نوع التسميع</label>
@@ -2639,6 +2649,9 @@ function loadRecStudents(){
   const gid=$('r-group').value;
   const list=S.students.filter(s=>s.group_id===gid);
   $('r-student').innerHTML='<option value="">— اختر الطالب —</option>'+list.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  // إخفاء info عند تغيير الحلقة
+  const box=$('last-rec-info');
+  if(box) box.style.display='none';
 }
 async function saveRec(){
   const sid=$('r-student').value;
@@ -5335,6 +5348,277 @@ renderRecs = function(){
     primary key (student_id, group_id)
   );
 */
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  عرض آخر تسميع عند اختيار الطالب في نافذة التسميع          ║
+// ╚══════════════════════════════════════════════════════════════╝
+function showLastRecInfo(){
+  const sid = $('r-student').value;
+  const box = $('last-rec-info');
+  if(!sid){ if(box) box.style.display='none'; onRecStudentChange(); return; }
+  onRecStudentChange();
+  // آخر تسميع
+  const recs = S.recitations.filter(r=>r.student_id===sid).sort((a,b)=>b.date.localeCompare(a.date));
+  const lastHifz = recs.find(r=>r.type==='حفظ جديد');
+  const lastRev  = recs.find(r=>r.type==='مراجعة');
+  const last     = recs[0];
+  if(!last){ if(box) box.style.display='none'; return; }
+  const fs = SURAHS.find(x=>x.n===last.surah_from);
+  const ts = SURAHS.find(x=>x.n===last.surah_to);
+  const gradeColors={'ممتاز':'#16a34a','جيد جداً':'#0891b2','جيد':'#2563eb','حسن':'#d97706','لا بأس به':'#ea580c','ضعيف':'#dc2626'};
+  const gc = gradeColors[last.grade]||'#1e2d42';
+  const hizbCount = calcHizb(sid);
+  const totalV    = getTotalV(sid);
+  $('last-rec-text').innerHTML=
+    `<span style="font-weight:700">${last.type==='حفظ جديد'?'📖 حفظ':'🔄 مراجعة'}:</span> `+
+    `${fs?.name||'—'} (${last.verse_from}) ← ${ts?.name||'—'} (${last.verse_to}) — `+
+    `<span style="font-weight:700;color:${gc}">${last.grade||'—'}</span>`+
+    (last.stars>0?` ${'⭐'.repeat(last.stars)}`:'')+ ` — <span style="color:var(--text3);font-size:11px">${fmtDate(last.date)}</span>`;
+  $('last-rec-hizb').textContent = `📚 ${fmtHizb(hizbCount)} حزب | ${totalV.toLocaleString()} آية`;
+  $('last-rec-stars').textContent = `⭐ ${getStars(sid)} نجمة إجمالاً`;
+  if(box) box.style.display='block';
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  نظام رقم الحزب الذكي في نافذة التسميع (قائمة + نص)        ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// تحديث toggleHizbComplete لإضافة القائمة الذكية
+const _origToggleHizbComplete = toggleHizbComplete;
+toggleHizbComplete = function(){
+  _origToggleHizbComplete();
+  // بعد الفتح نضيف قائمة ذكية بجانب الحقل
+  const cb = $('r-hizb-complete');
+  if(!cb?.checked) return;
+  const sid = $('r-student').value;
+  if(!sid) return;
+  // بناء قائمة الأحزاب المنجزة والمتبقية
+  const done   = new Set(S._hizbLog.filter(h=>h.student_id===sid).map(h=>h.hizb_number));
+  const next   = [...Array(60)].map((_,i)=>i+1).find(n=>!done.has(n))||1;
+  const numInp = $('r-hizb-num');
+  if(numInp && !numInp.value) numInp.value = next;
+  // إضافة قائمة مرئية إن لم تكن موجودة
+  const row = $('hizb-num-row');
+  if(row && !$('hizb-quick-select')){
+    const sel = document.createElement('div');
+    sel.id = 'hizb-quick-select';
+    sel.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;margin-top:8px';
+    // عرض 20 حزباً التالية
+    const start = Math.max(1, next-2);
+    for(let i=start; i<=Math.min(60,start+19); i++){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = i;
+      const isDone = done.has(i);
+      btn.style.cssText = `width:34px;height:34px;border-radius:8px;border:1.5px solid ${isDone?'#86efac':'#d1fae5'};background:${isDone?'#dcfce7':'#f0fdf4'};color:${isDone?'#166534':'#4ade80'};font-size:12px;font-weight:700;cursor:${isDone?'default':'pointer'};font-family:Tajawal,sans-serif;transition:all .15s;position:relative`;
+      if(isDone){ btn.title='محفوظ ✓'; btn.disabled=true; btn.innerHTML=`<span style="font-size:10px">${i}<span style="position:absolute;top:-5px;right:-4px;font-size:9px">✓</span></span>`; }
+      else{
+        btn.onclick=()=>{
+          if($('r-hizb-num')) $('r-hizb-num').value=i;
+          sel.querySelectorAll('button').forEach(b=>{ if(!b.disabled){ b.style.background='#f0fdf4';b.style.borderColor='#d1fae5';b.style.color='#4ade80'; }});
+          btn.style.background='#16a34a'; btn.style.borderColor='#16a34a'; btn.style.color='#fff';
+        };
+        if(i===next){ btn.style.background='#16a34a';btn.style.borderColor='#16a34a';btn.style.color='#fff'; }
+      }
+      sel.appendChild(btn);
+    }
+    row.appendChild(sel);
+  }
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  التحقق من صحة عدد الأحزاب في نموذج الطالب                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+function validateHizbInput(inp){
+  let v = parseInt(inp.value);
+  if(isNaN(v)||v<0){ inp.value=0; v=0; }
+  if(v>60){ inp.value=60; toast('الحد الأقصى 60 حزباً','warn'); }
+  inp.style.borderColor = v>0?'#16a34a':'var(--border)';
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  تحديث saveStudent لحفظ عدد الأحزاب المبدئي                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+const _saveStudentWithHizb = saveStudent;
+saveStudent = async function(){
+  // حفظ رقم الأحزاب قبل استدعاء الأصلي
+  const hizbInput = $('s-hizb-count');
+  const hizbVal   = parseInt(hizbInput?.value)||0;
+  // استدعاء الدالة الأصلية
+  await _saveStudentWithHizb();
+  // بعد الحفظ: إذا أدخل عدد أحزاب، سجّلها في S._hizbLog
+  if(hizbVal>0){
+    const sid = $('s-id').value || S.students[S.students.length-1]?.id;
+    if(sid){
+      // حذف السجلات القديمة المبدئية لهذا الطالب أولاً
+      S._hizbLog = S._hizbLog.filter(h=>!(h.student_id===sid&&h.initial===true));
+      // إضافة سجل مبدئي لكل حزب
+      for(let i=1; i<=Math.min(hizbVal,60); i++){
+        const alreadyDone = S._hizbLog.some(h=>h.student_id===sid&&h.hizb_number===i);
+        if(!alreadyDone){
+          await saveHizbCompletion(sid, i, today(), S.profile?.id);
+          // تعليم بأنه مبدئي
+          if(S._hizbLog[0]&&S._hizbLog[0].student_id===sid) S._hizbLog[0].initial=true;
+        }
+      }
+      clearHizbCache();
+      toast(`✅ تم تسجيل ${hizbVal} أحزاب مبدئية للطالب`,'ok');
+    }
+  }
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  تحديث openStudentModal لتعبئة خانة الأحزاب                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+const _openStudentModalWithHizb = openStudentModal;
+openStudentModal = function(id){
+  _openStudentModalWithHizb(id);
+  // تعبئة عدد الأحزاب الحالي إن كان الطالب موجوداً
+  setTimeout(()=>{
+    const hizbInput = $('s-hizb-count');
+    if(!hizbInput) return;
+    if(id){
+      const h = calcHizb(id);
+      hizbInput.value = h>0 ? Math.floor(h) : '';
+      hizbInput.style.borderColor = h>0?'#16a34a':'var(--border)';
+    } else {
+      hizbInput.value = '';
+      hizbInput.style.borderColor = 'var(--border)';
+    }
+  }, 60);
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  لوحة تحكم تفاعلية: تحديث renderDash لجعلها قابلة للنقر    ║
+// ╚══════════════════════════════════════════════════════════════╝
+// تحديث showStatDetail لإضافة تنبيه عند 5 أحزاب و تقدم الحفظ
+const _origShowStatDetailBase = showStatDetail;
+// تحديث openSDetail لإضافة شريط تقدم الحفظ وتنبيه الأحزاب
+const _origOpenSDetail = openSDetail;
+openSDetail = function(id){
+  _origOpenSDetail(id);
+  // بعد فتح النافذة نضيف شريط تقدم الأحزاب
+  setTimeout(()=>{
+    const body = $('sdetail-content');
+    if(!body) return;
+    const h = calcHizb(id);
+    const pct = Math.min(h/60*100,100);
+    const milestones = [5,10,15,20,30,40,50,60];
+    const nextMilestone = milestones.find(m=>m>h)||60;
+    // إضافة شريط تقدم الحفظ إن لم يوجد
+    if(!body.querySelector('#hizb-progress-bar')){
+      const div = document.createElement('div');
+      div.id = 'hizb-progress-bar';
+      div.style.cssText='padding:14px 20px;background:#f0fdf4;border-top:1px solid #86efac';
+      div.innerHTML=`
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+          <span style="font-weight:700;color:#166534"><i class="fas fa-book-reader" style="margin-left:4px"></i>تقدم الحفظ</span>
+          <span style="color:#16a34a;font-weight:800">${fmtHizb(h)} / 60 حزب</span>
+        </div>
+        <div style="height:10px;background:#d1fae5;border-radius:5px;overflow:hidden;position:relative">
+          <div style="height:100%;background:linear-gradient(90deg,#16a34a,#4ade80);border-radius:5px;width:${pct}%;transition:width 1s ease"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--text3)">
+          <span>0</span>
+          ${milestones.filter(m=>m<=60).map(m=>`<span style="color:${h>=m?'#16a34a':'var(--border)'}">•${m}</span>`).join('')}
+        </div>
+        ${h>0&&h<nextMilestone?`<div style="margin-top:6px;font-size:11px;color:#d97706;font-weight:600"><i class="fas fa-flag" style="margin-left:4px"></i>يحتاج ${nextMilestone-h} حزب للوصول للمرحلة التالية (${nextMilestone})</div>`:''}
+        ${h>=5?`<div style="margin-top:4px;font-size:11px;color:#16a34a"><i class="fas fa-award" style="margin-left:4px"></i>مؤهل للحصول على شهادة حفظ! <button onclick="nav('certificates');closeM('m-sdetail')" style="background:none;border:none;color:#16a34a;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;font-weight:700;text-decoration:underline">إنشاء شهادة</button></div>`:''}
+      `;
+      body.appendChild(div);
+    }
+  }, 100);
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  تنبيه تلقائي عند إتمام 5 أحزاب وما يليها                   ║
+// ╚══════════════════════════════════════════════════════════════╝
+function checkHizbMilestones(sid){
+  const h = S._hizbLog.filter(x=>x.student_id===sid).length;
+  const s = S.students.find(x=>x.id===sid);
+  const milestones = [5,10,15,20,30,40,50,60];
+  if(milestones.includes(h)){
+    const emoji = h===60?'🏆':h>=30?'🌟':'🎉';
+    toast(`${emoji} تهانينا! ${s?.name||'الطالب'} أتم ${h} حزباً!`,'ok');
+    // إضافة إشعار
+    notifications.unshift({
+      id:'milestone-'+sid+'-'+h, type:'hifz', icon:'fas fa-quran',
+      title:'إنجاز رائع!',
+      body:`${s?.name||'—'} أتم ${h} حزباً من القرآن الكريم ${emoji}`,
+      time:'الآن'
+    });
+    renderNotifications();
+  }
+}
+
+// ربط التحقق من المراحل بعد حفظ الحزب
+const _origSaveHizbCompletion = saveHizbCompletion;
+saveHizbCompletion = async function(sid, hizbNum, date, teacherId){
+  const result = await _origSaveHizbCompletion(sid, hizbNum, date, teacherId);
+  checkHizbMilestones(sid);
+  return result;
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  لوحة التحكم: جعل بطاقات الإحصائيات كاملة الوظائف           ║
+// ╚══════════════════════════════════════════════════════════════╝
+// نضيف tooltip لبطاقات الإحصائيات عبر CSS
+(function addClickableStyles(){
+  const style = document.createElement('style');
+  style.textContent=`
+    .stat-card.clickable::before{content:'انقر للتفاصيل';position:absolute;top:6px;left:8px;font-size:9px;color:var(--primary-l);opacity:0;transition:opacity .2s;font-family:Tajawal,sans-serif;font-weight:600}
+    .stat-card.clickable:hover::before{opacity:.7}
+    .stat-card.clickable::after{display:none}
+    /* شريط تقدم حفظ في بطاقة الطالب */
+    .s-card .hifz-prog{height:4px;background:var(--border);border-radius:2px;margin-top:5px;overflow:hidden}
+    .s-card .hifz-prog-bar{height:100%;background:linear-gradient(90deg,#16a34a,#4ade80);border-radius:2px}
+    /* نبض الإشعارات */
+    @keyframes hizb-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    .hizb-milestone{animation:hizb-pulse .6s ease 3}
+    /* تحسين عرض آخر تسميع */
+    #last-rec-info{transition:all .2s;animation:fadeInDown .3s ease}
+    @keyframes fadeInDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+    /* تحسين زر الحزب */
+    #hizb-quick-select button:not(:disabled):hover{transform:scale(1.12);box-shadow:0 2px 8px rgba(22,163,74,.3)}
+    /* تحسين خانة عدد الأحزاب */
+    #s-hizb-count:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.1)}
+    /* شريط تقدم الحفظ في بطاقة الطالب */
+    .student-hizb-bar{margin-top:6px;padding:6px 0;border-top:1px solid #f0f4f8}
+  `;
+  document.head.appendChild(style);
+})();
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  تحديث renderStudents لإظهار شريط تقدم الأحزاب              ║
+// ╚══════════════════════════════════════════════════════════════╝
+const _origRenderStudents = renderStudents;
+renderStudents = function(){
+  _origRenderStudents();
+  // بعد الرسم نضيف بيانات الأحزاب في بطاقات Grid
+  if(sView==='grid'){
+    const myS = myStudents();
+    const gf = $('filter-group')?.value||'';
+    const list = gf ? myS.filter(s=>s.group_id===gf) : myS;
+    list.forEach(s=>{
+      const card = document.querySelector(`#students-grid .s-card[onclick*="${s.id}"]`);
+      if(!card) return;
+      const h = calcHizb(s.id);
+      if(h<=0) return;
+      const pct = Math.min(h/60*100,100);
+      if(card.querySelector('.student-hizb-bar')) return;
+      const bar = document.createElement('div');
+      bar.className = 'student-hizb-bar';
+      bar.innerHTML=`<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:2px"><span><i class="fas fa-book-reader" style="color:#16a34a;margin-left:3px"></i>الحفظ</span><span style="color:#16a34a;font-weight:700">${fmtHizb(h)}/60 حزب</span></div><div class="hifz-prog"><div class="hifz-prog-bar" style="width:${pct}%"></div></div>`;
+      card.appendChild(bar);
+    });
+  }
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  تحديث calcHizb النهائي لدمج اليدوي + المبدئي               ║
+// ╚══════════════════════════════════════════════════════════════╝
+// يستخدم calcHizb المعرَّف مسبقاً كـ override للأصل
+// لا حاجة لتعديل إضافي — calcHizb تعمل بشكل صحيح
 
 </script>
 </body>
