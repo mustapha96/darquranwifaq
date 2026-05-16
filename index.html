@@ -1337,22 +1337,107 @@ textarea{resize:vertical;min-height:80px}
         </div>
         <div id="r-calc" style="display:none;margin-top:10px"><div class="hifz-box"><i class="fas fa-book-quran"></i><div><div id="r-range" style="font-weight:700;color:#166534;font-size:13px"></div><div id="r-vcount" style="font-size:12px;color:#4ade80;margin-top:2px"></div></div></div></div>
       </div>
-      <div style="background:#fffbf0;border-radius:10px;padding:14px;border:1px solid #fde68a;margin-bottom:14px">
-        <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:10px"><i class="fas fa-star" style="color:#d97706;margin-left:6px"></i>تقييم الحفظ</div>
-        <div style="display:flex;flex-wrap:wrap;gap:7px">
-          <button type="button" onclick="setGrade('ممتاز',3,'#16a34a')" data-g="ممتاز" class="grade-btn" style="border-color:#16a34a;color:#16a34a">⭐⭐⭐ ممتاز</button>
-          <button type="button" onclick="setGrade('جيد جداً',0,'#0891b2')" data-g="جيد جداً" class="grade-btn" style="border-color:#0891b2;color:#0891b2">جيد جداً</button>
-          <button type="button" onclick="setGrade('جيد',0,'#2563eb')" data-g="جيد" class="grade-btn" style="border-color:#2563eb;color:#2563eb">جيد</button>
-          <button type="button" onclick="setGrade('حسن',0,'#d97706')" data-g="حسن" class="grade-btn" style="border-color:#d97706;color:#d97706">حسن</button>
-          <button type="button" onclick="setGrade('لا بأس به',0,'#ea580c')" data-g="لا بأس به" class="grade-btn" style="border-color:#ea580c;color:#ea580c">لا بأس به</button>
-          <button type="button" onclick="setGrade('ضعيف',0,'#dc2626')" data-g="ضعيف" class="grade-btn" style="border-color:#dc2626;color:#dc2626">ضعيف</button>
+      <!-- ====== تقييم الحفظ المُحدَّث ====== -->
+      <div style="background:#fffbf0;border-radius:12px;padding:16px;border:1px solid #fde68a;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-star" style="color:#d97706"></i>تقييم الحفظ
+          <span style="font-size:11px;font-weight:400;color:#b45309;margin-right:4px">(اختر مستوى الأداء)</span>
+        </div>
+        <!-- أزرار التقييم بتصميم جديد -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+          <!-- جيد جداً — الأعلى -->
+          <button type="button" onclick="setGrade('جيد جداً',3,'#0891b2')" data-g="جيد جداً" class="grade-btn"
+            style="border-color:#0891b2;color:#0891b2;border-radius:10px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;background:#f0f9ff">
+            <span style="font-size:17px">⭐⭐⭐</span>
+            <span style="font-weight:700">جيد جداً</span>
+            <span style="font-size:10px;opacity:.7;font-weight:400">+3 نجوم</span>
+          </button>
+          <!-- جيد -->
+          <button type="button" onclick="setGrade('جيد',1,'#2563eb')" data-g="جيد" class="grade-btn"
+            style="border-color:#2563eb;color:#2563eb;border-radius:10px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;background:#eff6ff">
+            <span style="font-size:17px">⭐</span>
+            <span style="font-weight:700">جيد</span>
+            <span style="font-size:10px;opacity:.7;font-weight:400">+1 نجمة</span>
+          </button>
+          <!-- حسن / لا بأس به -->
+          <button type="button" onclick="setGrade('حسن',0,'#d97706')" data-g="حسن" class="grade-btn"
+            style="border-color:#d97706;color:#d97706;border-radius:10px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;background:#fffbf0">
+            <span style="font-size:17px">🌙</span>
+            <span style="font-weight:700">حسن</span>
+            <span style="font-size:10px;opacity:.7;font-weight:400">بدون نجوم</span>
+          </button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <!-- ضعيف -->
+          <button type="button" onclick="setGrade('ضعيف',0,'#ea580c')" data-g="ضعيف" class="grade-btn"
+            style="border-color:#ea580c;color:#ea580c;border-radius:10px;padding:10px 6px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;background:#fff7ed">
+            <span style="font-size:15px">⚠️</span>
+            <div style="text-align:center"><span style="font-weight:700;display:block">ضعيف</span><span style="font-size:10px;opacity:.7">بدون نجوم</span></div>
+          </button>
+          <!-- لم يحفظ — خصم نجمة -->
+          <button type="button" onclick="setGrade('لم يحفظ',-1,'#dc2626')" data-g="لم يحفظ" class="grade-btn"
+            style="border-color:#dc2626;color:#dc2626;border-radius:10px;padding:10px 6px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;background:#fef2f2">
+            <span style="font-size:15px">❌</span>
+            <div style="text-align:center"><span style="font-weight:700;display:block">لم يحفظ</span><span style="font-size:10px;opacity:.7">-1 نجمة</span></div>
+          </button>
         </div>
         <input type="hidden" id="r-grade" value=""><input type="hidden" id="r-stars" value="0">
-        <div id="r-grade-info" style="display:none;margin-top:8px;padding:7px 12px;background:#fff;border-radius:7px;font-size:12px;font-weight:600"></div>
+        <div id="r-grade-info" style="display:none;margin-top:10px;padding:9px 14px;background:#fff;border-radius:8px;font-size:12px;font-weight:600;border-right:3px solid #ccc"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+      <!-- ====== خانة الملاحظات الذكية Hybrid ====== -->
+      <div style="background:#f8fafc;border-radius:12px;padding:14px;border:1px solid var(--border);margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+          <span><i class="fas fa-comment-alt" style="margin-left:6px;color:var(--primary-l)"></i>ملاحظة الأستاذ</span>
+          <button type="button" onclick="clearNotes()" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:Tajawal,sans-serif">✕ مسح</button>
+        </div>
+        <!-- قائمة العبارات الجاهزة -->
+        <div style="margin-bottom:8px">
+          <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">📋 عبارات جاهزة (اختياري)</label>
+          <select id="r-notes-quick" onchange="applyQuickNote(this.value)"
+            style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;cursor:pointer">
+            <option value="">— اختر عبارة جاهزة أو اكتب يدوياً أدناه —</option>
+            <optgroup label="✨ عبارات تشجيعية">
+              <option value="حفظ مميز ومتقن، بارك الله فيك وواصل التقدم.">حفظ مميز ومتقن، بارك الله فيك وواصل التقدم.</option>
+              <option value="قراءة ممتازة وثبات رائع في الحفظ.">قراءة ممتازة وثبات رائع في الحفظ.</option>
+              <option value="أحسنت الترتيل والأداء، استمر وفقك الله.">أحسنت الترتيل والأداء، استمر وفقك الله.</option>
+              <option value="أداء قوي وتفاعل ممتاز أثناء التسميع.">أداء قوي وتفاعل ممتاز أثناء التسميع.</option>
+              <option value="تقدم ملحوظ ومستوى مشرف جداً.">تقدم ملحوظ ومستوى مشرف جداً.</option>
+            </optgroup>
+            <optgroup label="📘 عبارات توجيهية">
+              <option value="الحفظ جيد ويحتاج إلى مزيد من التكرار.">الحفظ جيد ويحتاج إلى مزيد من التكرار.</option>
+              <option value="انتبه أكثر لمخارج الحروف أثناء القراءة.">انتبه أكثر لمخارج الحروف أثناء القراءة.</option>
+              <option value="يحتاج إلى تحسين أحكام التجويد.">يحتاج إلى تحسين أحكام التجويد.</option>
+              <option value="يوجد تحسن واضح لكن لا تزال بعض الأخطاء تحتاج مراجعة.">يوجد تحسن واضح لكن لا تزال بعض الأخطاء تحتاج مراجعة.</option>
+              <option value="راجع مواضع الوقف والابتداء جيداً.">راجع مواضع الوقف والابتداء جيداً.</option>
+            </optgroup>
+            <optgroup label="⚠️ عبارات متابعة وتنبيه">
+              <option value="يحتاج إلى مراجعة مكثفة قبل الحصة القادمة.">يحتاج إلى مراجعة مكثفة قبل الحصة القادمة.</option>
+              <option value="التركيز أثناء التسميع كان ضعيفاً.">التركيز أثناء التسميع كان ضعيفاً.</option>
+              <option value="لم يتم إتقان الحفظ المطلوب.">لم يتم إتقان الحفظ المطلوب.</option>
+              <option value="نرجو المتابعة اليومية من ولي الأمر.">نرجو المتابعة اليومية من ولي الأمر.</option>
+              <option value="لم يحفظ المطلوب لهذه الحصة.">لم يحفظ المطلوب لهذه الحصة.</option>
+            </optgroup>
+          </select>
+        </div>
+        <!-- حقل الكتابة اليدوية -->
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">✏️ أضف تعليقاً إضافياً أو اكتب يدوياً</label>
+          <textarea id="r-notes" rows="2" placeholder="مثال: خصوصاً حرف الضاد والغين..."
+            style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--text);resize:none;outline:none;transition:border-color .2s;background:#fff;line-height:1.6"
+            oninput="previewNote()"
+            onfocus="this.style.borderColor='var(--primary-l)'"
+            onblur="this.style.borderColor='var(--border)'"></textarea>
+        </div>
+        <!-- معاينة الملاحظة المدمجة -->
+        <div id="r-note-preview" style="display:none;margin-top:8px;padding:8px 12px;background:#fff;border-radius:8px;border-right:3px solid var(--primary-l);font-size:12px;color:var(--text);line-height:1.7">
+          <span style="font-size:10px;color:var(--text3);display:block;margin-bottom:3px">معاينة الملاحظة الكاملة:</span>
+          <span id="r-note-preview-text"></span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr;gap:12px">
         <div class="fg"><label>التاريخ</label><input type="date" id="r-date"></div>
-        <div class="fg"><label>ملاحظات</label><input type="text" id="r-notes" placeholder="ملاحظة مختصرة..."></div>
       </div>
     </div>
     <div class="mfoot" style="background:#f8fafc"><button class="btn btn-o" onclick="closeM('m-rec')">إلغاء</button><button class="btn btn-s" onclick="saveRec()"><i class="fas fa-check-circle"></i> حفظ التسميع</button></div>
@@ -2048,7 +2133,7 @@ function getStars(sid){
   return t;
 }
 function getQuality(sid){
-  const SC={'ممتاز':100,'جيد جداً':85,'جيد':70,'حسن':60,'لا بأس به':45,'ضعيف':25};
+  const SC={'جيد جداً':100,'جيد':75,'حسن':60,'ضعيف':25,'لم يحفظ':0};
   const recs=S.recitations.filter(r=>r.student_id===sid&&r.grade);
   if(!recs.length)return null;
   return Math.round(recs.reduce((a,r)=>a+(SC[r.grade]||50),0)/recs.length);
@@ -2589,12 +2674,106 @@ function switchRecType(type){
   $('rt-mur').style.background=type==='مراجعة'?'#ecfeff':'#fff';
   document.querySelectorAll('input[name="r-type"]').forEach(r=>r.checked=r.value===type);
 }
+// ===================== دوال الملاحظات الذكية =====================
+/** تطبيق عبارة جاهزة على حقل الملاحظات */
+function applyQuickNote(val){
+  if(!val) return;
+  const ta = $('r-notes');
+  if(!ta) return;
+  // إذا الحقل فارغ نضع العبارة مباشرة؛ إذا يحتوي نصاً يدوياً لا نلمسه
+  const manual = ta.value.trim();
+  // نحفظ العبارة الجاهزة في data attribute لنتمكن من دمجها
+  ta.dataset.quick = val;
+  previewNote();
+}
+
+/** معاينة الملاحظة المدمجة = عبارة جاهزة + كتابة يدوية */
+function previewNote(){
+  const ta    = $('r-notes');
+  const prev  = $('r-note-preview');
+  const prevT = $('r-note-preview-text');
+  if(!ta||!prev||!prevT) return;
+  const quick  = (ta.dataset.quick||'').trim();
+  const manual = ta.value.trim();
+  let full = '';
+  if(quick && manual)  full = quick + ' ' + manual;
+  else if(quick)       full = quick;
+  else if(manual)      full = manual;
+  if(full){
+    prevT.textContent = full;
+    prev.style.display = 'block';
+  } else {
+    prev.style.display = 'none';
+  }
+}
+
+/** مسح كل الملاحظات */
+function clearNotes(){
+  const ta = $('r-notes');
+  if(ta){ ta.value=''; delete ta.dataset.quick; }
+  const q = $('r-notes-quick'); if(q) q.selectedIndex=0;
+  const prev=$('r-note-preview'); if(prev) prev.style.display='none';
+}
+
+/** جلب الملاحظة المدمجة عند الحفظ */
+function getFinalNote(){
+  const ta    = $('r-notes');
+  if(!ta) return '';
+  const quick  = (ta.dataset.quick||'').trim();
+  const manual = ta.value.trim();
+  if(quick && manual)  return quick + ' ' + manual;
+  if(quick)            return quick;
+  return manual;
+}
+
+// ===================== نهاية دوال الملاحظات =====================
+
 function setGrade(grade,stars,color){
-  $('r-grade').value=grade;$('r-stars').value=stars;
-  document.querySelectorAll('.grade-btn').forEach(b=>{const sel=b.dataset.g===grade;b.style.background=sel?color:'#fff';b.style.color=sel?'#fff':color;b.style.transform=sel?'scale(1.05)':'scale(1)'});
-  $('r-grade-info').style.display='block';
-  $('r-grade-info').innerHTML=`<span style="font-weight:700;color:${color}">${grade}</span> — ${stars>0?'⭐'.repeat(stars)+' +'+stars+' نجوم':'بدون نجوم تلقائية'}`;
-  $('r-grade-info').style.borderRight=`3px solid ${color}`;
+  $('r-grade').value=grade;
+  $('r-stars').value=stars;
+
+  // تحديث مظهر الأزرار
+  document.querySelectorAll('.grade-btn').forEach(b=>{
+    const sel=b.dataset.g===grade;
+    // إعادة تعيين خلفية كل زر لأصله
+    const bgMap={'جيد جداً':'#f0f9ff','جيد':'#eff6ff','حسن':'#fffbf0','ضعيف':'#fff7ed','لم يحفظ':'#fef2f2'};
+    b.style.background=sel?color:(bgMap[b.dataset.g]||'#fff');
+    b.style.color=sel?'#fff':color;
+    b.style.transform=sel?'scale(1.04)':'scale(1)';
+    b.style.boxShadow=sel?`0 4px 14px ${color}44`:'none';
+  });
+
+  // رسالة حالة التقييم
+  const info=$('r-grade-info');
+  const starsLabel = stars>0 ? `<span style="color:#d97706">+${stars} نجمة ${'⭐'.repeat(stars)}</span>`
+    : stars<0 ? `<span style="color:#dc2626">−${Math.abs(stars)} نجمة ❌</span>`
+    : `<span style="color:#718096">بدون تغيير في النجوم</span>`;
+  info.innerHTML=`<i class="fas fa-check-circle" style="color:${color};margin-left:6px"></i><span style="font-weight:700;color:${color}">${grade}</span> — ${starsLabel}`;
+  info.style.display='block';
+  info.style.borderRight=`3px solid ${color}`;
+
+  // اقتراح ملاحظات تلقائية حسب التقييم
+  const quick=$('r-notes-quick');
+  if(quick){
+    const current = quick.value;
+    // نضبط الـ optgroup المرئي أولاً — لا نغير الاختيار إذا اختار مسبقاً
+    if(!current){
+      const suggestMap={
+        'جيد جداً':   'حفظ مميز ومتقن، بارك الله فيك وواصل التقدم.',
+        'جيد':         'الحفظ جيد ويحتاج إلى مزيد من التكرار.',
+        'حسن':         'الحفظ جيد ويحتاج إلى مزيد من التكرار.',
+        'ضعيف':        'يحتاج إلى مراجعة مكثفة قبل الحصة القادمة.',
+        'لم يحفظ':     'لم يحفظ المطلوب لهذه الحصة.'
+      };
+      if(suggestMap[grade]){
+        // نعيّن الاقتراح ونطبقه
+        for(let i=0;i<quick.options.length;i++){
+          if(quick.options[i].value===suggestMap[grade]){ quick.selectedIndex=i; break; }
+        }
+        applyQuickNote(suggestMap[grade]);
+      }
+    }
+  }
 }
 function updateVerseMax(surahSelId, verseInputId){
   const n = parseInt($(surahSelId).value);
@@ -2629,10 +2808,21 @@ function calcV(){
   return v;
 }
 function openRecModal(){
-  $('r-id').value='';$('r-notes').value='';$('r-grade').value='';$('r-stars').value='0';
+  $('r-id').value='';$('r-grade').value='';$('r-stars').value='0';
   $('r-v-from').value='1';$('r-v-to').value='10';$('r-calc').style.display='none';
   $('r-grade-info').style.display='none';$('r-date').value=today();
-  document.querySelectorAll('.grade-btn').forEach(b=>{b.style.background='#fff';b.style.transform='scale(1)'});
+  // مسح الملاحظات الذكية
+  clearNotes();
+  // إعادة تعيين مظهر أزرار التقييم
+  const bgMap={'جيد جداً':'#f0f9ff','جيد':'#eff6ff','حسن':'#fffbf0','ضعيف':'#fff7ed','لم يحفظ':'#fef2f2'};
+  const colorMap={'جيد جداً':'#0891b2','جيد':'#2563eb','حسن':'#d97706','ضعيف':'#ea580c','لم يحفظ':'#dc2626'};
+  document.querySelectorAll('.grade-btn').forEach(b=>{
+    const g=b.dataset.g;
+    b.style.background=bgMap[g]||'#fff';
+    b.style.color=colorMap[g]||'#333';
+    b.style.transform='scale(1)';
+    b.style.boxShadow='none';
+  });
   const mg=myGroups();
   $('r-group').innerHTML=mg.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
   let autoG=S.sessionGroupId;
@@ -2663,19 +2853,27 @@ async function saveRec(){
   const dt=$('r-date').value;
   if(!dt){toast('أدخل التاريخ','warn');return}
   const v=calcV()||0;
-  const stars=parseInt($('r-stars').value)||0;
+  const starsRaw=parseInt($('r-stars').value)||0;
+  const stars=starsRaw; // قد يكون سالباً (لم يحفظ = -1)
   const type=document.querySelector('input[name="r-type"]:checked')?.value||'حفظ جديد';
-  const record={student_id:sid,type,surah_from:sf,verse_from:vf,surah_to:st,verse_to:vt,verses_count:v,grade,stars,date:dt,notes:$('r-notes').value,teacher_id:S.profile?.id};
+  const finalNote=getFinalNote();
+  const record={student_id:sid,type,surah_from:sf,verse_from:vf,surah_to:st,verse_to:vt,verses_count:v,grade,stars,date:dt,notes:finalNote,teacher_id:S.profile?.id};
   try{
     const{data,error}=await db.from('recitations').insert(record).select().single();
     if(error)throw error;
     S.recitations.unshift(data);
-    if(stars>0){
-      try{const{data:ms}=await db.from('student_stars').insert({student_id:sid,stars,reason:type,teacher_id:S.profile?.id,date:dt}).select().single();if(ms)S.manualStars.unshift(ms)}catch{}
+    // تسجيل النجوم في جدول student_stars (موجب أو سالب)
+    if(stars!==0){
+      try{
+        const reason=stars>0?type:'لم يحفظ — خصم تلقائي';
+        const{data:ms}=await db.from('student_stars').insert({student_id:sid,stars,reason,teacher_id:S.profile?.id,date:dt}).select().single();
+        if(ms)S.manualStars.unshift(ms);
+      }catch{}
     }
     closeM('m-rec');
     clearHizbCache();
-    toast(`✅ تم حفظ التسميع — ${grade}${stars>0?' | '+'⭐'.repeat(stars):''}`, 'ok');
+    const starsMsg = stars>0?` | ${'⭐'.repeat(stars)}`: stars<0?' | ❌ −1 نجمة':'';
+    toast(`✅ تم حفظ التسميع — ${grade}${starsMsg}`, 'ok');
     loadRecs();
   }catch(e){toast('خطأ: '+e.message,'err')}
 }
@@ -2707,7 +2905,7 @@ function loadRecs(){
   if(fd)list=list.filter(r=>r.date>=fd);
   if(td)list=list.filter(r=>r.date<=td);
   $('rec-count').textContent=`${list.length} سجل`;
-  const GC={'ممتاز':'bx-g','جيد جداً':'bx-b','جيد':'bx-b','حسن':'bx-y','لا بأس به':'bx-o','ضعيف':'bx-r'};
+  const GC={'جيد جداً':'bx-b','جيد':'bx-b','حسن':'bx-y','ضعيف':'bx-o','لم يحفظ':'bx-r'};
   $('rec-tbody').innerHTML=list.length?list.map(r=>{
     const s=S.students.find(x=>x.id===r.student_id);
     const g=s?S.groups.find(x=>x.id===s.group_id):null;
@@ -3546,8 +3744,8 @@ function buildReportMsg(sid){
         return `${fs?.name||'—'}(${r.verse_from}) → ${ts?.name||'—'}(${r.verse_to})`;
       }).join('\n      ')
     : 'لا يوجد سجل بعد';
-  const qLabel = q===null?'—': q>=90?'ممتاز ⭐⭐⭐': q>=75?'جيد جداً ⭐⭐': q>=60?'جيد ⭐':'يحتاج متابعة';
-  const attLabel = attRate>=85?'ممتاز ✅': attRate>=70?'جيد 👍': attRate>=50?'متوسط ⚠️':'ضعيف ❌';
+  const qLabel = q===null?'—': q>=95?'جيد جداً ⭐⭐⭐': q>=75?'جيد ⭐': q>=60?'حسن':'يحتاج متابعة';
+  const attLabel = attRate>=85?'رائع ✅': attRate>=70?'جيد 👍': attRate>=50?'متوسط ⚠️':'ضعيف ❌';
   const notes = s.notes ? `\n${s.notes}` : '\nلا توجد ملاحظات خاصة.';
   const dt = new Date().toLocaleDateString('ar-MA',{day:'2-digit',month:'long',year:'numeric'});
 
@@ -4934,8 +5132,6 @@ calcHizb = function(sid){
 // ╚══════════════════════════════════════════════════════════════╝
 // ── تعريف saveRec المُحسَّن (يستبدل النسخة الأصلية) ──
 saveRec = async function(){
-  // نستدعي الأصل أولاً
-  // نحتاج نعيد كتابة الدالة كاملاً لإضافة منطق الحزب
   const sid  = $('r-student').value;
   if(!sid){ toast('اختر الطالب','warn'); return; }
   const grade= $('r-grade').value;
@@ -4946,22 +5142,27 @@ saveRec = async function(){
   const dt = $('r-date').value;
   if(!dt){ toast('أدخل التاريخ','warn'); return; }
   const v = calcV()||0;
-  const stars = parseInt($('r-stars').value)||0;
+  const starsRaw = parseInt($('r-stars').value)||0;
+  const stars = starsRaw;
   const type  = document.querySelector('input[name="r-type"]:checked')?.value||'حفظ جديد';
-  const record= {student_id:sid,type,surah_from:sf,verse_from:vf,surah_to:st,verse_to:vt,verses_count:v,grade,stars,date:dt,notes:$('r-notes').value,teacher_id:S.profile?.id};
+  const finalNote = getFinalNote();
+  const record= {student_id:sid,type,surah_from:sf,verse_from:vf,surah_to:st,verse_to:vt,verses_count:v,grade,stars,date:dt,notes:finalNote,teacher_id:S.profile?.id};
   try{
     const{data,error}=await db.from('recitations').insert(record).select().single();
     if(error)throw error;
     S.recitations.unshift(data);
-    if(stars>0){
-      try{const{data:ms}=await db.from('student_stars').insert({student_id:sid,stars,reason:type,teacher_id:S.profile?.id,date:dt}).select().single();if(ms)S.manualStars.unshift(ms)}catch{}
+    if(stars!==0){
+      try{
+        const reason = stars>0?type:'لم يحفظ — خصم تلقائي';
+        const{data:ms}=await db.from('student_stars').insert({student_id:sid,stars,reason,teacher_id:S.profile?.id,date:dt}).select().single();
+        if(ms)S.manualStars.unshift(ms);
+      }catch{}
     }
     // ── تسجيل الحزب المُتمَّ إن طُلب ──
     const hizbChecked = $('r-hizb-complete')?.checked;
     if(hizbChecked){
       const hizbNum = parseInt($('r-hizb-num')?.value)||0;
       if(hizbNum>=1&&hizbNum<=60){
-        // تحقق من عدم التكرار
         const alreadyDone = S._hizbLog.some(h=>h.student_id===sid&&h.hizb_number===hizbNum);
         if(alreadyDone){
           toast(`تنبيه: الحزب ${hizbNum} مسجَّل مسبقاً لهذا الطالب`,'warn');
@@ -4977,7 +5178,8 @@ saveRec = async function(){
     clearHizbCache();
     closeM('m-rec');
     clearAutoSave('rec');
-    toast(`✅ تم حفظ التسميع — ${grade}${stars>0?' | '+'⭐'.repeat(stars):''}`,'ok');
+    const starsMsg2 = stars>0?` | ${'⭐'.repeat(Math.min(stars,3))}`: stars<0?' | ❌ −1 نجمة':'';
+    toast(`✅ تم حفظ التسميع — ${grade}${starsMsg2}`,'ok');
     loadRecs();
   }catch(e){toast('خطأ: '+e.message,'err')}
 };
@@ -5214,7 +5416,7 @@ function startRecAutoSave(){
         group_id:   $('r-group')?.value,
         grade, sf, vf:$('r-v-from')?.value,
         st, vt:$('r-v-to')?.value,
-        notes:$('r-notes')?.value,
+        notes: typeof getFinalNote==='function'?getFinalNote():($('r-notes')?.value||''),
         date:$('r-date')?.value,
         type:document.querySelector('input[name="r-type"]:checked')?.value
       });
@@ -5365,7 +5567,7 @@ function showLastRecInfo(){
   if(!last){ if(box) box.style.display='none'; return; }
   const fs = SURAHS.find(x=>x.n===last.surah_from);
   const ts = SURAHS.find(x=>x.n===last.surah_to);
-  const gradeColors={'ممتاز':'#16a34a','جيد جداً':'#0891b2','جيد':'#2563eb','حسن':'#d97706','لا بأس به':'#ea580c','ضعيف':'#dc2626'};
+  const gradeColors={'جيد جداً':'#0891b2','جيد':'#2563eb','حسن':'#d97706','ضعيف':'#ea580c','لم يحفظ':'#dc2626'};
   const gc = gradeColors[last.grade]||'#1e2d42';
   const hizbCount = calcHizb(sid);
   const totalV    = getTotalV(sid);
