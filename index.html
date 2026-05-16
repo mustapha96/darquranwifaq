@@ -1848,8 +1848,33 @@ function myStudents(){
   return S.students.filter(s=>myGroupIds.has(s.group_id));
 }
 function groupName(id){return S.groups.find(g=>g.id===id)?.name||'—'}
-function teacherName(id){return S.teachers.find(t=>t.id===id)?.name||'—'}
+function teacherName(id){
+  const t=S.teachers.find(t=>t.id===id);
+  if(!t) return '—';
+  const n=(t.name||'').trim();
+  if(!n||n.includes('@')) return '—';
+  return n;
+}
 function studentName(id){return S.students.find(s=>s.id===id)?.name||'—'}
+
+/** يُعيد الاسم الظاهر للمستخدم الحالي — يُصلح الإيميلات القديمة تلقائياً */
+function currentUserDisplayName(){
+  const raw = (S.profile?.name||'').trim();
+  if(!raw || raw.includes('@')){
+    const em = (S.profile?.email||S.user?.email||'').toLowerCase();
+    const M = {
+      'admin@wafaq.com':'المدير مصطفى أبو حذيفة',
+      'admin@wafiq.com':'المدير مصطفى أبو حذيفة',
+      'mohamed@wafaq.com':'الأستاذ محمد تور',
+      'samir@wafaq.com':'الأستاذ سمير أندجار',
+      'abdelghafour@wafaq.com':'الأستاذ عبد الغفور حسبي',
+      'hassan@wafaq.com':'الأستاذ حسن تحسا',
+      'younsse@wafaq.com':'الأستاذ يونس أبو إسحاق',
+    };
+    return M[em] || 'مستخدم';
+  }
+  return raw;
+}
 
 // ===================== LANDING =====================
 function showLogin(){
@@ -1932,23 +1957,56 @@ async function doLogout(){
 }
 
 async function loadProfile(){
-  const email=S.user.email;
-  const TMAP={'admin@wafaq.com':'المشرف العام','Mohamed@wafaq.com':'الأستاذ محمد تور','Samir@wafaq.com':'الأستاذ سمير اندجار','Abdelghafour@wafaq.com':'الأستاذ عبد الغفور حسبي','Hassan@wafaq.com':'الأستاذ حسن تحسا','Younsse@wafaq.com':'الأستاذ يونس أسوقي'};
-  const defName=TMAP[email]||email;
-  const defRole=email==='admin@wafaq.com'?'admin':'teacher';
+  const email = S.user.email;
+  const emailLower = (email||'').toLowerCase().trim();
+
+  // ── جدول الأسماء الحقيقية — يُطابَق بالإيميل بغض النظر عن حالة الأحرف ──
+  const DISPLAY_NAMES = {
+    'admin@wafaq.com':          'مصطفى أبو حذيفة',
+    'mohamed@wafaq.com':        'محمد تور',
+    'samir@wafaq.com':          'سمير أندجار',
+    'abdelghafour@wafaq.com':   'عبد الغفور حسبي',
+    'hassan@wafaq.com':         'حسن تحسا',
+    'younsse@wafaq.com':        'يونس أبو إسحاق',
+    // بديل قديم للتوافق مع الإيميلات القديمة
+    'admin@wafiq.com':          'مصطفى أبو حذيفة',
+    'mohamed@wafiq.com':        'محمد تور',
+  };
+  const ROLE_MAP = {
+    'admin@wafaq.com':  'admin',
+    'admin@wafiq.com':  'admin',
+  };
+
+  // الاسم الافتراضي: يبحث في الجدول أولاً، إن لم يجد يعرض "مستخدم" بدل الإيميل
+  const defDisplayName = DISPLAY_NAMES[emailLower] || null;
+  const defRole = ROLE_MAP[emailLower] || 'teacher';
+
   try{
     const{data,error}=await db.from('profiles').select('*').eq('id',S.user.id).single();
     if(error||!data){
-      const{data:np}=await db.from('profiles').insert({id:S.user.id,name:defName,role:defRole,email}).select().single();
-      S.profile=np||{id:S.user.id,name:defName,role:defRole,email};
+      // مستخدم جديد — نُنشئ ملفه مع الاسم الصحيح
+      const nameToSave = defDisplayName || email;
+      const{data:np}=await db.from('profiles').insert({id:S.user.id,name:nameToSave,role:defRole,email}).select().single();
+      S.profile=np||{id:S.user.id,name:nameToSave,role:defRole,email};
     }else{
       S.profile=data;
-      if(email==='admin@wafaq.com'&&data.role!=='admin'){
+      // ── تحديث تلقائي: إذا كان الاسم المخزون هو الإيميل القديم نُصلحه الآن ──
+      const storedName = (data.name||'').trim();
+      const looksLikeEmail = storedName.includes('@');
+      if(looksLikeEmail && defDisplayName){
+        await db.from('profiles').update({name:defDisplayName}).eq('id',S.user.id);
+        S.profile.name = defDisplayName;
+      }
+      // تحديث صلاحية المدير إن لزم
+      if(ROLE_MAP[emailLower]==='admin' && data.role!=='admin'){
         await db.from('profiles').update({role:'admin'}).eq('id',S.user.id);
         S.profile.role='admin';
       }
     }
-  }catch(e){S.profile={id:S.user.id,name:defName,role:defRole,email}}
+  }catch(e){
+    const fallbackName = defDisplayName || email;
+    S.profile={id:S.user.id,name:fallbackName,role:defRole,email};
+  }
 }
 
 async function loadData(){
@@ -2027,19 +2085,43 @@ function showApp(){
   $('login-page').style.display='none';
   $('app').style.display='block';
   const r=S.profile?.role;
-  const name=S.profile?.name||'—';
-  const ini=name.split(' ').pop()[0]||'م';
-  const roleLabel=r==='admin'?'👑 مدير النظام':r==='supervisor'?'🛡️ مشرف':'📚 أستاذ';
+  const rawName=S.profile?.name||'';
+
+  // ── بناء الاسم الظاهر مع اللقب المهني ──
+  // نتحقق إذا كان الاسم يحتوي بريداً إلكترونياً (حالة قديمة) ونستبدله
+  const isEmail = rawName.includes('@');
+  const EMAIL_FALLBACK = {
+    'admin@wafaq.com':'مصطفى أبو حذيفة','admin@wafiq.com':'مصطفى أبو حذيفة',
+    'mohamed@wafaq.com':'محمد تور','mohamed@wafiq.com':'محمد تور',
+    'samir@wafaq.com':'سمير أندجار','abdelghafour@wafaq.com':'عبد الغفور حسبي',
+    'hassan@wafaq.com':'حسن تحسا','younsse@wafaq.com':'يونس أبو إسحاق',
+  };
+  const cleanName = isEmail
+    ? (EMAIL_FALLBACK[(rawName||'').toLowerCase()] || rawName)
+    : rawName || '—';
+
+  // اللقب حسب الدور
+  const titlePrefix = r==='admin'?'المدير ': r==='supervisor'?'المشرف ':'الأستاذ ';
+  // الاسم الظاهر الكامل (بدون تكرار اللقب إذا كان موجوداً)
+  const alreadyHasTitle = cleanName.startsWith('الأستاذ') || cleanName.startsWith('المدير') || cleanName.startsWith('المشرف');
+  const displayName = alreadyHasTitle ? cleanName : titlePrefix + cleanName;
+
+  // الحرف الأول للأفاتار (أول حرف من الاسم الشخصي)
+  const nameParts = cleanName.replace(/^(الأستاذ|المدير|المشرف)\s*/,'').trim().split(' ');
+  const ini = nameParts[0]?.[0] || 'م';
+
+  // تسمية الدور
+  const roleLabel = r==='admin'?'👑 مدير النظام': r==='supervisor'?'🛡️ مشرف':'📚 أستاذ';
+
   ['sb-av','hd-av'].forEach(id=>$(id).textContent=ini);
-  $('sb-name').textContent=name;$('hd-name').textContent=name;
-  $('sb-role').textContent=roleLabel;$('hd-role').textContent=roleLabel;
+  $('sb-name').textContent=displayName;
+  $('hd-name').textContent=displayName;
+  $('sb-role').textContent=roleLabel;
+  $('hd-role').textContent=roleLabel;
+
   if(r==='admin'||r==='supervisor'){$('nav-admin').style.display='block'}
   if(r==='admin'){$('nav-fin').style.display='flex'}
-  // إخفاء الإعدادات عن الأساتذة (للمدير والمشرف فقط)
-  if(r==='teacher'){
-    $('nav-settings').style.display='none';
-  }
-  // زر إضافة العطلة للمشرف والمدير فقط
+  if(r==='teacher'){$('nav-settings').style.display='none';}
   const btnHoliday=$('btn-add-holiday');
   if(btnHoliday){btnHoliday.style.display=(r==='admin'||r==='supervisor')?'inline-flex':'none';}
   initSurahSelects();
@@ -2144,7 +2226,19 @@ function getAttRate(sid){const a=S.attendance.filter(x=>x.student_id===sid);retu
 // ===================== DASHBOARD =====================
 function renderDash(){
   const now=new Date();
-  $('dash-title').textContent='مرحباً، '+(S.profile?.name?.split(' ')[0]||'')+' 👋';
+  // استخراج الاسم الأول من الاسم الحقيقي (بدون اللقب الوظيفي)
+  const rawN = S.profile?.name||'';
+  const isEmailN = rawN.includes('@');
+  const EMAIL_FB2 = {
+    'admin@wafaq.com':'مصطفى','admin@wafiq.com':'مصطفى',
+    'mohamed@wafaq.com':'محمد','samir@wafaq.com':'سمير',
+    'abdelghafour@wafaq.com':'عبد الغفور','hassan@wafaq.com':'حسن',
+    'younsse@wafaq.com':'يونس',
+  };
+  const firstNameRaw = isEmailN
+    ? (EMAIL_FB2[(rawN||'').toLowerCase()] || 'أستاذ')
+    : rawN.replace(/^(الأستاذ|المدير|المشرف)\s*/,'').trim().split(' ')[0] || '';
+  $('dash-title').textContent='مرحباً، '+ firstNameRaw +' 👋';
   $('dash-date').textContent=now.toLocaleDateString('ar-MA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const todayStr=today();
   const myS=myStudents();
@@ -2488,10 +2582,30 @@ function renderTeachers(){
 
 // ===================== USERS =====================
 function renderUsers(){
+  // دالة مساعدة: تُعيد الاسم الصحيح للمستخدم (تُصلح الإيميلات القديمة)
+  const EMAIL_NAMES = {
+    'admin@wafaq.com':'المدير مصطفى أبو حذيفة','admin@wafiq.com':'المدير مصطفى أبو حذيفة',
+    'mohamed@wafaq.com':'الأستاذ محمد تور','mohamed@wafiq.com':'الأستاذ محمد تور',
+    'samir@wafaq.com':'الأستاذ سمير أندجار',
+    'abdelghafour@wafaq.com':'الأستاذ عبد الغفور حسبي',
+    'hassan@wafaq.com':'الأستاذ حسن تحسا',
+    'younsse@wafaq.com':'الأستاذ يونس أبو إسحاق',
+  };
+  function getDisplayName(t){
+    const n = (t.name||'').trim();
+    if(n.includes('@')) return EMAIL_NAMES[n.toLowerCase()]||n;
+    // إضافة اللقب إن لم يكن موجوداً
+    const hasTitle = n.startsWith('الأستاذ')||n.startsWith('المدير')||n.startsWith('المشرف');
+    if(hasTitle) return n;
+    const prefix = t.role==='admin'?'المدير ':t.role==='supervisor'?'المشرف ':'الأستاذ ';
+    return prefix + n;
+  }
   const content=$('users-content');
-  content.innerHTML=`<div class="card"><div class="card-head"><h3>قائمة المستخدمين</h3></div><div class="tbl-wrap"><table><thead><tr><th>الاسم</th><th>الدور الحالي</th><th>تغيير الصلاحية</th></tr></thead><tbody>${S.teachers.map(t=>{
+  content.innerHTML=`<div class="card"><div class="card-head"><h3>قائمة المستخدمين</h3></div><div class="tbl-wrap"><table><thead><tr><th>الاسم الكامل</th><th>الدور الحالي</th><th>تغيير الصلاحية</th></tr></thead><tbody>${S.teachers.map(t=>{
     const rLabel=t.role==='admin'?'👑 مدير النظام':t.role==='supervisor'?'🛡️ مشرف':'📚 أستاذ';
-    return`<tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${t.name?.[0]||'؟'}</div><strong>${t.name}</strong></div></td><td>${rLabel}</td><td>${t.role!=='admin'?`<select onchange="changeRole('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px"><option value="teacher" ${t.role==='teacher'?'selected':''}>أستاذ</option><option value="supervisor" ${t.role==='supervisor'?'selected':''}>مشرف</option></select>`:'<span style="color:var(--text3);font-size:12px">مدير النظام</span>'}</td></tr>`;
+    const dn = getDisplayName(t);
+    const ini = dn.replace(/^(الأستاذ|المدير|المشرف)\s*/,'').trim()[0]||'م';
+    return`<tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:${t.role==='admin'?'linear-gradient(135deg,#d97706,#f59e0b)':t.role==='supervisor'?'linear-gradient(135deg,#0891b2,#06b6d4)':'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">${ini}</div><div><div style="font-weight:700;font-size:13px">${dn}</div><div style="font-size:11px;color:var(--text3)">${t.email||''}</div></div></div></td><td>${rLabel}</td><td>${t.role!=='admin'?`<select onchange="changeRole('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px"><option value="teacher" ${t.role==='teacher'?'selected':''}>أستاذ</option><option value="supervisor" ${t.role==='supervisor'?'selected':''}>مشرف</option></select>`:'<span style="color:var(--text3);font-size:12px">مدير النظام</span>'}</td></tr>`;
   }).join('')}</tbody></table></div></div>`;
 }
 async function changeRole(uid,role){
