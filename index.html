@@ -5937,5 +5937,565 @@ renderStudents = function(){
 // لا حاجة لتعديل إضافي — calcHizb تعمل بشكل صحيح
 
 </script>
+
+<script>
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  تحديث ٢: إحصائيات الفترات الزمنية                          ║
+// ║  تحديث ٣: التفاعلية الكاملة                                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// ═══ الفترات الزمنية ═══
+
+function getGroupPeriod(group) {
+  const sch = Array.isArray(group.schedule) ? group.schedule : [];
+  if (!sch.length) return 'غير محدد';
+  const startTime = sch[0].start || '00:00';
+  const [h] = startTime.split(':').map(Number);
+  if (h >= 5  && h < 12) return 'صباح';
+  if (h >= 12 && h < 17) return 'ظهر';
+  if (h >= 17)            return 'مساء';
+  return 'غير محدد';
+}
+
+function groupsByPeriod(groups) {
+  const periods = {};
+  groups.forEach(g => {
+    const p = getGroupPeriod(g);
+    if (!periods[p]) periods[p] = [];
+    periods[p].push(g);
+  });
+  return Object.fromEntries(Object.entries(periods).filter(([,v]) => v.length));
+}
+
+function calcPeriodStats(groups, attendance, students, dateFrom, dateTo) {
+  const groupIds = new Set(groups.map(g => g.id));
+  let att = attendance.filter(a => groupIds.has(a.group_id));
+  if (dateFrom) att = att.filter(a => a.date >= dateFrom);
+  if (dateTo)   att = att.filter(a => a.date <= dateTo);
+  const present  = att.filter(a => a.status === 'حاضر').length;
+  const late     = att.filter(a => a.status === 'متأخر').length;
+  const absent   = att.filter(a => a.status === 'غائب').length;
+  const excused  = att.filter(a => a.status === 'بعذر').length;
+  const total    = att.length;
+  const rate     = total ? Math.round((present + late) / total * 100) : 0;
+  const groupStudents = students.filter(s => groupIds.has(s.group_id));
+  const absByStudent = {};
+  att.filter(a => a.status==='غائب'||a.status==='بعذر').forEach(a => {
+    absByStudent[a.student_id] = (absByStudent[a.student_id]||0)+1;
+  });
+  const criticalStudents = Object.entries(absByStudent).filter(([,c])=>c>=3).sort((a,b)=>b[1]-a[1]);
+  const byDay = {};
+  att.filter(a=>a.status==='غائب'||a.status==='بعذر').forEach(a=>{
+    const d = AR_DAYS[new Date(a.date).getDay()];
+    byDay[d]=(byDay[d]||0)+1;
+  });
+  const worstDay = Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+  return {present,late,absent,excused,total,rate,groupStudents,criticalStudents,byDay,worstDay,attRecords:att};
+}
+
+const PERIOD_COLORS = {
+  'صباح': {bg:'linear-gradient(135deg,#f0f9ff,#e0f2fe)',border:'#7dd3fc',icon:'🌅',dark:'#0369a1',mid:'#0ea5e9',light:'#e0f2fe',hbg:'linear-gradient(135deg,#0369a1,#0ea5e9)'},
+  'ظهر':  {bg:'linear-gradient(135deg,#fefce8,#fef9c3)',border:'#fde047',icon:'☀️',dark:'#713f12',mid:'#d97706',light:'#fef9c3',hbg:'linear-gradient(135deg,#713f12,#d97706)'},
+  'مساء': {bg:'linear-gradient(135deg,#f0fdf4,#dcfce7)',border:'#86efac',icon:'🌙',dark:'#14532d',mid:'#16a34a',light:'#dcfce7',hbg:'linear-gradient(135deg,#14532d,#16a34a)'},
+  'غير محدد':{bg:'linear-gradient(135deg,#f8fafc,#f1f5f9)',border:'#cbd5e1',icon:'⏰',dark:'#334155',mid:'#64748b',light:'#f1f5f9',hbg:'linear-gradient(135deg,#334155,#64748b)'},
+};
+
+function renderAttendanceByPeriod() {
+  const myG = myGroups();
+  const myS = myStudents();
+  const periods = groupsByPeriod(myG);
+  const dateFrom = $('period-from')?.value||'';
+  const dateTo   = $('period-to')?.value||'';
+  const container = $('period-stats-content');
+  if (!container) return;
+
+  if (!Object.keys(periods).length) {
+    container.innerHTML = `<div class="empty card" style="padding:60px"><i class="fas fa-clock"></i><p>لا توجد حلقات مجدولة — أضف أوقاتاً للحلقات لتفعيل هذا القسم</p></div>`;
+    return;
+  }
+
+  // ─ بطاقات الفترات ─
+  let html = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px">`;
+  Object.entries(periods).forEach(([name, groups]) => {
+    const c = PERIOD_COLORS[name]||PERIOD_COLORS['غير محدد'];
+    const stats = calcPeriodStats(groups, S.attendance, myS, dateFrom, dateTo);
+    const times = [...new Set(groups.flatMap(g=>(Array.isArray(g.schedule)?g.schedule:[]).map(s=>`${s.start}–${s.end}`)))].slice(0,2).join(' / ')||'—';
+    html += `
+    <div onclick="showPeriodDetail('${name}')" style="background:${c.bg};border:2px solid ${c.border};border-radius:18px;padding:22px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden"
+         onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 14px 36px rgba(0,0,0,.13)'"
+         onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="position:absolute;top:-15px;left:-15px;font-size:90px;opacity:.05">${c.icon}</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+        <div style="font-size:32px">${c.icon}</div>
+        <div style="flex:1">
+          <h3 style="font-size:18px;font-weight:800;color:${c.dark};margin:0">فترة ${name}</h3>
+          <p style="font-size:11px;color:${c.mid};margin:3px 0 0"><i class="fas fa-clock" style="margin-left:4px"></i>${times}</p>
+        </div>
+        <div style="background:${c.light};border:1px solid ${c.border};border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:${c.dark}">${groups.length} حلقة</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+          <span style="color:${c.dark};font-weight:700">نسبة الحضور</span>
+          <span style="font-size:18px;font-weight:800;color:${stats.rate>=80?'#16a34a':stats.rate>=60?'#d97706':'#dc2626'}">${stats.rate}%</span>
+        </div>
+        <div style="height:10px;background:rgba(0,0,0,.08);border-radius:5px;overflow:hidden">
+          <div style="height:100%;width:${stats.rate}%;background:${stats.rate>=80?c.mid:stats.rate>=60?'#d97706':'#dc2626'};border-radius:5px;transition:width 1.2s ease"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:12px">
+        <div style="background:rgba(22,163,74,.12);border-radius:8px;padding:8px 4px"><div style="font-size:17px;font-weight:800;color:#16a34a">${stats.present}</div><div style="font-size:9px;color:#4ade80">حاضر</div></div>
+        <div style="background:rgba(234,179,8,.12);border-radius:8px;padding:8px 4px"><div style="font-size:17px;font-weight:800;color:#ca8a04">${stats.late}</div><div style="font-size:9px;color:#facc15">متأخر</div></div>
+        <div style="background:rgba(220,38,38,.12);border-radius:8px;padding:8px 4px"><div style="font-size:17px;font-weight:800;color:#dc2626">${stats.absent}</div><div style="font-size:9px;color:#f87171">غائب</div></div>
+        <div style="background:rgba(37,99,235,.12);border-radius:8px;padding:8px 4px"><div style="font-size:17px;font-weight:800;color:#2563eb">${stats.excused}</div><div style="font-size:9px;color:#60a5fa">بعذر</div></div>
+      </div>
+      ${stats.criticalStudents.length
+        ? `<div style="padding:8px 12px;background:rgba(220,38,38,.08);border-radius:8px;border:1px solid rgba(220,38,38,.2);font-size:11px;font-weight:700;color:#dc2626"><i class="fas fa-exclamation-triangle" style="margin-left:4px"></i>${stats.criticalStudents.length} طالب تجاوز 3 غيابات</div>`
+        : `<div style="padding:8px 12px;background:rgba(22,163,74,.08);border-radius:8px;border:1px solid rgba(22,163,74,.2);font-size:11px;font-weight:700;color:#16a34a"><i class="fas fa-check-circle" style="margin-left:4px"></i>لا توجد حالات غياب متكرر</div>`}
+      <div style="text-align:center;margin-top:10px;font-size:11px;color:${c.mid};font-weight:600">🔍 اضغط لعرض التفاصيل الكاملة</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // ─ رسم بياني مقارن ─
+  const allStats = Object.entries(periods).map(([name,groups])=>({name,groups,stats:calcPeriodStats(groups,S.attendance,myS,dateFrom,dateTo),c:PERIOD_COLORS[name]||PERIOD_COLORS['غير محدد']}));
+  const maxRate = Math.max(...allStats.map(x=>x.stats.rate),1);
+  html += `
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-head"><h3><i class="fas fa-chart-bar" style="color:var(--primary-l);margin-left:6px"></i>مقارنة الحضور بين الفترات</h3></div>
+    <div class="card-body">
+      <div style="display:flex;align-items:flex-end;gap:24px;height:180px;padding:0 20px">
+        ${allStats.map(({name,groups,stats,c})=>`
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer" onclick="showPeriodDetail('${name}')"
+             onmouseover="this.querySelector('.bar-inner').style.opacity='.8'" onmouseout="this.querySelector('.bar-inner').style.opacity='1'">
+          <div style="font-size:14px;font-weight:800;color:${stats.rate>=80?'#16a34a':stats.rate>=60?'#d97706':'#dc2626'}">${stats.rate}%</div>
+          <div style="width:100%;max-width:70px;background:#f1f5f9;border-radius:10px 10px 0 0;height:${Math.max(stats.rate/100*130,6)}px;overflow:hidden;transition:height 1s ease;position:relative">
+            <div class="bar-inner" style="width:100%;height:100%;background:${c.hbg};transition:opacity .2s;display:flex;align-items:flex-start;justify-content:center;padding-top:8px">
+              <span style="font-size:22px">${c.icon}</span>
+            </div>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${name}</div>
+          <div style="font-size:10px;color:var(--text3)">${groups.length} حلقة · ${stats.groupStudents.length} طالب</div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+        <span style="font-size:11px;display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block"></span>ممتاز ≥80%</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#d97706;display:inline-block"></span>جيد 60-79%</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#dc2626;display:inline-block"></span>يحتاج متابعة &lt;60%</span>
+      </div>
+    </div>
+  </div>`;
+
+  // ─ جدول تفصيلي ─
+  html += `<div class="card"><div class="card-head"><h3><i class="fas fa-table" style="color:var(--primary);margin-left:6px"></i>تفاصيل الحلقات حسب الفترة</h3></div><div class="tbl-wrap"><table>
+    <thead><tr><th>الحلقة</th><th>الفترة</th><th>الأوقات</th><th>الطلبة</th><th>حضور</th><th>غياب</th><th>النسبة</th><th>الأستاذ</th></tr></thead><tbody>`;
+  myG.forEach(g=>{
+    const p=getGroupPeriod(g); const c=PERIOD_COLORS[p]||PERIOD_COLORS['غير محدد'];
+    const sch=Array.isArray(g.schedule)?g.schedule:[];
+    const times=sch.map(s=>`${s.start}–${s.end}`).join(', ')||'—';
+    const cnt=myS.filter(s=>s.group_id===g.id).length;
+    const gAtt=S.attendance.filter(a=>a.group_id===g.id);
+    const gPres=gAtt.filter(a=>a.status==='حاضر'||a.status==='متأخر').length;
+    const gAbs=gAtt.filter(a=>a.status==='غائب'||a.status==='بعذر').length;
+    const gRate=gAtt.length?Math.round(gPres/gAtt.length*100):0;
+    html+=`<tr style="cursor:pointer" onclick="showGroupDetailModal('${g.id}')"
+               onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:${c.mid}"></div><strong>${g.name}</strong></div></td>
+      <td><span style="background:${c.light};color:${c.dark};border:1px solid ${c.border};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">${c.icon} ${p}</span></td>
+      <td style="font-size:11px;color:var(--text3);direction:ltr;text-align:right">${times}</td>
+      <td><span class="bx bx-b">${cnt}</span></td>
+      <td style="color:#16a34a;font-weight:700">${gPres}</td>
+      <td style="color:#dc2626;font-weight:700">${gAbs}</td>
+      <td><div style="display:flex;align-items:center;gap:5px"><div style="width:42px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="height:100%;width:${gRate}%;background:${gRate>=80?'#16a34a':gRate>=60?'#d97706':'#dc2626'};border-radius:3px"></div></div><span style="font-size:12px;font-weight:700;color:${gRate>=80?'#16a34a':gRate>=60?'#d97706':'#dc2626'}">${gRate}%</span></div></td>
+      <td>${teacherName(g.teacher_id)}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+  container.innerHTML = html;
+}
+
+function showPeriodDetail(periodName) {
+  const myG=myGroups(), myS=myStudents();
+  const groups=myG.filter(g=>getGroupPeriod(g)===periodName);
+  if(!groups.length) return;
+  const c=PERIOD_COLORS[periodName]||PERIOD_COLORS['غير محدد'];
+  const dateFrom=$('period-from')?.value||'';
+  const dateTo=$('period-to')?.value||'';
+  const stats=calcPeriodStats(groups,S.attendance,myS,dateFrom,dateTo);
+  let modal=$('m-period-detail');
+  if(!modal){
+    modal=document.createElement('div');modal.id='m-period-detail';modal.className='overlay';
+    modal.innerHTML=`<div class="modal modal-lg">
+      <div class="mh" id="pd-header" style="padding:0">
+        <div style="flex:1;padding:20px 24px"><h3 id="pd-title" style="color:#fff;font-size:18px;font-weight:800"></h3><p id="pd-sub" style="color:rgba(255,255,255,.7);font-size:12px;margin-top:4px"></p></div>
+        <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff;margin-left:16px" onclick="closeM('m-period-detail')">✕</button>
+      </div>
+      <div class="mbody" id="pd-body" style="max-height:75vh;overflow-y:auto;padding:20px"></div>
+    </div>`;
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+    document.body.appendChild(modal);
+  }
+  $('pd-header').style.background=c.hbg;
+  $('pd-title').textContent=`${c.icon} حلقات ${periodName}`;
+  $('pd-sub').textContent=`${groups.length} حلقة · ${stats.groupStudents.length} طالب · نسبة الحضور: ${stats.rate}%`;
+  const maxDay=Math.max(...Object.values(stats.byDay),1);
+  const critRows=stats.criticalStudents.slice(0,8).map(([sid,cnt])=>{
+    const s=S.students.find(x=>x.id===sid);const g=S.groups.find(x=>x.id===s?.group_id);
+    return`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="closeM('m-period-detail');openSDetail('${sid}')">
+      <div style="width:32px;height:32px;border-radius:50%;background:#dc2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${s?.name?.[0]||'؟'}</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:13px">${s?.name||'—'}</div><div style="font-size:11px;color:var(--text3)">${g?.name||'—'}</div></div>
+      <span class="bx bx-r">${cnt} غياب</span>
+      ${s?.phone?`<button onclick="event.stopPropagation();openWAAbsenceModal('${sid}')" style="background:#25d366;color:#fff;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px"><i class="fab fa-whatsapp"></i></button>`:''}
+    </div>`;
+  }).join('');
+  $('pd-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+      <div style="padding:14px;background:#dcfce7;border-radius:10px;border:1px solid #86efac;text-align:center"><div style="font-size:24px;font-weight:800;color:#16a34a">${stats.present}</div><div style="font-size:11px;color:#4ade80">حاضر ✅</div></div>
+      <div style="padding:14px;background:#fef9c3;border-radius:10px;border:1px solid #fde047;text-align:center"><div style="font-size:24px;font-weight:800;color:#ca8a04">${stats.late}</div><div style="font-size:11px;color:#facc15">متأخر 🕐</div></div>
+      <div style="padding:14px;background:#fee2e2;border-radius:10px;border:1px solid #fca5a5;text-align:center"><div style="font-size:24px;font-weight:800;color:#dc2626">${stats.absent}</div><div style="font-size:11px;color:#f87171">غائب ❌</div></div>
+      <div style="padding:14px;background:#dbeafe;border-radius:10px;border:1px solid #93c5fd;text-align:center"><div style="font-size:24px;font-weight:800;color:#2563eb">${stats.excused}</div><div style="font-size:11px;color:#60a5fa">بعذر 📝</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card"><div class="card-head"><h3 style="font-size:13px">غياب حسب اليوم</h3></div><div class="card-body">
+        <div style="display:flex;align-items:flex-end;gap:4px;height:80px">
+          ${Object.entries(stats.byDay).sort((a,b)=>b[1]-a[1]).map(([day,cnt])=>`
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+            <span style="font-size:9px;font-weight:700;color:#dc2626">${cnt}</span>
+            <div style="width:100%;background:#dc2626;border-radius:3px 3px 0 0;height:${Math.max(cnt/maxDay*65,3)}px"></div>
+            <span style="font-size:8px;color:var(--text3)">${day.substring(0,3)}</span>
+          </div>`).join('')||'<p style="font-size:12px;color:var(--text3);text-align:center;width:100%;padding:20px">لا غياب 🎉</p>'}
+        </div>
+        ${stats.worstDay!=='—'?`<div style="margin-top:8px;font-size:11px;color:#dc2626;font-weight:600"><i class="fas fa-calendar-times" style="margin-left:4px"></i>أكثر أيام الغياب: ${stats.worstDay}</div>`:''}
+      </div></div>
+      <div class="card"><div class="card-head"><h3 style="font-size:13px">الحلقات في هذه الفترة</h3></div><div class="card-body" style="padding:10px">
+        ${groups.map(g=>{
+          const gAtt=S.attendance.filter(a=>a.group_id===g.id);
+          const gRate=gAtt.length?Math.round(gAtt.filter(a=>a.status==='حاضر').length/gAtt.length*100):0;
+          const sch=Array.isArray(g.schedule)?g.schedule:[];
+          return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;cursor:pointer"
+                      onclick="closeM('m-period-detail');nav('attendance');setTimeout(()=>{$('att-group').value='${g.id}';loadAttList()},300)">
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">${g.name}</div><div style="font-size:10px;color:var(--text3)">${sch.map(s=>`${s.start}–${s.end}`).join(', ')||'—'} | ${teacherName(g.teacher_id)}</div></div>
+            <span style="font-size:14px;font-weight:800;color:${gRate>=80?'#16a34a':gRate>=60?'#d97706':'#dc2626'}">${gRate}%</span>
+          </div>`;
+        }).join('')}
+      </div></div>
+    </div>
+    ${stats.criticalStudents.length?`<div class="card"><div class="card-head"><h3 style="color:#dc2626;font-size:13px"><i class="fas fa-exclamation-triangle" style="margin-left:5px"></i>طلبة كثيرو الغياب</h3><span class="bx bx-r">${stats.criticalStudents.length} طالب</span></div><div class="card-body">${critRows}</div></div>`
+    :`<div class="alert alert-s"><i class="fas fa-check-circle"></i><strong>ممتاز!</strong> لا يوجد طلبة تجاوزوا 3 غيابات في هذه الفترة 🎉</div>`}`;
+  openM('m-period-detail');
+}
+
+function showGroupDetailModal(gid) {
+  const g=S.groups.find(x=>x.id===gid); if(!g) return;
+  const students=S.students.filter(s=>s.group_id===gid);
+  const gAtt=S.attendance.filter(a=>a.group_id===gid);
+  const present=gAtt.filter(a=>a.status==='حاضر').length;
+  const absent=gAtt.filter(a=>a.status==='غائب'||a.status==='بعذر').length;
+  const rate=gAtt.length?Math.round(present/gAtt.length*100):0;
+  const period=getGroupPeriod(g); const c=PERIOD_COLORS[period]||PERIOD_COLORS['غير محدد'];
+  const sch=Array.isArray(g.schedule)?g.schedule:[];
+  let modal=$('m-group-modal');
+  if(!modal){
+    modal=document.createElement('div');modal.id='m-group-modal';modal.className='overlay';
+    modal.innerHTML=`<div class="modal modal-lg">
+      <div class="mh" style="background:linear-gradient(135deg,#0f2447,#1565c0)"><h3 id="gm-title" style="color:#fff"></h3><button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-group-modal')">✕</button></div>
+      <div class="mbody" id="gm-body" style="max-height:75vh;overflow-y:auto"></div></div>`;
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+    document.body.appendChild(modal);
+  }
+  $('gm-title').textContent=`الحلقة: ${g.name}`;
+  const rows=students.map(s=>{
+    const sRate=getAttRate(s.id),sV=getTotalV(s.id),sStars=getStars(s.id);
+    return`<tr style="cursor:pointer" onclick="closeM('m-group-modal');openSDetail('${s.id}')" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${s.name[0]}</div><strong>${s.name}</strong></div></td>
+      <td>${s.level||'—'}</td>
+      <td><div style="display:flex;align-items:center;gap:5px"><div style="width:38px;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="height:100%;width:${sRate}%;background:${sRate>=80?'#16a34a':sRate>=60?'#d97706':'#dc2626'}"></div></div><span style="font-size:12px;font-weight:700">${sRate}%</span></div></td>
+      <td style="color:var(--accent);font-weight:700">${sV.toLocaleString()}</td>
+      <td style="color:#d97706;font-weight:700">${sStars}⭐</td>
+      <td>${s.phone?`<button onclick="event.stopPropagation();openWAReportModal('${s.id}')" style="background:#25d366;color:#fff;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px"><i class="fab fa-whatsapp"></i></button>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  $('gm-body').innerHTML=`<div style="padding:20px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      <div style="text-align:center;padding:12px;background:#f0f6ff;border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;font-weight:800;color:var(--primary)">${students.length}</div><div style="font-size:11px;color:var(--text3)">طلبة</div></div>
+      <div style="text-align:center;padding:12px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac"><div style="font-size:20px;font-weight:800;color:#16a34a">${rate}%</div><div style="font-size:11px;color:var(--text3)">حضور</div></div>
+      <div style="text-align:center;padding:12px;background:#fee2e2;border-radius:10px;border:1px solid #fca5a5"><div style="font-size:20px;font-weight:800;color:#dc2626">${absent}</div><div style="font-size:11px;color:var(--text3)">غياب</div></div>
+      <div style="text-align:center;padding:12px;background:${c.light};border-radius:10px;border:1px solid ${c.border}"><div style="font-size:18px;font-weight:800;color:${c.dark}">${c.icon} ${period}</div><div style="font-size:11px;color:var(--text3)">الفترة</div></div>
+    </div>
+    ${sch.length?`<div style="margin-bottom:14px;padding:12px 16px;background:#f0f6ff;border-radius:10px;border:1px solid var(--border)"><div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px"><i class="fas fa-calendar-alt" style="margin-left:5px"></i>جدول الحصص</div><div style="display:flex;flex-wrap:wrap;gap:6px">${sch.map(s=>`<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600"><b>${s.day}</b> ${s.start}–${s.end}</div>`).join('')}</div></div>`:''}
+    <div class="card"><div class="card-head"><h3 style="font-size:13px">قائمة الطلبة (${students.length})</h3>
+      <button class="btn btn-s btn-sm" onclick="closeM('m-group-modal');nav('attendance');setTimeout(()=>{$('att-group').value='${gid}';loadAttList()},300)"><i class="fas fa-clipboard-check"></i> تسجيل حضور</button>
+    </div><div class="tbl-wrap"><table>
+      <thead><tr><th>الطالب</th><th>المستوى</th><th>الحضور</th><th>الآيات</th><th>النجوم</th><th></th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">لا يوجد طلبة</td></tr>'}</tbody>
+    </table></div></div>
+  </div>`;
+  openM('m-group-modal');
+}
+
+// ═══ التفاعلية المحسّنة للوحة التحكم ═══
+
+function showDayAttDetail(dateStr) {
+  const myGroupIds=new Set(myGroups().map(g=>g.id));
+  const dayAtt=S.attendance.filter(a=>a.date===dateStr&&myGroupIds.has(a.group_id));
+  if(!dayAtt.length){toast('لا يوجد حضور مسجل لهذا اليوم','warn');return;}
+  const dayName=AR_DAYS[new Date(dateStr).getDay()];
+  const present=dayAtt.filter(a=>a.status==='حاضر'||a.status==='متأخر');
+  const absent=dayAtt.filter(a=>a.status==='غائب'||a.status==='بعذر');
+  const buildList=(records,isAbsent)=>records.map(a=>{
+    const s=S.students.find(x=>x.id===a.student_id);const g=S.groups.find(x=>x.id===a.group_id);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="closeM('m-day-att');openSDetail('${a.student_id}')">
+      <div style="width:32px;height:32px;border-radius:50%;background:${isAbsent?'#dc2626':'#16a34a'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${s?.name?.[0]||'؟'}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${s?.name||'—'}</div><div style="font-size:11px;color:var(--text3)">${g?.name||'—'}</div></div>
+      <span class="bx ${a.status==='حاضر'?'bx-g':a.status==='متأخر'?'bx-y':a.status==='بعذر'?'bx-b':'bx-r'}">${a.status}</span>
+      ${s?.phone&&isAbsent?`<button onclick="event.stopPropagation();openWAAbsenceModal('${a.student_id}','${dateStr}')" style="background:#25d366;color:#fff;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:10px"><i class="fab fa-whatsapp"></i></button>`:''}
+    </div>`;
+  }).join('');
+  let modal=$('m-day-att');
+  if(!modal){
+    modal=document.createElement('div');modal.id='m-day-att';modal.className='overlay';
+    modal.innerHTML=`<div class="modal modal-lg">
+      <div class="mh" style="background:linear-gradient(135deg,#0f2447,#1565c0)"><h3 id="day-att-title" style="color:#fff"></h3><button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-day-att')">✕</button></div>
+      <div class="mbody" id="day-att-body" style="max-height:75vh;overflow-y:auto;padding:20px"></div></div>`;
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+    document.body.appendChild(modal);
+  }
+  $('day-att-title').textContent=`سجل الحضور — ${dayName} ${fmtDate(dateStr)}`;
+  $('day-att-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="padding:16px;background:#dcfce7;border-radius:12px;border:1px solid #86efac;text-align:center"><div style="font-size:32px;font-weight:800;color:#16a34a">${present.length}</div><div style="font-size:12px;color:#4ade80">حاضر ✅</div></div>
+      <div style="padding:16px;background:#fee2e2;border-radius:12px;border:1px solid #fca5a5;text-align:center"><div style="font-size:32px;font-weight:800;color:#dc2626">${absent.length}</div><div style="font-size:12px;color:#f87171">غائب ❌</div></div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" id="day-tab-btn-present" onclick="switchDayTab('present',this)">✅ الحاضرون (${present.length})</div>
+      <div class="tab" id="day-tab-btn-absent" onclick="switchDayTab('absent',this)">❌ الغائبون (${absent.length})</div>
+    </div>
+    <div id="day-tab-present" class="tab-pane active">${buildList(present,false)||'<div class="empty"><i class="fas fa-clipboard-check"></i><p>لا يوجد حضور مسجل</p></div>'}</div>
+    <div id="day-tab-absent" class="tab-pane">
+      ${buildList(absent,true)||'<div class="empty"><i class="fas fa-smile"></i><p>لا يوجد غياب — ممتاز! 🎉</p></div>'}
+      ${absent.filter(a=>{const s=S.students.find(x=>x.id===a.student_id);return s?.phone;}).length?`
+      <div style="margin-top:14px"><button onclick="sendAbsenceBulkDay('${dateStr}')" style="width:100%;padding:10px;background:#25d366;color:#fff;border:none;border-radius:8px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fab fa-whatsapp"></i> إرسال تنبيه لجميع الغائبين</button></div>`:''}
+    </div>`;
+  openM('m-day-att');
+}
+
+function switchDayTab(tab,el){
+  document.querySelectorAll('#m-day-att .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#m-day-att .tab-pane').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('day-tab-'+tab)?.classList.add('active');
+}
+
+function showTodayAttDetail(type){
+  showDayAttDetail(today());
+  if(type==='absent') setTimeout(()=>{const t=$('day-tab-btn-absent');if(t)switchDayTab('absent',t);},150);
+}
+
+function sendAbsenceBulkDay(dateStr){
+  const myGroupIds=new Set(myGroups().map(g=>g.id));
+  const absent=S.attendance.filter(a=>a.date===dateStr&&myGroupIds.has(a.group_id)&&(a.status==='غائب'||a.status==='بعذر'));
+  const withPhone=absent.filter(a=>S.students.find(s=>s.id===a.student_id)?.phone);
+  if(!withPhone.length){toast('لا يوجد أرقام هاتف للطلبة الغائبين','warn');return;}
+  withPhone.forEach((a,i)=>{setTimeout(()=>{const s=S.students.find(x=>x.id===a.student_id);if(s)openWA(s.phone,buildAbsenceMsg(s.id,dateStr));},i*1200);});
+  toast(`📲 جاري إرسال ${withPhone.length} رسالة...`,'ok');
+}
+
+// ═══ تهيئة صفحة الفترات في sidebar ═══
+
+function initPeriodStatsPage(){
+  if(!document.getElementById('page-period-stats')){
+    const page=document.createElement('div');page.id='page-period-stats';page.className='page';
+    page.innerHTML=`
+      <div class="ph">
+        <div><h1><i class="fas fa-clock" style="color:var(--primary);margin-left:8px"></i>إحصائيات الفترات الزمنية</h1><p>مقارنة الحضور بين حلقات الصباح والظهر والمساء</p></div>
+        <button class="btn btn-p btn-sm" onclick="exportPeriodPDF()"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="card-body">
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <div class="fg" style="flex:1;min-width:140px"><label>من تاريخ</label><input type="date" id="period-from" onchange="renderAttendanceByPeriod()"></div>
+          <div class="fg" style="flex:1;min-width:140px"><label>إلى تاريخ</label><input type="date" id="period-to" onchange="renderAttendanceByPeriod()"></div>
+          <button class="btn btn-o btn-sm" onclick="document.getElementById('period-from').value='';document.getElementById('period-to').value='';renderAttendanceByPeriod()"><i class="fas fa-times"></i> إزالة الفلتر</button>
+        </div>
+      </div></div>
+      <div id="period-stats-content"></div>`;
+    document.querySelector('.content').appendChild(page);
+  }
+  if(!document.getElementById('nav-period-stats')){
+    const all=document.querySelectorAll('.nav-item');
+    let target=null;
+    all.forEach(n=>{if(n.getAttribute('onclick')?.includes("'attendance'"))target=n;});
+    if(target){
+      const ni=document.createElement('div');
+      ni.id='nav-period-stats';ni.className='nav-item';
+      ni.innerHTML=`<i class="fas fa-clock"></i> إحصائيات الفترات`;
+      ni.setAttribute('onclick',"nav('period-stats')");
+      target.after(ni);
+    }
+  }
+}
+
+function exportPeriodPDF(){
+  const myG=myGroups(),myS=myStudents();
+  const periods=groupsByPeriod(myG);
+  const dateFrom=$('period-from')?.value||'';const dateTo=$('period-to')?.value||'';
+  let rows='';
+  Object.entries(periods).forEach(([name,groups])=>{
+    const stats=calcPeriodStats(groups,S.attendance,myS,dateFrom,dateTo);
+    const c=PERIOD_COLORS[name]||PERIOD_COLORS['غير محدد'];
+    rows+=`<tr style="background:#f0f6ff"><td><strong>${c.icon} ${name}</strong></td><td>${groups.length}</td><td>${stats.groupStudents.length}</td><td style="color:#16a34a;font-weight:700">${stats.present}</td><td style="color:#dc2626;font-weight:700">${stats.absent}</td><td style="font-weight:800;color:${stats.rate>=80?'#16a34a':stats.rate>=60?'#d97706':'#dc2626'}">${stats.rate}%</td></tr>`;
+    groups.forEach(g=>{
+      const gAtt=S.attendance.filter(a=>a.group_id===g.id);
+      const gP=gAtt.filter(a=>a.status==='حاضر').length;
+      const gA=gAtt.filter(a=>a.status==='غائب').length;
+      const gR=gAtt.length?Math.round(gP/gAtt.length*100):0;
+      rows+=`<tr><td style="padding-right:24px">${g.name}</td><td>—</td><td>${S.students.filter(s=>s.group_id===g.id).length}</td><td>${gP}</td><td>${gA}</td><td>${gR}%</td></tr>`;
+    });
+  });
+  makePDF('إحصائيات الحضور حسب الفترة الزمنية',`<table><thead><tr><th>الفترة / الحلقة</th><th>الحلقات</th><th>الطلبة</th><th>حضور</th><th>غياب</th><th>النسبة</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+// ═══ Override لوحة التحكم بنسخة تفاعلية محسّنة ═══
+
+const _origRenderDash2 = renderDash;
+renderDash = function(){
+  const now=new Date();const todayStr=today();
+  const myS=myStudents(),myG=myGroups();
+  const myGroupIds=new Set(myG.map(g=>g.id));
+  const myStudentIds=new Set(myS.map(s=>s.id));
+  const todayAtt=S.attendance.filter(a=>a.date===todayStr&&myGroupIds.has(a.group_id));
+  const presentToday=todayAtt.filter(a=>a.status==='حاضر').length;
+  const lateToday=todayAtt.filter(a=>a.status==='متأخر').length;
+  const absentToday=todayAtt.filter(a=>a.status==='غائب').length;
+  const excusedToday=todayAtt.filter(a=>a.status==='بعذر').length;
+  const myRecs=S.recitations.filter(r=>myStudentIds.has(r.student_id));
+  const totalV=myRecs.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
+  const totalHizb=calcTotalHizb(myS);
+  const rawN=S.profile?.name||'';
+  const isEm=rawN.includes('@');
+  const EMAIL_FB2={'admin@wafaq.com':'مصطفى','admin@wafiq.com':'مصطفى','mohamed@wafaq.com':'محمد','samir@wafaq.com':'سمير','abdelghafour@wafaq.com':'عبد الغفور','hassan@wafaq.com':'حسن','younsse@wafaq.com':'يونس'};
+  const firstName=isEm?(EMAIL_FB2[(rawN||'').toLowerCase()]||'أستاذ'):rawN.replace(/^(الأستاذ|المدير|المشرف)\s*/,'').trim().split(' ')[0]||'';
+  const h=now.getHours();const greet=h<12?'☀️ صباح الخير':h<17?'🌤️ مساء الخير':'🌙 مساء النور';
+  $('dash-title').textContent=`${greet}، ${firstName}`;
+  $('dash-date').textContent=now.toLocaleDateString('ar-MA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  const periods=groupsByPeriod(myG);
+  const periodSummary=Object.entries(periods).map(([n,g])=>{const c=PERIOD_COLORS[n]||PERIOD_COLORS['غير محدد'];return`<span onclick="nav('period-stats')" style="cursor:pointer;display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:${c.dark};background:${c.light};border:1px solid ${c.border};border-radius:12px;padding:2px 8px">${c.icon}${n} ${g.length}</span>`;}).join('');
+
+  $('dash-stats').innerHTML=`
+    <div class="stat-card clickable" onclick="showStatDetail('students')" title="عرض قائمة الطلبة" style="border-top:3px solid var(--primary-l)">
+      <div class="stat-ic ic-blue"><i class="fas fa-user-graduate"></i></div>
+      <div><div class="stat-h">${myS.length}</div><div class="stat-p">الطلبة</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">${myS.filter(s=>s.gender==='ذكر').length}♂ · ${myS.filter(s=>s.gender==='أنثى').length}♀</div></div>
+    </div>
+    <div class="stat-card clickable" onclick="showStatDetail('groups')" style="border-top:3px solid var(--accent)">
+      <div class="stat-ic ic-green"><i class="fas fa-users"></i></div>
+      <div><div class="stat-h">${myG.length}</div><div class="stat-p">الحلقات</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${periodSummary}</div></div>
+    </div>
+    <div class="stat-card clickable" onclick="showTodayAttDetail('present')" style="border-top:3px solid var(--gold)">
+      <div class="stat-ic ic-orange"><i class="fas fa-clipboard-check"></i></div>
+      <div><div class="stat-h">${presentToday+lateToday}</div><div class="stat-p">حاضرون اليوم</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">${presentToday} حاضر · ${lateToday} متأخر</div></div>
+    </div>
+    <div class="stat-card clickable" onclick="showTodayAttDetail('absent')" style="border-top:3px solid #dc2626">
+      <div class="stat-ic" style="background:#fee2e2"><i class="fas fa-user-times" style="color:#dc2626"></i></div>
+      <div><div class="stat-h" style="color:#dc2626">${absentToday+excusedToday}</div><div class="stat-p">غائبون اليوم</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">${absentToday} بدون عذر · ${excusedToday} بعذر</div></div>
+    </div>
+    <div class="stat-card clickable" onclick="showStatDetail('hifz')" style="border-top:3px solid var(--gold-l)">
+      <div class="stat-ic ic-gold"><i class="fas fa-quran"></i></div>
+      <div><div class="stat-h">${totalV.toLocaleString()}</div><div class="stat-p">آيات محفوظة</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">${(totalV/6236*100).toFixed(1)}% من القرآن</div></div>
+    </div>
+    <div class="stat-card clickable" onclick="showStatDetail('hizb')" style="border-top:3px solid var(--primary)">
+      <div class="stat-ic ic-purple"><i class="fas fa-book-reader"></i></div>
+      <div><div class="stat-h">${totalHizb%1===0?totalHizb:totalHizb.toFixed(1)}</div><div class="stat-p">أحزاب محفوظة</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">من أصل 60 حزباً</div></div>
+    </div>`;
+
+  // رسم بياني تفاعلي
+  const days7=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().split('T')[0];
+    const dayAtt=S.attendance.filter(a=>a.date===ds&&myGroupIds.has(a.group_id));
+    days7.push({l:d.toLocaleDateString('ar',{weekday:'short'}),ds,present:dayAtt.filter(a=>a.status==='حاضر').length,absent:dayAtt.filter(a=>a.status==='غائب'||a.status==='بعذر').length});}
+  const mx=Math.max(...days7.map(d=>d.present+d.absent),1);
+  $('att-chart').innerHTML=days7.map(d=>`
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .15s"
+         onclick="showDayAttDetail('${d.ds}')" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''">
+      <span style="font-size:9px;font-weight:700;color:${d.present>0?'var(--primary)':'var(--text3)'}">${d.present}</span>
+      <div style="width:100%;border-radius:5px 5px 0 0;overflow:hidden;min-height:3px" title="${d.present} حاضر · ${d.absent} غائب">
+        ${d.absent?`<div style="background:#fca5a5;height:${Math.max(d.absent/(mx)*60,2)}px"></div>`:''}
+        <div style="background:var(--primary);height:${Math.max(d.present/mx*60,d.present?3:1)}px"></div>
+      </div>
+      <span style="font-size:8px;color:var(--text3)">${d.l}</span>
+      ${d.ds===todayStr?`<span style="font-size:7px;background:var(--primary);color:#fff;border-radius:3px;padding:1px 3px">اليوم</span>`:''}
+    </div>`).join('');
+
+  // تنبيهات قابلة للنقر
+  const alerts=[];
+  const noAtt=myG.filter(g=>!S.attendance.some(a=>a.date===todayStr&&a.group_id===g.id));
+  noAtt.forEach(g=>alerts.push(`<div class="alert alert-w" style="cursor:pointer;transition:opacity .15s" onclick="nav('attendance');setTimeout(()=>{$('att-group').value='${g.id}';loadAttList()},300)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><i class="fas fa-clock"></i><div><strong>${g.name}</strong> — لم يُسجَّل الحضور <span style="font-size:11px;text-decoration:underline;color:var(--primary)">تسجيل الآن ←</span></div></div>`));
+  const highAbs=myS.filter(s=>S.attendance.filter(a=>a.student_id===s.id&&(a.status==='غائب'||a.status==='بعذر')).length>=5).slice(0,3);
+  highAbs.forEach(s=>{const cnt=S.attendance.filter(a=>a.student_id===s.id&&(a.status==='غائب'||a.status==='بعذر')).length;
+    alerts.push(`<div class="alert alert-d" style="cursor:pointer" onclick="openSDetail('${s.id}')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><i class="fas fa-user-times"></i><div><strong>${s.name}</strong> — ${cnt} غياب مسجل <span style="font-size:11px;text-decoration:underline">عرض الملف ←</span></div></div>`);});
+  $('dash-alerts').innerHTML=alerts.join('')||'<div class="alert alert-s"><i class="fas fa-check-circle"></i>لا توجد تنبيهات — أداء ممتاز 🎉</div>';
+
+  // أفضل الطلبة — قابل للنقر بالكامل
+  const top5=myS.map(s=>({...s,stars:getStars(s.id),v:getTotalV(s.id),att:getAttRate(s.id),hizb:calcHizb(s.id)})).sort((a,b)=>b.stars-a.stars).slice(0,5);
+  $('top-students').innerHTML=top5.length?`<div style="display:flex;flex-direction:column;gap:6px">${top5.map((s,i)=>{
+    const g=S.groups.find(x=>x.id===s.group_id);const medals=['🥇','🥈','🥉'];
+    const hDisp=s.hizb>0?(s.hizb%1===0?s.hizb:s.hizb.toFixed(1)):0;
+    return`<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:${i===0?'#fef9c3':'#f8fafc'};border:1px solid ${i===0?'#fde68a':'var(--border)'};cursor:pointer;transition:all .2s"
+           onclick="openSDetail('${s.id}')" onmouseover="this.style.transform='translateX(-3px)';this.style.boxShadow='0 4px 12px rgba(26,60,110,.12)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="font-size:18px;width:26px">${medals[i]||i+1}</div>
+      <div style="width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">${s.name[0]}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+      <div style="font-size:10px;color:var(--text3)">${g?.name||'—'} · ${hDisp} حزب · ${s.att}% حضور</div></div>
+      <div style="text-align:center;flex-shrink:0"><div style="font-size:15px;font-weight:800;color:#d97706">${s.stars}⭐</div><div style="font-size:9px;color:var(--text3)">${s.v.toLocaleString()} آية</div></div>
+    </div>`;}).join('')}
+    <button onclick="nav('reports')" style="width:100%;margin-top:4px;padding:8px;background:var(--bg);border:1.5px dashed var(--border);border-radius:8px;font-family:Tajawal,sans-serif;font-size:12px;color:var(--text3);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--primary-l)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">
+      عرض التقارير الكاملة ←
+    </button></div>`:'<div class="empty"><i class="fas fa-star"></i><p>لا توجد بيانات</p></div>';
+
+  // آخر الأنشطة — قابلة للنقر
+  const recent=S.recitations.filter(r=>myStudentIds.has(r.student_id)).slice(0,6);
+  const GC={'جيد جداً':'#0891b2','جيد':'#2563eb','حسن':'#d97706','ضعيف':'#ea580c','لم يحفظ':'#dc2626'};
+  $('recent-act').innerHTML=recent.length?`<div style="display:flex;flex-direction:column;gap:5px">${recent.map(r=>{
+    const s=S.students.find(x=>x.id===r.student_id);
+    const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);
+    return`<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .15s" onclick="openSDetail('${r.student_id}')" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''">
+      <div style="width:26px;height:26px;border-radius:7px;background:${r.type==='حفظ جديد'?'#dcfce7':'#dbeafe'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="fas ${r.type==='حفظ جديد'?'fa-book-quran':'fa-redo'}" style="color:${r.type==='حفظ جديد'?'var(--accent)':'var(--info)'};font-size:10px"></i>
+      </div>
+      <div style="flex:1;min-width:0"><span style="font-weight:700">${s?.name||'—'}</span><span style="color:var(--text3)"> · ${fs?.name||'—'}→${ts?.name||'—'}</span></div>
+      ${r.grade?`<span style="font-size:10px;font-weight:700;color:${GC[r.grade]||'#666'};flex-shrink:0">${r.grade}</span>`:''}
+      <div style="color:var(--text3);font-size:9px;flex-shrink:0">${fmtDate(r.date)}</div>
+    </div>`;}).join('')}</div>`:'<div class="empty"><i class="fas fa-history"></i><p>لا توجد أنشطة</p></div>';
+};
+
+// ═══ Override nav لدعم صفحة الفترات ═══
+const _origNav2=nav;
+nav=function(page){
+  if(page==='period-stats'){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    const pg=document.getElementById('page-period-stats');
+    if(pg)pg.classList.add('active');
+    document.getElementById('nav-period-stats')?.classList.add('active');
+    $('breadcrumb-txt').textContent='إحصائيات الفترات الزمنية';
+    const from=$('period-from'),to=$('period-to');
+    if(from&&!from.value){const d=new Date();d.setMonth(d.getMonth()-1);from.value=d.toISOString().split('T')[0];}
+    if(to&&!to.value)to.value=today();
+    renderAttendanceByPeriod();
+    closeSidebar();
+  }else{_origNav2(page);}
+};
+
+// ═══ Override showApp لتهيئة الصفحة الجديدة ═══
+const _origShowApp2=showApp;
+showApp=function(){_origShowApp2();setTimeout(initPeriodStatsPage,600);};
+
+console.log('✅ تحديثات الفترات الزمنية + التفاعلية الكاملة — تم تحميلها');
+</script>
 </body>
 </html>
