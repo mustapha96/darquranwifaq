@@ -548,10 +548,76 @@ textarea{resize:vertical;min-height:80px}
 }
 @media print{
   body *{visibility:hidden}
-  .cert-paper,
-  .cert-paper *{visibility:visible}
+  .cert-paper,.cert-paper *{visibility:visible}
   .cert-paper{position:fixed;inset:0;width:100%;height:100%;max-width:none;border-radius:0;box-shadow:none}
 }
+
+/* ══════════════════════════════════════════════════════
+   نظام نتائج الدورات
+══════════════════════════════════════════════════════ */
+.grade-input-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;align-items:center;padding:10px 14px;border-radius:10px;background:#f8fafc;border:1.5px solid var(--border);margin-bottom:6px;transition:border-color .2s}
+.grade-input-row:hover{border-color:var(--primary-l);background:#f0f6ff}
+.grade-input-row.has-grade{border-color:#86efac;background:#f0fdf4}
+.grade-input-row label{font-size:13px;font-weight:700;color:var(--text)}
+.grade-input-row .coef-badge{font-size:11px;font-weight:700;color:var(--primary);background:#dbeafe;padding:2px 8px;border-radius:20px;text-align:center}
+.grade-input-row input{padding:8px 10px;text-align:center;font-size:16px;font-weight:800;border:1.5px solid var(--border);border-radius:8px;width:100%}
+.grade-input-row input:focus{border-color:var(--primary-l)}
+.grade-input-row .result-cell{font-size:14px;font-weight:800;color:var(--primary);text-align:center}
+.result-archive-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:all .2s;cursor:pointer}
+.result-archive-card:hover{border-color:var(--primary-l);box-shadow:var(--sh);transform:translateY(-1px)}
+.rac-avatar{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0}
+.rac-grade{font-size:22px;font-weight:900;min-width:52px;text-align:center}
+.subject-config-row{display:grid;grid-template-columns:3fr 1fr 1fr auto;gap:8px;align-items:end;padding:10px 12px;border-radius:10px;background:#f8fafc;border:1.5px solid var(--border);margin-bottom:6px;transition:all .2s}
+.subject-config-row:hover{border-color:var(--primary-l);background:#f0f6ff}
+.score-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}
+
+/* ── ورقة النتيجة للطباعة ── */
+.result-sheet{width:210mm;min-height:297mm;background:#fff;font-family:'Tajawal',sans-serif;direction:rtl;position:relative;overflow:hidden}
+.rs-frame-outer{position:absolute;inset:8mm;border:3px double #1a3c6e;border-radius:4px;pointer-events:none;z-index:0}
+.rs-frame-inner{position:absolute;inset:11mm;border:1px solid #1a3c6e;border-radius:3px;opacity:.4;pointer-events:none;z-index:0}
+.rs-content{position:relative;z-index:1;padding:14mm 18mm 10mm}
+.rs-header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a3c6e;padding-bottom:8px;margin-bottom:10px}
+.rs-header-center{text-align:center;flex:1}
+.rs-logo{width:70px;height:70px;border-radius:50%;border:2px solid #1a3c6e;object-fit:cover}
+.rs-assoc-name{font-size:10pt;font-weight:700;color:#1a3c6e;line-height:1.4}
+.rs-bismillah{font-family:'Amiri',serif;font-size:13pt;color:#1a3c6e;margin-bottom:3px}
+.rs-title{font-family:'Amiri',serif;font-size:16pt;font-weight:700;color:#1a3c6e;text-align:center;margin:8px 0;border:1px solid #1a3c6e;padding:5px 16px;display:inline-block;border-radius:4px;background:#f0f4f8}
+.rs-session-badge{font-size:11pt;font-weight:700;color:#d97706}
+.rs-student-info{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;background:#f0f4f8;border:1px solid #d1dae6;border-radius:8px;padding:10px 14px;margin-bottom:10px}
+.rs-info-row{display:flex;align-items:center;gap:6px;font-size:10pt}
+.rs-info-label{font-weight:800;color:#1a3c6e;min-width:70px;flex-shrink:0}
+.rs-info-val{border-bottom:1px dotted #1a3c6e;flex:1;padding-bottom:1px;color:#1e2d42}
+.rs-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10pt}
+.rs-table th{background:#1a3c6e;color:#fff;padding:7px 10px;text-align:center;font-weight:700;border:1px solid #1a3c6e;font-size:9.5pt}
+.rs-table td{border:1px solid #c8d4e5;padding:6px 10px;text-align:center;vertical-align:middle;color:#1e2d42}
+.rs-table .td-name{text-align:right;font-weight:600;background:#f7f9fc}
+.rs-table .td-score{font-weight:800;font-size:11pt}
+.rs-table .td-total{font-weight:800;color:#1a3c6e}
+.rs-table tr:nth-child(even) td{background:#f0f6ff}
+.rs-table tr:nth-child(even) td.td-name{background:#e8f0fb}
+.rs-table .rs-tfoot td{background:#1a3c6e!important;color:#fff;font-weight:800;font-size:10.5pt}
+.rs-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.rs-sum-box{border:1.5px solid #c8d4e5;border-radius:8px;padding:8px 10px;text-align:center;background:#f7f9fc}
+.rs-sum-box .val{font-size:17pt;font-weight:900;color:#1a3c6e;line-height:1}
+.rs-sum-box .lbl{font-size:8.5pt;color:#4a5568;margin-top:3px}
+.rs-sum-box.highlight{background:#1a3c6e;border-color:#1a3c6e}
+.rs-sum-box.highlight .val,.rs-sum-box.highlight .lbl{color:#fff}
+.rs-mention-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px}
+.rs-mention-box{display:flex;align-items:center;gap:8px;border:2px solid #1a3c6e;border-radius:8px;padding:7px 20px;background:#f0f4f8}
+.rs-mention-label{font-size:10pt;font-weight:700;color:#1a3c6e}
+.rs-mention-val{font-size:13pt;font-weight:900;color:#d97706}
+.rs-notes-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.rs-notes-box{border:1px solid #c8d4e5;border-radius:8px;padding:8px 12px;min-height:52px;background:#fafbfc}
+.rs-notes-title{font-size:9.5pt;font-weight:800;color:#1a3c6e;border-bottom:1px solid #c8d4e5;padding-bottom:4px;margin-bottom:5px}
+.rs-notes-text{font-size:9.5pt;color:#374151;line-height:1.6}
+.rs-sigs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px}
+.rs-sig-box{border:1px solid #c8d4e5;border-radius:6px;padding:8px;text-align:center;min-height:60px}
+.rs-sig-title{font-size:9pt;font-weight:800;color:#1a3c6e;margin-bottom:20px}
+.rs-seal{width:55px;height:55px;border:2px solid #c8d4e5;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;opacity:.25;font-size:9pt;color:#1a3c6e;flex-direction:column;gap:2px}
+.rs-footer{border-top:2px solid #1a3c6e;padding-top:7px;text-align:center}
+.rs-hadith{font-family:'Amiri',serif;font-size:10.5pt;color:#1a3c6e;line-height:1.7;margin-bottom:3px}
+.rs-hadith-ref{font-size:8.5pt;color:#718096}
+.rs-footer-info{font-size:8.5pt;color:#4a5568;margin-top:3px}
 </style>
 </head>
 <body>
@@ -769,6 +835,7 @@ textarea{resize:vertical;min-height:80px}
       <div class="nav-item" onclick="nav('exams')"><i class="fas fa-graduation-cap"></i> الامتحانات</div>
       <div class="nav-item" onclick="nav('summer')"><i class="fas fa-sun"></i> الدورة الصيفية</div>
       <div class="nav-item" onclick="nav('certificates')"><i class="fas fa-scroll"></i> الشهادات</div>
+      <div class="nav-item" onclick="nav('grades')"><i class="fas fa-star-half-alt"></i> نتائج الدورات</div>
     </div>
     <div class="nav-sec" id="nav-settings">
       <div class="nav-sec-title">الإعدادات</div>
@@ -1201,6 +1268,17 @@ textarea{resize:vertical;min-height:80px}
           </div>
         </div>
       </div>
+
+      <!-- GRADES — نتائج الدورات -->
+      <div class="page" id="page-grades">
+        <div id="page-grades-inner">
+          <div style="text-align:center;padding:60px 20px;color:var(--text3)">
+            <div class="spinner" style="margin:0 auto 16px"></div>
+            <p>جاري التحميل...</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1628,6 +1706,118 @@ textarea{resize:vertical;min-height:80px}
     <div class="mfoot" style="justify-content:center;gap:12px">
       <button class="btn btn-o" onclick="cancelNavAway()" style="min-width:120px"><i class="fas fa-arrow-right"></i> البقاء</button>
       <button class="btn btn-d" onclick="confirmNavAway()" style="min-width:120px"><i class="fas fa-sign-out-alt"></i> خروج بدون حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== GRADES MODALS ===================== -->
+
+<!-- مودال إدخال / تعديل نتيجة -->
+<div class="overlay" id="m-grade-entry">
+  <div class="modal modal-lg">
+    <div class="mh" style="background:linear-gradient(135deg,#0f2447,#1a3c6e)">
+      <h3 style="color:#fff"><i class="fas fa-star-half-alt" style="color:#fbbf24;margin-left:8px"></i><span id="m-grade-entry-title">إدخال نتيجة دورة</span></h3>
+      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="GradesSystem.closeEntryModal()">✕</button>
+    </div>
+    <div class="mbody" style="padding:0">
+      <!-- الخطوة 1 -->
+      <div id="grade-step-1" style="padding:20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:6px">
+          <span style="width:22px;height:22px;background:var(--primary);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px">1</span>
+          معلومات الطالب والدورة
+        </div>
+        <div class="fgrid">
+          <div class="fg"><label>الطالب *</label><select id="gr-student" onchange="GradesSystem.onStudentChange()"><option value="">— اختر الطالب —</option></select></div>
+          <div class="fg"><label>الحلقة</label><input id="gr-group-name" type="text" placeholder="تُملأ تلقائياً" readonly style="background:#f8fafc;color:var(--text3)"></div>
+          <div class="fg"><label>المستوى</label><select id="gr-level"><option value="تمهيدي">تمهيدي</option><option value="مستوى أول">مستوى أول</option><option value="مستوى ثاني">مستوى ثاني</option><option value="مستوى ثالث">مستوى ثالث</option><option value="مستوى رابع (الكبار)">مستوى رابع (الكبار)</option></select></div>
+          <div class="fg"><label>السنة الدراسية</label><input id="gr-year" type="text" placeholder="مثال: 2024-2025"></div>
+          <div class="fg"><label>الدورة</label><select id="gr-session"><option value="الأولى">الدورة الأولى</option><option value="الثانية">الدورة الثانية</option><option value="الدورة الصيفية">الدورة الصيفية</option><option value="استدراكية">دورة استدراكية</option></select></div>
+          <div class="fg"><label>تاريخ النتيجة</label><input id="gr-date" type="date"></div>
+        </div>
+      </div>
+      <!-- الخطوة 2 -->
+      <div id="grade-step-2" style="padding:20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:6px"><span style="width:22px;height:22px;background:var(--primary);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px">2</span> نقاط المواد</div>
+          <span style="font-size:11px;color:var(--text3)">النقطة من 20 — يمكن ترك الخانة فارغة</span>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:6px 14px;background:var(--bg);border-radius:8px;margin-bottom:8px;font-size:11px;font-weight:700;color:var(--text3)">
+          <span>المادة</span><span style="text-align:center">المعامل</span><span style="text-align:center">النقطة /20</span><span style="text-align:center">المجموع</span>
+        </div>
+        <div id="grade-inputs-list"></div>
+        <!-- ملخص مباشر -->
+        <div id="live-summary" style="margin-top:12px;padding:12px 16px;background:linear-gradient(135deg,#f0f4f8,#e8f0fe);border-radius:10px;border:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+          <div style="text-align:center"><div id="live-total" style="font-size:24px;font-weight:900;color:var(--primary)">0</div><div style="font-size:11px;color:var(--text3)">مجموع النقاط</div></div>
+          <div style="text-align:center"><div id="live-max"   style="font-size:24px;font-weight:900;color:var(--text3)">0</div><div style="font-size:11px;color:var(--text3)">المجموع الأقصى</div></div>
+          <div style="text-align:center"><div id="live-avg"   style="font-size:24px;font-weight:900;color:var(--accent)">—</div><div style="font-size:11px;color:var(--text3)">المعدل /20</div></div>
+          <div style="flex:1;min-width:120px;text-align:center"><div id="live-mention" style="font-size:14px;font-weight:800;padding:6px 14px;border-radius:20px;display:inline-block;background:#fef3c7;color:#92400e">—</div><div style="font-size:11px;color:var(--text3);margin-top:3px">التقدير</div></div>
+        </div>
+      </div>
+      <!-- الخطوة 3 -->
+      <div id="grade-step-3" style="padding:20px">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px">
+          <span style="width:22px;height:22px;background:var(--primary);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px">3</span>
+          ملاحظات (اختياري)
+        </div>
+        <div class="fg">
+          <label>ملاحظة الأستاذ</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+            <button type="button" onclick="GradesSystem.setNote('يُبشّر بمستقبل متميز إن واظب على الحضور والمراجعة.')" class="btn btn-sm btn-o" style="font-size:11px">تشجيع</button>
+            <button type="button" onclick="GradesSystem.setNote('مستوى جيد ويحتاج إلى مزيد من الجهد والمراجعة المنتظمة.')" class="btn btn-sm btn-o" style="font-size:11px">متوسط</button>
+            <button type="button" onclick="GradesSystem.setNote('نرجو الاهتمام أكثر وتكثيف المراجعة للدورة القادمة.')" class="btn btn-sm btn-o" style="font-size:11px">تحذير</button>
+            <button type="button" onclick="GradesSystem.setNote('أحسن وواصل، بارك الله فيك وفي أهلك.')" class="btn btn-sm btn-o" style="font-size:11px">ممتاز</button>
+          </div>
+          <textarea id="gr-notes" rows="2" placeholder="اكتب ملاحظة أو اختر من الملاحظات الجاهزة أعلاه..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot" style="background:#f8fafc">
+      <button class="btn btn-o" onclick="GradesSystem.closeEntryModal()">إلغاء</button>
+      <button class="btn btn-p" onclick="GradesSystem.preview()"><i class="fas fa-eye"></i> معاينة</button>
+      <button class="btn btn-s" onclick="GradesSystem.save()"><i class="fas fa-save"></i> حفظ النتيجة</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال إعدادات المواد -->
+<div class="overlay" id="m-subjects-config">
+  <div class="modal modal-lg">
+    <div class="mh" style="background:linear-gradient(135deg,#0f2447,#1a3c6e)">
+      <h3 style="color:#fff"><i class="fas fa-list-alt" style="color:#fbbf24;margin-left:8px"></i>إعدادات المواد والمعاملات</h3>
+      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-subjects-config')">✕</button>
+    </div>
+    <div class="mbody">
+      <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;font-size:13px;color:#1e40af;margin-bottom:16px;display:flex;gap:8px">
+        <i class="fas fa-info-circle"></i>
+        يمكنك إضافة مواد، تعديل أسمائها، تغيير معاملاتها وحذفها. التغييرات تسري على النتائج الجديدة فقط.
+      </div>
+      <div style="display:grid;grid-template-columns:3fr 1fr 1fr auto;gap:8px;padding:6px 12px;background:var(--bg);border-radius:8px;margin-bottom:8px;font-size:11px;font-weight:700;color:var(--text3)">
+        <span>اسم المادة</span><span style="text-align:center">المعامل</span><span style="text-align:center">من (أقصى)</span><span></span>
+      </div>
+      <div id="subjects-config-list"></div>
+      <button class="btn btn-s" onclick="GradesSystem.addSubject()" style="width:100%;margin-top:10px"><i class="fas fa-plus"></i> إضافة مادة جديدة</button>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-o" onclick="closeM('m-subjects-config')">إلغاء</button>
+      <button class="btn btn-p" onclick="GradesSystem.saveSubjectsConfig()"><i class="fas fa-save"></i> حفظ الإعدادات</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال معاينة وطباعة النتيجة -->
+<div class="overlay" id="m-result-preview">
+  <div class="modal" style="max-width:860px;max-height:95vh">
+    <div class="mh" style="background:linear-gradient(135deg,#0f2447,#1a3c6e)">
+      <h3 style="color:#fff"><i class="fas fa-print" style="color:#fbbf24;margin-left:8px"></i>معاينة النتيجة — جاهزة للطباعة</h3>
+      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-result-preview')">✕</button>
+    </div>
+    <div class="mbody" style="padding:12px;background:#6b7280;overflow-y:auto;max-height:72vh">
+      <div id="modal-result-sheet" style="transform-origin:top center;transform:scale(0.82);margin-bottom:-80px"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-o" onclick="closeM('m-result-preview')">إغلاق</button>
+      <button class="btn" style="background:#25d366;color:#fff" onclick="GradesSystem.sendWhatsApp()"><i class="fab fa-whatsapp"></i> واتساب</button>
+      <button class="btn btn-p" onclick="GradesSystem.printResult()"><i class="fas fa-print"></i> طباعة / PDF</button>
     </div>
   </div>
 </div>
@@ -2126,6 +2316,7 @@ function showApp(){
   if(btnHoliday){btnHoliday.style.display=(r==='admin'||r==='supervisor')?'inline-flex':'none';}
   initSurahSelects();
   fillSelects();
+  GradesSystem.initSubjects();
   checkSession();
   S._sessionInterval = setInterval(checkSession,60000);
   nav('dashboard');
@@ -2146,7 +2337,7 @@ async function checkAuth(){
 }
 
 // ===================== NAV =====================
-const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب','absence-stats':'إحصائيات الغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات',certificates:'الشهادات'};
+const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب','absence-stats':'إحصائيات الغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات',certificates:'الشهادات',grades:'نتائج الدورات'};
 
 function nav(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -2167,6 +2358,7 @@ function nav(page){
   if(page==='finance')renderFinance();
   if(page==='exams')renderExams();
   if(page==='certificates')renderCertificatesPage();
+  if(page==='grades')GradesSystem.renderGradesPage();
   // إغلاق القائمة الجانبية في الجوال تلقائياً عند الانتقال
   closeSidebar();
 }
@@ -4110,6 +4302,7 @@ function fillSelects(){
   const mg=myGroups();
   const fg=$('filter-group');
   if(fg)fg.innerHTML='<option value="">كل الحلقات</option>'+mg.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  GradesSystem.fillStudentSelects();
 }
 
 // ===================== INIT =====================
@@ -5936,566 +6129,634 @@ renderStudents = function(){
 // يستخدم calcHizb المعرَّف مسبقاً كـ override للأصل
 // لا حاجة لتعديل إضافي — calcHizb تعمل بشكل صحيح
 
-</script>
+// ══════════════════════════════════════════════════════════════
+//  نظام نتائج الدورات — GradesSystem
+//  مدمج مع بيانات S.students و S.groups
+// ══════════════════════════════════════════════════════════════
+const GradesSystem = {
 
-<script>
+  DEFAULT_SUBJECTS: [
+    {id:'gs1', name:'الحفظ والتسميع',             coef:4, maxScore:20},
+    {id:'gs2', name:'التجويد والأداء',             coef:3, maxScore:20},
+    {id:'gs3', name:'المراجعة والتثبيت',           coef:3, maxScore:20},
+    {id:'gs4', name:'الأخلاق والانضباط',           coef:2, maxScore:20},
+    {id:'gs5', name:'الحضور والمواظبة',            coef:2, maxScore:20},
+    {id:'gs6', name:'المشاركة والتفاعل',           coef:1, maxScore:20},
+    {id:'gs7', name:'الدروس العلمية (فقه/عقيدة)', coef:2, maxScore:20},
+    {id:'gs8', name:'المحفوظات والأناشيد',         coef:1, maxScore:20},
+  ],
 
-// ╔══════════════════════════════════════════════════════════════╗
-// ║  تحديث ٢: إحصائيات الفترات الزمنية                          ║
-// ║  تحديث ٣: التفاعلية الكاملة                                  ║
-// ╚══════════════════════════════════════════════════════════════╝
+  MENTIONS: [
+    {min:18,    label:'ممتاز',       color:'#166534', bg:'#dcfce7'},
+    {min:16,    label:'حسن جداً',    color:'#1e40af', bg:'#dbeafe'},
+    {min:14,    label:'حسن',         color:'#1a3c6e', bg:'#e0eaf8'},
+    {min:12,    label:'جيد',         color:'#92400e', bg:'#fef3c7'},
+    {min:10,    label:'لا بأس به',   color:'#9a3412', bg:'#ffedd5'},
+    {min:0,     label:'مستحسن',      color:'#991b1b', bg:'#fee2e2'},
+  ],
 
-// ═══ الفترات الزمنية ═══
+  HADITH:     '«مَن سَلَكَ طَرِيقًا يَلتَمِسُ فِيهِ عِلمًا سَهَّلَ اللهُ لهُ بِهِ طَرِيقًا إِلى الجَنَّةِ»',
+  HADITH_REF: 'رواه مسلم',
 
-function getGroupPeriod(group) {
-  const sch = Array.isArray(group.schedule) ? group.schedule : [];
-  if (!sch.length) return 'غير محدد';
-  const startTime = sch[0].start || '00:00';
-  const [h] = startTime.split(':').map(Number);
-  if (h >= 5  && h < 12) return 'صباح';
-  if (h >= 12 && h < 17) return 'ظهر';
-  if (h >= 17)            return 'مساء';
-  return 'غير محدد';
-}
+  _subjects:       null,
+  _results:        [],
+  _editId:         null,
+  _currentResult:  null,
+  _activeTab:      'all',
 
-function groupsByPeriod(groups) {
-  const periods = {};
-  groups.forEach(g => {
-    const p = getGroupPeriod(g);
-    if (!periods[p]) periods[p] = [];
-    periods[p].push(g);
-  });
-  return Object.fromEntries(Object.entries(periods).filter(([,v]) => v.length));
-}
+  // ── تهيئة ───────────────────────────────────────────────────
+  initSubjects() {
+    this._loadSubjects();
+    this._loadResults();
+  },
 
-function calcPeriodStats(groups, attendance, students, dateFrom, dateTo) {
-  const groupIds = new Set(groups.map(g => g.id));
-  let att = attendance.filter(a => groupIds.has(a.group_id));
-  if (dateFrom) att = att.filter(a => a.date >= dateFrom);
-  if (dateTo)   att = att.filter(a => a.date <= dateTo);
-  const present  = att.filter(a => a.status === 'حاضر').length;
-  const late     = att.filter(a => a.status === 'متأخر').length;
-  const absent   = att.filter(a => a.status === 'غائب').length;
-  const excused  = att.filter(a => a.status === 'بعذر').length;
-  const total    = att.length;
-  const rate     = total ? Math.round((present + late) / total * 100) : 0;
-  const groupStudents = students.filter(s => groupIds.has(s.group_id));
-  const absByStudent = {};
-  att.filter(a => a.status==='غائب'||a.status==='بعذر').forEach(a => {
-    absByStudent[a.student_id] = (absByStudent[a.student_id]||0)+1;
-  });
-  const criticalStudents = Object.entries(absByStudent).filter(([,c])=>c>=3).sort((a,b)=>b[1]-a[1]);
-  const byDay = {};
-  att.filter(a=>a.status==='غائب'||a.status==='بعذر').forEach(a=>{
-    const d = AR_DAYS[new Date(a.date).getDay()];
-    byDay[d]=(byDay[d]||0)+1;
-  });
-  const worstDay = Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
-  return {present,late,absent,excused,total,rate,groupStudents,criticalStudents,byDay,worstDay,attRecords:att};
-}
+  _loadSubjects() {
+    try {
+      const saved = localStorage.getItem('wafaq_subjects');
+      this._subjects = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(this.DEFAULT_SUBJECTS));
+    } catch { this._subjects = JSON.parse(JSON.stringify(this.DEFAULT_SUBJECTS)); }
+  },
 
-const PERIOD_COLORS = {
-  'صباح': {bg:'linear-gradient(135deg,#f0f9ff,#e0f2fe)',border:'#7dd3fc',icon:'🌅',dark:'#0369a1',mid:'#0ea5e9',light:'#e0f2fe',hbg:'linear-gradient(135deg,#0369a1,#0ea5e9)'},
-  'ظهر':  {bg:'linear-gradient(135deg,#fefce8,#fef9c3)',border:'#fde047',icon:'☀️',dark:'#713f12',mid:'#d97706',light:'#fef9c3',hbg:'linear-gradient(135deg,#713f12,#d97706)'},
-  'مساء': {bg:'linear-gradient(135deg,#f0fdf4,#dcfce7)',border:'#86efac',icon:'🌙',dark:'#14532d',mid:'#16a34a',light:'#dcfce7',hbg:'linear-gradient(135deg,#14532d,#16a34a)'},
-  'غير محدد':{bg:'linear-gradient(135deg,#f8fafc,#f1f5f9)',border:'#cbd5e1',icon:'⏰',dark:'#334155',mid:'#64748b',light:'#f1f5f9',hbg:'linear-gradient(135deg,#334155,#64748b)'},
-};
+  _saveSubjectsLocal() {
+    try { localStorage.setItem('wafaq_subjects', JSON.stringify(this._subjects)); } catch {}
+    // حفظ في Supabase
+    db.from('settings').upsert({key:'grade_subjects',value:JSON.stringify(this._subjects)},{onConflict:'key'}).catch(()=>{});
+  },
 
-function renderAttendanceByPeriod() {
-  const myG = myGroups();
-  const myS = myStudents();
-  const periods = groupsByPeriod(myG);
-  const dateFrom = $('period-from')?.value||'';
-  const dateTo   = $('period-to')?.value||'';
-  const container = $('period-stats-content');
-  if (!container) return;
+  _loadResults() {
+    try {
+      const saved = localStorage.getItem('wafaq_grade_results');
+      this._results = saved ? JSON.parse(saved) : [];
+    } catch { this._results = []; }
+    // محاولة تحميل من Supabase
+    db.from('settings').select('*').eq('key','grade_results').single()
+      .then(({data})=>{ if(data){ try{ this._results=JSON.parse(data.value); }catch{} } })
+      .catch(()=>{});
+  },
 
-  if (!Object.keys(periods).length) {
-    container.innerHTML = `<div class="empty card" style="padding:60px"><i class="fas fa-clock"></i><p>لا توجد حلقات مجدولة — أضف أوقاتاً للحلقات لتفعيل هذا القسم</p></div>`;
-    return;
-  }
+  _saveResults() {
+    try { localStorage.setItem('wafaq_grade_results', JSON.stringify(this._results)); } catch {}
+    db.from('settings').upsert({key:'grade_results',value:JSON.stringify(this._results)},{onConflict:'key'}).catch(()=>{});
+  },
 
-  // ─ بطاقات الفترات ─
-  let html = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px">`;
-  Object.entries(periods).forEach(([name, groups]) => {
-    const c = PERIOD_COLORS[name]||PERIOD_COLORS['غير محدد'];
-    const stats = calcPeriodStats(groups, S.attendance, myS, dateFrom, dateTo);
-    const times = [...new Set(groups.flatMap(g=>(Array.isArray(g.schedule)?g.schedule:[]).map(s=>`${s.start}–${s.end}`)))].slice(0,2).join(' / ')||'—';
-    html += `
-    <div onclick="showPeriodDetail('${name}')" style="background:${c.bg};border:2px solid ${c.border};border-radius:18px;padding:22px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden"
-         onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 14px 36px rgba(0,0,0,.13)'"
-         onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <div style="position:absolute;top:-15px;left:-15px;font-size:90px;opacity:.05">${c.icon}</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
-        <div style="font-size:32px">${c.icon}</div>
-        <div style="flex:1">
-          <h3 style="font-size:18px;font-weight:800;color:${c.dark};margin:0">فترة ${name}</h3>
-          <p style="font-size:11px;color:${c.mid};margin:3px 0 0"><i class="fas fa-clock" style="margin-left:4px"></i>${times}</p>
-        </div>
-        <div style="background:${c.light};border:1px solid ${c.border};border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:${c.dark}">${groups.length} حلقة</div>
-      </div>
-      <div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
-          <span style="color:${c.dark};font-weight:700">نسبة الحضور</span>
-          <span style="font-size:18px;font-weight:800;color:${stats.rate>=80?'#16a34a':stats.rate>=60?'#d97706':'#dc2626'}">${stats.rate}%</span>
-        </div>
-        <div style="height:10px;background:rgba(0,0,0,.08);border-radius:5px;overflow:hidden">
-          <div style="height:100%;width:${stats.rate}%;background:${stats.rate>=80?c.mid:stats.rate>=60?'#d97706':'#dc2626'};border-radius:5px;transition:width 1.2s ease"></div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:12px">
-        <div style="background:rgba(22,163,74,.12);border-radius:8px;padding:8px 4px"><div style="font-size:17px;font-weight:800;color:#16a34a">${stats.present}</div><div style="font-size:9px;color:#4ade80">حاضر</div></div>
-        <div style="background:rgba(234,179,8,.12);border-radius:8px;padding:8px 4px"><div style="font-size:17px;font-weight:800;color:#ca8a04">${stats.late}</div><div style="font-size:9px;color:#facc15">متأخر</div></div>
-        <div style="background:rgba(220,38,38,.12);border-radius:8px;padding:8px 4px"><div style="font-size:17px;font-weight:800;color:#dc2626">${stats.absent}</div><div style="font-size:9px;color:#f87171">غائب</div></div>
-        <div style="background:rgba(37,99,235,.12);border-radius:8px;padding:8px 4px"><div style="font-size:17px;font-weight:800;color:#2563eb">${stats.excused}</div><div style="font-size:9px;color:#60a5fa">بعذر</div></div>
-      </div>
-      ${stats.criticalStudents.length
-        ? `<div style="padding:8px 12px;background:rgba(220,38,38,.08);border-radius:8px;border:1px solid rgba(220,38,38,.2);font-size:11px;font-weight:700;color:#dc2626"><i class="fas fa-exclamation-triangle" style="margin-left:4px"></i>${stats.criticalStudents.length} طالب تجاوز 3 غيابات</div>`
-        : `<div style="padding:8px 12px;background:rgba(22,163,74,.08);border-radius:8px;border:1px solid rgba(22,163,74,.2);font-size:11px;font-weight:700;color:#16a34a"><i class="fas fa-check-circle" style="margin-left:4px"></i>لا توجد حالات غياب متكرر</div>`}
-      <div style="text-align:center;margin-top:10px;font-size:11px;color:${c.mid};font-weight:600">🔍 اضغط لعرض التفاصيل الكاملة</div>
-    </div>`;
-  });
-  html += `</div>`;
+  // ── تعبئة قوائم الطلبة ──────────────────────────────────────
+  fillStudentSelects() {
+    const sel = $('gr-student');
+    if (!sel) return;
+    const students = typeof myStudents === 'function' ? myStudents() : [];
+    sel.innerHTML = '<option value="">— اختر الطالب —</option>' +
+      students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  },
 
-  // ─ رسم بياني مقارن ─
-  const allStats = Object.entries(periods).map(([name,groups])=>({name,groups,stats:calcPeriodStats(groups,S.attendance,myS,dateFrom,dateTo),c:PERIOD_COLORS[name]||PERIOD_COLORS['غير محدد']}));
-  const maxRate = Math.max(...allStats.map(x=>x.stats.rate),1);
-  html += `
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-head"><h3><i class="fas fa-chart-bar" style="color:var(--primary-l);margin-left:6px"></i>مقارنة الحضور بين الفترات</h3></div>
-    <div class="card-body">
-      <div style="display:flex;align-items:flex-end;gap:24px;height:180px;padding:0 20px">
-        ${allStats.map(({name,groups,stats,c})=>`
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer" onclick="showPeriodDetail('${name}')"
-             onmouseover="this.querySelector('.bar-inner').style.opacity='.8'" onmouseout="this.querySelector('.bar-inner').style.opacity='1'">
-          <div style="font-size:14px;font-weight:800;color:${stats.rate>=80?'#16a34a':stats.rate>=60?'#d97706':'#dc2626'}">${stats.rate}%</div>
-          <div style="width:100%;max-width:70px;background:#f1f5f9;border-radius:10px 10px 0 0;height:${Math.max(stats.rate/100*130,6)}px;overflow:hidden;transition:height 1s ease;position:relative">
-            <div class="bar-inner" style="width:100%;height:100%;background:${c.hbg};transition:opacity .2s;display:flex;align-items:flex-start;justify-content:center;padding-top:8px">
-              <span style="font-size:22px">${c.icon}</span>
-            </div>
-          </div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)">${name}</div>
-          <div style="font-size:10px;color:var(--text3)">${groups.length} حلقة · ${stats.groupStudents.length} طالب</div>
-        </div>`).join('')}
-      </div>
-      <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap">
-        <span style="font-size:11px;display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block"></span>ممتاز ≥80%</span>
-        <span style="font-size:11px;display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#d97706;display:inline-block"></span>جيد 60-79%</span>
-        <span style="font-size:11px;display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#dc2626;display:inline-block"></span>يحتاج متابعة &lt;60%</span>
-      </div>
-    </div>
-  </div>`;
+  // ── الحصول على التقدير ──────────────────────────────────────
+  getMention(avg) {
+    if (avg == null || isNaN(avg)) return this.MENTIONS[this.MENTIONS.length - 1];
+    return this.MENTIONS.find(m => avg >= m.min) || this.MENTIONS[this.MENTIONS.length - 1];
+  },
 
-  // ─ جدول تفصيلي ─
-  html += `<div class="card"><div class="card-head"><h3><i class="fas fa-table" style="color:var(--primary);margin-left:6px"></i>تفاصيل الحلقات حسب الفترة</h3></div><div class="tbl-wrap"><table>
-    <thead><tr><th>الحلقة</th><th>الفترة</th><th>الأوقات</th><th>الطلبة</th><th>حضور</th><th>غياب</th><th>النسبة</th><th>الأستاذ</th></tr></thead><tbody>`;
-  myG.forEach(g=>{
-    const p=getGroupPeriod(g); const c=PERIOD_COLORS[p]||PERIOD_COLORS['غير محدد'];
-    const sch=Array.isArray(g.schedule)?g.schedule:[];
-    const times=sch.map(s=>`${s.start}–${s.end}`).join(', ')||'—';
-    const cnt=myS.filter(s=>s.group_id===g.id).length;
-    const gAtt=S.attendance.filter(a=>a.group_id===g.id);
-    const gPres=gAtt.filter(a=>a.status==='حاضر'||a.status==='متأخر').length;
-    const gAbs=gAtt.filter(a=>a.status==='غائب'||a.status==='بعذر').length;
-    const gRate=gAtt.length?Math.round(gPres/gAtt.length*100):0;
-    html+=`<tr style="cursor:pointer" onclick="showGroupDetailModal('${g.id}')"
-               onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
-      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:${c.mid}"></div><strong>${g.name}</strong></div></td>
-      <td><span style="background:${c.light};color:${c.dark};border:1px solid ${c.border};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">${c.icon} ${p}</span></td>
-      <td style="font-size:11px;color:var(--text3);direction:ltr;text-align:right">${times}</td>
-      <td><span class="bx bx-b">${cnt}</span></td>
-      <td style="color:#16a34a;font-weight:700">${gPres}</td>
-      <td style="color:#dc2626;font-weight:700">${gAbs}</td>
-      <td><div style="display:flex;align-items:center;gap:5px"><div style="width:42px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="height:100%;width:${gRate}%;background:${gRate>=80?'#16a34a':gRate>=60?'#d97706':'#dc2626'};border-radius:3px"></div></div><span style="font-size:12px;font-weight:700;color:${gRate>=80?'#16a34a':gRate>=60?'#d97706':'#dc2626'}">${gRate}%</span></div></td>
-      <td>${teacherName(g.teacher_id)}</td>
-    </tr>`;
-  });
-  html+=`</tbody></table></div></div>`;
-  container.innerHTML = html;
-}
-
-function showPeriodDetail(periodName) {
-  const myG=myGroups(), myS=myStudents();
-  const groups=myG.filter(g=>getGroupPeriod(g)===periodName);
-  if(!groups.length) return;
-  const c=PERIOD_COLORS[periodName]||PERIOD_COLORS['غير محدد'];
-  const dateFrom=$('period-from')?.value||'';
-  const dateTo=$('period-to')?.value||'';
-  const stats=calcPeriodStats(groups,S.attendance,myS,dateFrom,dateTo);
-  let modal=$('m-period-detail');
-  if(!modal){
-    modal=document.createElement('div');modal.id='m-period-detail';modal.className='overlay';
-    modal.innerHTML=`<div class="modal modal-lg">
-      <div class="mh" id="pd-header" style="padding:0">
-        <div style="flex:1;padding:20px 24px"><h3 id="pd-title" style="color:#fff;font-size:18px;font-weight:800"></h3><p id="pd-sub" style="color:rgba(255,255,255,.7);font-size:12px;margin-top:4px"></p></div>
-        <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff;margin-left:16px" onclick="closeM('m-period-detail')">✕</button>
-      </div>
-      <div class="mbody" id="pd-body" style="max-height:75vh;overflow-y:auto;padding:20px"></div>
-    </div>`;
-    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
-    document.body.appendChild(modal);
-  }
-  $('pd-header').style.background=c.hbg;
-  $('pd-title').textContent=`${c.icon} حلقات ${periodName}`;
-  $('pd-sub').textContent=`${groups.length} حلقة · ${stats.groupStudents.length} طالب · نسبة الحضور: ${stats.rate}%`;
-  const maxDay=Math.max(...Object.values(stats.byDay),1);
-  const critRows=stats.criticalStudents.slice(0,8).map(([sid,cnt])=>{
-    const s=S.students.find(x=>x.id===sid);const g=S.groups.find(x=>x.id===s?.group_id);
-    return`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="closeM('m-period-detail');openSDetail('${sid}')">
-      <div style="width:32px;height:32px;border-radius:50%;background:#dc2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${s?.name?.[0]||'؟'}</div>
-      <div style="flex:1"><div style="font-weight:700;font-size:13px">${s?.name||'—'}</div><div style="font-size:11px;color:var(--text3)">${g?.name||'—'}</div></div>
-      <span class="bx bx-r">${cnt} غياب</span>
-      ${s?.phone?`<button onclick="event.stopPropagation();openWAAbsenceModal('${sid}')" style="background:#25d366;color:#fff;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px"><i class="fab fa-whatsapp"></i></button>`:''}
-    </div>`;
-  }).join('');
-  $('pd-body').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
-      <div style="padding:14px;background:#dcfce7;border-radius:10px;border:1px solid #86efac;text-align:center"><div style="font-size:24px;font-weight:800;color:#16a34a">${stats.present}</div><div style="font-size:11px;color:#4ade80">حاضر ✅</div></div>
-      <div style="padding:14px;background:#fef9c3;border-radius:10px;border:1px solid #fde047;text-align:center"><div style="font-size:24px;font-weight:800;color:#ca8a04">${stats.late}</div><div style="font-size:11px;color:#facc15">متأخر 🕐</div></div>
-      <div style="padding:14px;background:#fee2e2;border-radius:10px;border:1px solid #fca5a5;text-align:center"><div style="font-size:24px;font-weight:800;color:#dc2626">${stats.absent}</div><div style="font-size:11px;color:#f87171">غائب ❌</div></div>
-      <div style="padding:14px;background:#dbeafe;border-radius:10px;border:1px solid #93c5fd;text-align:center"><div style="font-size:24px;font-weight:800;color:#2563eb">${stats.excused}</div><div style="font-size:11px;color:#60a5fa">بعذر 📝</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="card"><div class="card-head"><h3 style="font-size:13px">غياب حسب اليوم</h3></div><div class="card-body">
-        <div style="display:flex;align-items:flex-end;gap:4px;height:80px">
-          ${Object.entries(stats.byDay).sort((a,b)=>b[1]-a[1]).map(([day,cnt])=>`
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
-            <span style="font-size:9px;font-weight:700;color:#dc2626">${cnt}</span>
-            <div style="width:100%;background:#dc2626;border-radius:3px 3px 0 0;height:${Math.max(cnt/maxDay*65,3)}px"></div>
-            <span style="font-size:8px;color:var(--text3)">${day.substring(0,3)}</span>
-          </div>`).join('')||'<p style="font-size:12px;color:var(--text3);text-align:center;width:100%;padding:20px">لا غياب 🎉</p>'}
-        </div>
-        ${stats.worstDay!=='—'?`<div style="margin-top:8px;font-size:11px;color:#dc2626;font-weight:600"><i class="fas fa-calendar-times" style="margin-left:4px"></i>أكثر أيام الغياب: ${stats.worstDay}</div>`:''}
-      </div></div>
-      <div class="card"><div class="card-head"><h3 style="font-size:13px">الحلقات في هذه الفترة</h3></div><div class="card-body" style="padding:10px">
-        ${groups.map(g=>{
-          const gAtt=S.attendance.filter(a=>a.group_id===g.id);
-          const gRate=gAtt.length?Math.round(gAtt.filter(a=>a.status==='حاضر').length/gAtt.length*100):0;
-          const sch=Array.isArray(g.schedule)?g.schedule:[];
-          return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;cursor:pointer"
-                      onclick="closeM('m-period-detail');nav('attendance');setTimeout(()=>{$('att-group').value='${g.id}';loadAttList()},300)">
-            <div style="flex:1"><div style="font-size:13px;font-weight:700">${g.name}</div><div style="font-size:10px;color:var(--text3)">${sch.map(s=>`${s.start}–${s.end}`).join(', ')||'—'} | ${teacherName(g.teacher_id)}</div></div>
-            <span style="font-size:14px;font-weight:800;color:${gRate>=80?'#16a34a':gRate>=60?'#d97706':'#dc2626'}">${gRate}%</span>
-          </div>`;
-        }).join('')}
-      </div></div>
-    </div>
-    ${stats.criticalStudents.length?`<div class="card"><div class="card-head"><h3 style="color:#dc2626;font-size:13px"><i class="fas fa-exclamation-triangle" style="margin-left:5px"></i>طلبة كثيرو الغياب</h3><span class="bx bx-r">${stats.criticalStudents.length} طالب</span></div><div class="card-body">${critRows}</div></div>`
-    :`<div class="alert alert-s"><i class="fas fa-check-circle"></i><strong>ممتاز!</strong> لا يوجد طلبة تجاوزوا 3 غيابات في هذه الفترة 🎉</div>`}`;
-  openM('m-period-detail');
-}
-
-function showGroupDetailModal(gid) {
-  const g=S.groups.find(x=>x.id===gid); if(!g) return;
-  const students=S.students.filter(s=>s.group_id===gid);
-  const gAtt=S.attendance.filter(a=>a.group_id===gid);
-  const present=gAtt.filter(a=>a.status==='حاضر').length;
-  const absent=gAtt.filter(a=>a.status==='غائب'||a.status==='بعذر').length;
-  const rate=gAtt.length?Math.round(present/gAtt.length*100):0;
-  const period=getGroupPeriod(g); const c=PERIOD_COLORS[period]||PERIOD_COLORS['غير محدد'];
-  const sch=Array.isArray(g.schedule)?g.schedule:[];
-  let modal=$('m-group-modal');
-  if(!modal){
-    modal=document.createElement('div');modal.id='m-group-modal';modal.className='overlay';
-    modal.innerHTML=`<div class="modal modal-lg">
-      <div class="mh" style="background:linear-gradient(135deg,#0f2447,#1565c0)"><h3 id="gm-title" style="color:#fff"></h3><button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-group-modal')">✕</button></div>
-      <div class="mbody" id="gm-body" style="max-height:75vh;overflow-y:auto"></div></div>`;
-    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
-    document.body.appendChild(modal);
-  }
-  $('gm-title').textContent=`الحلقة: ${g.name}`;
-  const rows=students.map(s=>{
-    const sRate=getAttRate(s.id),sV=getTotalV(s.id),sStars=getStars(s.id);
-    return`<tr style="cursor:pointer" onclick="closeM('m-group-modal');openSDetail('${s.id}')" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
-      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${s.name[0]}</div><strong>${s.name}</strong></div></td>
-      <td>${s.level||'—'}</td>
-      <td><div style="display:flex;align-items:center;gap:5px"><div style="width:38px;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="height:100%;width:${sRate}%;background:${sRate>=80?'#16a34a':sRate>=60?'#d97706':'#dc2626'}"></div></div><span style="font-size:12px;font-weight:700">${sRate}%</span></div></td>
-      <td style="color:var(--accent);font-weight:700">${sV.toLocaleString()}</td>
-      <td style="color:#d97706;font-weight:700">${sStars}⭐</td>
-      <td>${s.phone?`<button onclick="event.stopPropagation();openWAReportModal('${s.id}')" style="background:#25d366;color:#fff;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px"><i class="fab fa-whatsapp"></i></button>`:'—'}</td>
-    </tr>`;
-  }).join('');
-  $('gm-body').innerHTML=`<div style="padding:20px">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
-      <div style="text-align:center;padding:12px;background:#f0f6ff;border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;font-weight:800;color:var(--primary)">${students.length}</div><div style="font-size:11px;color:var(--text3)">طلبة</div></div>
-      <div style="text-align:center;padding:12px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac"><div style="font-size:20px;font-weight:800;color:#16a34a">${rate}%</div><div style="font-size:11px;color:var(--text3)">حضور</div></div>
-      <div style="text-align:center;padding:12px;background:#fee2e2;border-radius:10px;border:1px solid #fca5a5"><div style="font-size:20px;font-weight:800;color:#dc2626">${absent}</div><div style="font-size:11px;color:var(--text3)">غياب</div></div>
-      <div style="text-align:center;padding:12px;background:${c.light};border-radius:10px;border:1px solid ${c.border}"><div style="font-size:18px;font-weight:800;color:${c.dark}">${c.icon} ${period}</div><div style="font-size:11px;color:var(--text3)">الفترة</div></div>
-    </div>
-    ${sch.length?`<div style="margin-bottom:14px;padding:12px 16px;background:#f0f6ff;border-radius:10px;border:1px solid var(--border)"><div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px"><i class="fas fa-calendar-alt" style="margin-left:5px"></i>جدول الحصص</div><div style="display:flex;flex-wrap:wrap;gap:6px">${sch.map(s=>`<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600"><b>${s.day}</b> ${s.start}–${s.end}</div>`).join('')}</div></div>`:''}
-    <div class="card"><div class="card-head"><h3 style="font-size:13px">قائمة الطلبة (${students.length})</h3>
-      <button class="btn btn-s btn-sm" onclick="closeM('m-group-modal');nav('attendance');setTimeout(()=>{$('att-group').value='${gid}';loadAttList()},300)"><i class="fas fa-clipboard-check"></i> تسجيل حضور</button>
-    </div><div class="tbl-wrap"><table>
-      <thead><tr><th>الطالب</th><th>المستوى</th><th>الحضور</th><th>الآيات</th><th>النجوم</th><th></th></tr></thead>
-      <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">لا يوجد طلبة</td></tr>'}</tbody>
-    </table></div></div>
-  </div>`;
-  openM('m-group-modal');
-}
-
-// ═══ التفاعلية المحسّنة للوحة التحكم ═══
-
-function showDayAttDetail(dateStr) {
-  const myGroupIds=new Set(myGroups().map(g=>g.id));
-  const dayAtt=S.attendance.filter(a=>a.date===dateStr&&myGroupIds.has(a.group_id));
-  if(!dayAtt.length){toast('لا يوجد حضور مسجل لهذا اليوم','warn');return;}
-  const dayName=AR_DAYS[new Date(dateStr).getDay()];
-  const present=dayAtt.filter(a=>a.status==='حاضر'||a.status==='متأخر');
-  const absent=dayAtt.filter(a=>a.status==='غائب'||a.status==='بعذر');
-  const buildList=(records,isAbsent)=>records.map(a=>{
-    const s=S.students.find(x=>x.id===a.student_id);const g=S.groups.find(x=>x.id===a.group_id);
-    return`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="closeM('m-day-att');openSDetail('${a.student_id}')">
-      <div style="width:32px;height:32px;border-radius:50%;background:${isAbsent?'#dc2626':'#16a34a'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${s?.name?.[0]||'؟'}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600">${s?.name||'—'}</div><div style="font-size:11px;color:var(--text3)">${g?.name||'—'}</div></div>
-      <span class="bx ${a.status==='حاضر'?'bx-g':a.status==='متأخر'?'bx-y':a.status==='بعذر'?'bx-b':'bx-r'}">${a.status}</span>
-      ${s?.phone&&isAbsent?`<button onclick="event.stopPropagation();openWAAbsenceModal('${a.student_id}','${dateStr}')" style="background:#25d366;color:#fff;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:10px"><i class="fab fa-whatsapp"></i></button>`:''}
-    </div>`;
-  }).join('');
-  let modal=$('m-day-att');
-  if(!modal){
-    modal=document.createElement('div');modal.id='m-day-att';modal.className='overlay';
-    modal.innerHTML=`<div class="modal modal-lg">
-      <div class="mh" style="background:linear-gradient(135deg,#0f2447,#1565c0)"><h3 id="day-att-title" style="color:#fff"></h3><button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-day-att')">✕</button></div>
-      <div class="mbody" id="day-att-body" style="max-height:75vh;overflow-y:auto;padding:20px"></div></div>`;
-    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
-    document.body.appendChild(modal);
-  }
-  $('day-att-title').textContent=`سجل الحضور — ${dayName} ${fmtDate(dateStr)}`;
-  $('day-att-body').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-      <div style="padding:16px;background:#dcfce7;border-radius:12px;border:1px solid #86efac;text-align:center"><div style="font-size:32px;font-weight:800;color:#16a34a">${present.length}</div><div style="font-size:12px;color:#4ade80">حاضر ✅</div></div>
-      <div style="padding:16px;background:#fee2e2;border-radius:12px;border:1px solid #fca5a5;text-align:center"><div style="font-size:32px;font-weight:800;color:#dc2626">${absent.length}</div><div style="font-size:12px;color:#f87171">غائب ❌</div></div>
-    </div>
-    <div class="tabs">
-      <div class="tab active" id="day-tab-btn-present" onclick="switchDayTab('present',this)">✅ الحاضرون (${present.length})</div>
-      <div class="tab" id="day-tab-btn-absent" onclick="switchDayTab('absent',this)">❌ الغائبون (${absent.length})</div>
-    </div>
-    <div id="day-tab-present" class="tab-pane active">${buildList(present,false)||'<div class="empty"><i class="fas fa-clipboard-check"></i><p>لا يوجد حضور مسجل</p></div>'}</div>
-    <div id="day-tab-absent" class="tab-pane">
-      ${buildList(absent,true)||'<div class="empty"><i class="fas fa-smile"></i><p>لا يوجد غياب — ممتاز! 🎉</p></div>'}
-      ${absent.filter(a=>{const s=S.students.find(x=>x.id===a.student_id);return s?.phone;}).length?`
-      <div style="margin-top:14px"><button onclick="sendAbsenceBulkDay('${dateStr}')" style="width:100%;padding:10px;background:#25d366;color:#fff;border:none;border-radius:8px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fab fa-whatsapp"></i> إرسال تنبيه لجميع الغائبين</button></div>`:''}
-    </div>`;
-  openM('m-day-att');
-}
-
-function switchDayTab(tab,el){
-  document.querySelectorAll('#m-day-att .tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('#m-day-att .tab-pane').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('day-tab-'+tab)?.classList.add('active');
-}
-
-function showTodayAttDetail(type){
-  showDayAttDetail(today());
-  if(type==='absent') setTimeout(()=>{const t=$('day-tab-btn-absent');if(t)switchDayTab('absent',t);},150);
-}
-
-function sendAbsenceBulkDay(dateStr){
-  const myGroupIds=new Set(myGroups().map(g=>g.id));
-  const absent=S.attendance.filter(a=>a.date===dateStr&&myGroupIds.has(a.group_id)&&(a.status==='غائب'||a.status==='بعذر'));
-  const withPhone=absent.filter(a=>S.students.find(s=>s.id===a.student_id)?.phone);
-  if(!withPhone.length){toast('لا يوجد أرقام هاتف للطلبة الغائبين','warn');return;}
-  withPhone.forEach((a,i)=>{setTimeout(()=>{const s=S.students.find(x=>x.id===a.student_id);if(s)openWA(s.phone,buildAbsenceMsg(s.id,dateStr));},i*1200);});
-  toast(`📲 جاري إرسال ${withPhone.length} رسالة...`,'ok');
-}
-
-// ═══ تهيئة صفحة الفترات في sidebar ═══
-
-function initPeriodStatsPage(){
-  if(!document.getElementById('page-period-stats')){
-    const page=document.createElement('div');page.id='page-period-stats';page.className='page';
-    page.innerHTML=`
-      <div class="ph">
-        <div><h1><i class="fas fa-clock" style="color:var(--primary);margin-left:8px"></i>إحصائيات الفترات الزمنية</h1><p>مقارنة الحضور بين حلقات الصباح والظهر والمساء</p></div>
-        <button class="btn btn-p btn-sm" onclick="exportPeriodPDF()"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
-      </div>
-      <div class="card" style="margin-bottom:16px"><div class="card-body">
-        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
-          <div class="fg" style="flex:1;min-width:140px"><label>من تاريخ</label><input type="date" id="period-from" onchange="renderAttendanceByPeriod()"></div>
-          <div class="fg" style="flex:1;min-width:140px"><label>إلى تاريخ</label><input type="date" id="period-to" onchange="renderAttendanceByPeriod()"></div>
-          <button class="btn btn-o btn-sm" onclick="document.getElementById('period-from').value='';document.getElementById('period-to').value='';renderAttendanceByPeriod()"><i class="fas fa-times"></i> إزالة الفلتر</button>
-        </div>
-      </div></div>
-      <div id="period-stats-content"></div>`;
-    document.querySelector('.content').appendChild(page);
-  }
-  if(!document.getElementById('nav-period-stats')){
-    const all=document.querySelectorAll('.nav-item');
-    let target=null;
-    all.forEach(n=>{if(n.getAttribute('onclick')?.includes("'attendance'"))target=n;});
-    if(target){
-      const ni=document.createElement('div');
-      ni.id='nav-period-stats';ni.className='nav-item';
-      ni.innerHTML=`<i class="fas fa-clock"></i> إحصائيات الفترات`;
-      ni.setAttribute('onclick',"nav('period-stats')");
-      target.after(ni);
-    }
-  }
-}
-
-function exportPeriodPDF(){
-  const myG=myGroups(),myS=myStudents();
-  const periods=groupsByPeriod(myG);
-  const dateFrom=$('period-from')?.value||'';const dateTo=$('period-to')?.value||'';
-  let rows='';
-  Object.entries(periods).forEach(([name,groups])=>{
-    const stats=calcPeriodStats(groups,S.attendance,myS,dateFrom,dateTo);
-    const c=PERIOD_COLORS[name]||PERIOD_COLORS['غير محدد'];
-    rows+=`<tr style="background:#f0f6ff"><td><strong>${c.icon} ${name}</strong></td><td>${groups.length}</td><td>${stats.groupStudents.length}</td><td style="color:#16a34a;font-weight:700">${stats.present}</td><td style="color:#dc2626;font-weight:700">${stats.absent}</td><td style="font-weight:800;color:${stats.rate>=80?'#16a34a':stats.rate>=60?'#d97706':'#dc2626'}">${stats.rate}%</td></tr>`;
-    groups.forEach(g=>{
-      const gAtt=S.attendance.filter(a=>a.group_id===g.id);
-      const gP=gAtt.filter(a=>a.status==='حاضر').length;
-      const gA=gAtt.filter(a=>a.status==='غائب').length;
-      const gR=gAtt.length?Math.round(gP/gAtt.length*100):0;
-      rows+=`<tr><td style="padding-right:24px">${g.name}</td><td>—</td><td>${S.students.filter(s=>s.group_id===g.id).length}</td><td>${gP}</td><td>${gA}</td><td>${gR}%</td></tr>`;
+  // ── حساب الإجماليات ─────────────────────────────────────────
+  calcTotals(scores) {
+    let totalWeighted = 0, totalCoef = 0;
+    this._subjects.forEach(s => {
+      const sc = parseFloat(scores[s.id]);
+      if (!isNaN(sc) && scores[s.id] !== '') {
+        totalWeighted += sc * s.coef;
+        totalCoef += s.coef;
+      }
     });
-  });
-  makePDF('إحصائيات الحضور حسب الفترة الزمنية',`<table><thead><tr><th>الفترة / الحلقة</th><th>الحلقات</th><th>الطلبة</th><th>حضور</th><th>غياب</th><th>النسبة</th></tr></thead><tbody>${rows}</tbody></table>`);
-}
+    const avg = totalCoef > 0 ? Math.round((totalWeighted / totalCoef) * 100) / 100 : null;
+    const maxTotal = this._subjects.reduce((a, s) => a + s.maxScore * s.coef, 0);
+    return { avg, totalWeighted, maxTotal, totalCoef };
+  },
 
-// ═══ Override لوحة التحكم بنسخة تفاعلية محسّنة ═══
+  // ── رسم الصفحة الرئيسية ─────────────────────────────────────
+  renderGradesPage() {
+    let pg = $('page-grades');
+    if (!pg) {
+      pg = document.createElement('div');
+      pg.id = 'page-grades'; pg.className = 'page';
+      document.querySelector('.content')?.appendChild(pg);
+    }
+    pg.innerHTML = '<div id="page-grades-inner"></div>';
+    this._loadSubjects(); this._loadResults();
+    this._renderPage();
+  },
 
-const _origRenderDash2 = renderDash;
-renderDash = function(){
-  const now=new Date();const todayStr=today();
-  const myS=myStudents(),myG=myGroups();
-  const myGroupIds=new Set(myG.map(g=>g.id));
-  const myStudentIds=new Set(myS.map(s=>s.id));
-  const todayAtt=S.attendance.filter(a=>a.date===todayStr&&myGroupIds.has(a.group_id));
-  const presentToday=todayAtt.filter(a=>a.status==='حاضر').length;
-  const lateToday=todayAtt.filter(a=>a.status==='متأخر').length;
-  const absentToday=todayAtt.filter(a=>a.status==='غائب').length;
-  const excusedToday=todayAtt.filter(a=>a.status==='بعذر').length;
-  const myRecs=S.recitations.filter(r=>myStudentIds.has(r.student_id));
-  const totalV=myRecs.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
-  const totalHizb=calcTotalHizb(myS);
-  const rawN=S.profile?.name||'';
-  const isEm=rawN.includes('@');
-  const EMAIL_FB2={'admin@wafaq.com':'مصطفى','admin@wafiq.com':'مصطفى','mohamed@wafaq.com':'محمد','samir@wafaq.com':'سمير','abdelghafour@wafaq.com':'عبد الغفور','hassan@wafaq.com':'حسن','younsse@wafaq.com':'يونس'};
-  const firstName=isEm?(EMAIL_FB2[(rawN||'').toLowerCase()]||'أستاذ'):rawN.replace(/^(الأستاذ|المدير|المشرف)\s*/,'').trim().split(' ')[0]||'';
-  const h=now.getHours();const greet=h<12?'☀️ صباح الخير':h<17?'🌤️ مساء الخير':'🌙 مساء النور';
-  $('dash-title').textContent=`${greet}، ${firstName}`;
-  $('dash-date').textContent=now.toLocaleDateString('ar-MA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  _renderPage() {
+    const container = $('page-grades-inner');
+    if (!container) return;
+    const stats = this._calcStats();
+    container.innerHTML = `
+      <div class="ph">
+        <div><h1><i class="fas fa-star-half-alt" style="color:var(--gold);margin-left:8px"></i>نتائج الدورات</h1><p>إدخال ومتابعة وطباعة نتائج الطلبة</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-o" onclick="GradesSystem.openSubjectsConfig()"><i class="fas fa-list-alt"></i> إعدادات المواد</button>
+          <button class="btn btn-p" onclick="GradesSystem.openEntryModal()"><i class="fas fa-plus"></i> إدخال نتيجة جديدة</button>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-clipboard-list"></i></div><div><div class="stat-h">${stats.total}</div><div class="stat-p">إجمالي النتائج</div></div></div>
+        <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-star"></i></div><div><div class="stat-h">${stats.excellent}</div><div class="stat-p">تقدير ممتاز</div></div></div>
+        <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-chart-line"></i></div><div><div class="stat-h">${stats.avgAll}</div><div class="stat-p">متوسط المعدلات</div></div></div>
+        <div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-book"></i></div><div><div class="stat-h">${this._subjects.length}</div><div class="stat-p">عدد المواد</div></div></div>
+      </div>
+      <div class="tabs">
+        <div class="tab ${this._activeTab==='all'?'active':''}"    onclick="GradesSystem.switchTab('all',this)"><i class="fas fa-list"></i> كل النتائج</div>
+        <div class="tab ${this._activeTab==='first'?'active':''}"  onclick="GradesSystem.switchTab('first',this)">الدورة الأولى</div>
+        <div class="tab ${this._activeTab==='second'?'active':''}" onclick="GradesSystem.switchTab('second',this)">الدورة الثانية</div>
+        <div class="tab ${this._activeTab==='summer'?'active':''}" onclick="GradesSystem.switchTab('summer',this)">الصيفية</div>
+        <div class="tab ${this._activeTab==='top'?'active':''}"    onclick="GradesSystem.switchTab('top',this)"><i class="fas fa-trophy"></i> الترتيب</div>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="card-body" style="padding:14px 16px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="fg" style="flex:1;min-width:160px"><label>الحلقة</label>
+            <select id="gr-filter-group" onchange="GradesSystem._renderArchive()">
+              <option value="">كل الحلقات</option>
+              ${S.groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="fg" style="flex:1;min-width:130px"><label>السنة</label>
+            <select id="gr-filter-year" onchange="GradesSystem._renderArchive()">
+              <option value="">كل السنوات</option>
+              ${[...new Set(this._results.map(r=>r.year))].map(y=>`<option>${y}</option>`).join('')}
+            </select>
+          </div>
+          <div class="fg" style="flex:2;min-width:180px"><label>بحث باسم الطالب</label>
+            <input type="text" id="gr-search" placeholder="اكتب الاسم..." oninput="GradesSystem._renderArchive()">
+          </div>
+        </div>
+      </div></div>
+      <div id="gr-results-list"></div>
+      <div id="gr-ranking-section" style="display:${this._activeTab==='top'?'block':'none'}"></div>
+    `;
+    this._renderArchive();
+    this.fillStudentSelects();
+  },
 
-  const periods=groupsByPeriod(myG);
-  const periodSummary=Object.entries(periods).map(([n,g])=>{const c=PERIOD_COLORS[n]||PERIOD_COLORS['غير محدد'];return`<span onclick="nav('period-stats')" style="cursor:pointer;display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:${c.dark};background:${c.light};border:1px solid ${c.border};border-radius:12px;padding:2px 8px">${c.icon}${n} ${g.length}</span>`;}).join('');
+  // ── رسم الأرشيف ─────────────────────────────────────────────
+  _renderArchive() {
+    const container = $('gr-results-list');
+    if (!container) return;
+    const groupF = ($('gr-filter-group') || {}).value || '';
+    const yearF  = ($('gr-filter-year')  || {}).value || '';
+    const search = ($('gr-search')       || {}).value || '';
+    const tab    = this._activeTab;
+    let list = [...this._results];
+    if (groupF) list = list.filter(r => r.groupId === groupF);
+    if (yearF)  list = list.filter(r => r.year === yearF);
+    if (search) list = list.filter(r => r.studentName.includes(search));
+    if (tab === 'first')  list = list.filter(r => r.session === 'الأولى');
+    if (tab === 'second') list = list.filter(r => r.session === 'الثانية');
+    if (tab === 'summer') list = list.filter(r => r.session === 'الدورة الصيفية');
+    if (tab === 'top') { container.style.display='none'; this._renderRanking(); return; }
+    container.style.display = 'block';
+    if (!list.length) {
+      container.innerHTML = `<div class="empty card" style="padding:50px"><i class="fas fa-clipboard-list"></i><p>لا توجد نتائج${search?' تطابق البحث':''}</p><button class="btn btn-p" style="margin-top:14px" onclick="GradesSystem.openEntryModal()"><i class="fas fa-plus"></i> إضافة أول نتيجة</button></div>`;
+      return;
+    }
+    list.sort((a, b) => (b.avg || 0) - (a.avg || 0));
+    container.innerHTML = list.map(r => {
+      const m = this.getMention(r.avg);
+      const c = this._sessionColor(r.session);
+      return `<div class="result-archive-card" onclick="GradesSystem.showResult('${r.id}')">
+        <div class="rac-avatar" style="background:${c}">${r.studentName[0]||'؟'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:800">${r.studentName}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">
+            ${r.groupName} &nbsp;·&nbsp; <span style="color:${c};font-weight:700">الدورة ${r.session}</span> &nbsp;·&nbsp; ${r.year}
+          </div>
+        </div>
+        <div style="text-align:center;min-width:60px">
+          <div class="rac-grade" style="color:${this._avgColor(r.avg)}">${r.avg!=null?r.avg.toFixed(2):'—'}</div>
+          <div style="font-size:10px;color:var(--text3)">/20</div>
+        </div>
+        <div style="min-width:80px;text-align:center"><span class="score-badge" style="background:${m.bg};color:${m.color}">${m.label}</span></div>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm" style="background:#f0f4f8;color:var(--primary);border:1px solid var(--border)" onclick="event.stopPropagation();GradesSystem.showResult('${r.id}')"><i class="fas fa-eye"></i></button>
+          <button class="btn btn-sm btn-o" onclick="event.stopPropagation();GradesSystem.openEditModal('${r.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:var(--danger);border:1px solid #fca5a5" onclick="event.stopPropagation();GradesSystem.deleteResult('${r.id}')"><i class="fas fa-trash"></i></button>
+          <button class="btn btn-sm" style="background:#25d366;color:#fff" onclick="event.stopPropagation();GradesSystem.sendWhatsAppResult('${r.id}')"><i class="fab fa-whatsapp"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+  },
 
-  $('dash-stats').innerHTML=`
-    <div class="stat-card clickable" onclick="showStatDetail('students')" title="عرض قائمة الطلبة" style="border-top:3px solid var(--primary-l)">
-      <div class="stat-ic ic-blue"><i class="fas fa-user-graduate"></i></div>
-      <div><div class="stat-h">${myS.length}</div><div class="stat-p">الطلبة</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:2px">${myS.filter(s=>s.gender==='ذكر').length}♂ · ${myS.filter(s=>s.gender==='أنثى').length}♀</div></div>
-    </div>
-    <div class="stat-card clickable" onclick="showStatDetail('groups')" style="border-top:3px solid var(--accent)">
-      <div class="stat-ic ic-green"><i class="fas fa-users"></i></div>
-      <div><div class="stat-h">${myG.length}</div><div class="stat-p">الحلقات</div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${periodSummary}</div></div>
-    </div>
-    <div class="stat-card clickable" onclick="showTodayAttDetail('present')" style="border-top:3px solid var(--gold)">
-      <div class="stat-ic ic-orange"><i class="fas fa-clipboard-check"></i></div>
-      <div><div class="stat-h">${presentToday+lateToday}</div><div class="stat-p">حاضرون اليوم</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:2px">${presentToday} حاضر · ${lateToday} متأخر</div></div>
-    </div>
-    <div class="stat-card clickable" onclick="showTodayAttDetail('absent')" style="border-top:3px solid #dc2626">
-      <div class="stat-ic" style="background:#fee2e2"><i class="fas fa-user-times" style="color:#dc2626"></i></div>
-      <div><div class="stat-h" style="color:#dc2626">${absentToday+excusedToday}</div><div class="stat-p">غائبون اليوم</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:2px">${absentToday} بدون عذر · ${excusedToday} بعذر</div></div>
-    </div>
-    <div class="stat-card clickable" onclick="showStatDetail('hifz')" style="border-top:3px solid var(--gold-l)">
-      <div class="stat-ic ic-gold"><i class="fas fa-quran"></i></div>
-      <div><div class="stat-h">${totalV.toLocaleString()}</div><div class="stat-p">آيات محفوظة</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:2px">${(totalV/6236*100).toFixed(1)}% من القرآن</div></div>
-    </div>
-    <div class="stat-card clickable" onclick="showStatDetail('hizb')" style="border-top:3px solid var(--primary)">
-      <div class="stat-ic ic-purple"><i class="fas fa-book-reader"></i></div>
-      <div><div class="stat-h">${totalHizb%1===0?totalHizb:totalHizb.toFixed(1)}</div><div class="stat-p">أحزاب محفوظة</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:2px">من أصل 60 حزباً</div></div>
+  // ── الترتيب ──────────────────────────────────────────────────
+  _renderRanking() {
+    const container = $('gr-ranking-section');
+    if (!container) return;
+    const top = [...this._results].sort((a,b)=>(b.avg||0)-(a.avg||0)).slice(0,20);
+    if (!top.length) { container.innerHTML='<div class="empty card" style="padding:40px"><i class="fas fa-trophy"></i><p>لا توجد نتائج بعد</p></div>'; return; }
+    const medals={0:'🥇',1:'🥈',2:'🥉'};
+    container.innerHTML=`<div class="card"><div class="card-head"><h3><i class="fas fa-trophy" style="color:var(--gold);margin-left:6px"></i>ترتيب الطلبة</h3><span class="bx bx-b">${top.length} نتيجة</span></div><div class="card-body">
+      ${top.map((r,i)=>{const m=this.getMention(r.avg);return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9">
+        <div style="width:28px;text-align:center;font-size:16px">${medals[i]||(i+1)}</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:${this._sessionColor(r.session)};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">${r.studentName[0]}</div>
+        <div style="flex:1"><div style="font-weight:700">${r.studentName}</div><div style="font-size:11px;color:var(--text3)">${r.groupName} · الدورة ${r.session} · ${r.year}</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:${this._avgColor(r.avg)}">${r.avg!=null?r.avg.toFixed(2):'—'}</div><div style="font-size:10px;color:var(--text3)">/20</div></div>
+        <span class="score-badge" style="background:${m.bg};color:${m.color}">${m.label}</span>
+        <button class="btn btn-sm" style="background:#f0f4f8;color:var(--primary);border:1px solid var(--border)" onclick="GradesSystem.showResult('${r.id}')"><i class="fas fa-eye"></i></button>
+      </div>`;}).join('')}
+    </div></div>`;
+  },
+
+  switchTab(tab, el) {
+    this._activeTab = tab;
+    document.querySelectorAll('#page-grades-inner .tab').forEach(t=>t.classList.remove('active'));
+    if(el) el.classList.add('active');
+    const rank=$('gr-ranking-section'), list=$('gr-results-list');
+    if(tab==='top'){ if(rank)rank.style.display='block'; if(list)list.style.display='none'; this._renderRanking(); }
+    else           { if(rank)rank.style.display='none';  if(list)list.style.display='block'; this._renderArchive(); }
+  },
+
+  // ── مودال الإدخال ────────────────────────────────────────────
+  openEntryModal(editId=null) {
+    this._editId=editId;
+    $('m-grade-entry-title').textContent=editId?'تعديل نتيجة دورة':'إدخال نتيجة دورة جديدة';
+    this.fillStudentSelects();
+    const now=new Date();
+    $('gr-date').value=now.toISOString().split('T')[0];
+    $('gr-year').value=`${now.getFullYear()-1}-${now.getFullYear()}`;
+    $('gr-notes').value='';
+    let existingData=null;
+    if(editId){
+      existingData=this._results.find(r=>r.id===editId);
+      if(existingData){
+        $('gr-student').value=existingData.studentId;
+        this.onStudentChange();
+        $('gr-level').value  =existingData.level||'تمهيدي';
+        $('gr-year').value   =existingData.year;
+        $('gr-session').value=existingData.session;
+        $('gr-date').value   =existingData.date;
+        $('gr-notes').value  =existingData.notes||'';
+      }
+    }
+    this._buildGradeInputs(existingData?.scores||{});
+    openM('m-grade-entry');
+    this._updateLiveSummary();
+  },
+
+  closeEntryModal() { closeM('m-grade-entry'); this._editId=null; },
+
+  onStudentChange() {
+    const sid=$('gr-student').value;
+    if(!sid){$('gr-group-name').value='';return;}
+    const student=S.students.find(s=>s.id===sid);
+    if(!student) return;
+    const group=S.groups.find(g=>g.id===student.group_id);
+    $('gr-group-name').value=group?.name||'—';
+    if(student.level) $('gr-level').value=student.level;
+  },
+
+  // ── بناء خانات المواد ────────────────────────────────────────
+  _buildGradeInputs(existingScores={}) {
+    const container=$('grade-inputs-list');
+    if(!container) return;
+    container.innerHTML=this._subjects.map(s=>{
+      const val=existingScores[s.id]!==undefined?existingScores[s.id]:'';
+      const hasVal=val!=='';
+      const wtd=hasVal?(parseFloat(val)*s.coef).toFixed(1):'—';
+      return`<div class="grade-input-row${hasVal?' has-grade':''}" id="gir-${s.id}">
+        <label>${s.name}</label>
+        <div class="coef-badge">×${s.coef}</div>
+        <input type="number" id="gr-score-${s.id}" min="0" max="${s.maxScore}" step="0.25" placeholder="—" value="${val}"
+          oninput="GradesSystem._onScoreInput('${s.id}',this.value)"
+          onchange="GradesSystem._clampScore(this,'${s.id}')">
+        <div class="result-cell" id="gr-result-${s.id}">${hasVal?`<span style="color:${this._scoreColor(parseFloat(val))}">${wtd}</span>`:'—'}</div>
+      </div>`;
+    }).join('');
+  },
+
+  _onScoreInput(sid, val) {
+    const s=this._subjects.find(x=>x.id===sid); if(!s) return;
+    const score=parseFloat(val);
+    const cell=$(`gr-result-${sid}`), row=$(`gir-${sid}`);
+    if(!isNaN(score)&&val!==''){
+      if(cell) cell.innerHTML=`<span style="color:${this._scoreColor(score)}">${(score*s.coef).toFixed(1)}</span>`;
+      if(row)  row.classList.add('has-grade');
+    }else{
+      if(cell) cell.textContent='—';
+      if(row)  row.classList.remove('has-grade');
+    }
+    this._updateLiveSummary();
+  },
+
+  _clampScore(inp, sid) {
+    const s=this._subjects.find(x=>x.id===sid);
+    let v=parseFloat(inp.value);
+    if(isNaN(v)||inp.value==='') return;
+    const max=s?.maxScore||20;
+    if(v<0) v=0; if(v>max) v=max;
+    inp.value=Math.round(v*4)/4;
+    this._onScoreInput(sid,inp.value);
+  },
+
+  _updateLiveSummary() {
+    const scores=this._collectScores();
+    const{avg,totalWeighted,maxTotal}=this.calcTotals(scores);
+    const mention=avg!=null?this.getMention(avg):null;
+    const avgEl=$('live-avg'), ttlEl=$('live-total'), maxEl=$('live-max'), mtnEl=$('live-mention');
+    if(ttlEl) ttlEl.textContent=totalWeighted.toFixed(1);
+    if(maxEl) maxEl.textContent=maxTotal;
+    if(avgEl){avgEl.textContent=avg!=null?avg.toFixed(2):'—'; if(avg!=null)avgEl.style.color=this._avgColor(avg);}
+    if(mtnEl&&mention){mtnEl.textContent=mention.label;mtnEl.style.background=mention.bg;mtnEl.style.color=mention.color;}
+  },
+
+  _collectScores() {
+    const scores={};
+    this._subjects.forEach(s=>{const inp=$(`gr-score-${s.id}`);scores[s.id]=inp?inp.value:'';});
+    return scores;
+  },
+
+  setNote(text) { const ta=$('gr-notes'); if(ta) ta.value=text; },
+
+  // ── حفظ النتيجة ──────────────────────────────────────────────
+  save() {
+    const sid=$('gr-student').value;
+    if(!sid){toast('اختر الطالب أولاً','warn');return;}
+    const year=$('gr-year').value.trim();
+    const session=$('gr-session').value;
+    if(!year){toast('أدخل السنة الدراسية','warn');return;}
+    const scores=this._collectScores();
+    const filled=Object.values(scores).some(v=>v!=='');
+    if(!filled){toast('أدخل نقطة واحدة على الأقل','warn');return;}
+    const{avg,totalWeighted,maxTotal}=this.calcTotals(scores);
+    const student=S.students.find(s=>s.id===sid);
+    const group=S.groups.find(g=>g.id===student?.group_id);
+    const result={
+      id:           this._editId||`gr_${Date.now()}`,
+      studentId:    sid,
+      studentName:  student?.name||'—',
+      studentPhone: student?.phone||'',
+      parentName:   student?.parent_name||'',
+      groupId:      student?.group_id||'',
+      groupName:    group?.name||'—',
+      level:        $('gr-level').value,
+      year, session,
+      date:         $('gr-date').value,
+      notes:        ($('gr-notes').value||'').trim(),
+      scores,
+      avg, totalWeighted, maxTotal,
+      subjects:     JSON.parse(JSON.stringify(this._subjects)),
+      mention:      this.getMention(avg),
+      createdAt:    new Date().toISOString(),
+    };
+    if(this._editId){
+      const idx=this._results.findIndex(r=>r.id===this._editId);
+      if(idx>=0) this._results[idx]=result; else this._results.unshift(result);
+    }else{
+      this._results.unshift(result);
+    }
+    this._saveResults();
+    this._currentResult=result;
+    this.closeEntryModal();
+    toast(`✅ تم حفظ نتيجة ${result.studentName}`,'ok');
+    this._renderPage();
+    setTimeout(()=>this.showResult(result.id),400);
+  },
+
+  // ── معاينة بدون حفظ ──────────────────────────────────────────
+  preview() {
+    const sid=$('gr-student').value;
+    if(!sid){toast('اختر الطالب أولاً','warn');return;}
+    const scores=this._collectScores();
+    const{avg,totalWeighted,maxTotal}=this.calcTotals(scores);
+    const student=S.students.find(s=>s.id===sid);
+    const group=S.groups.find(g=>g.id===student?.group_id);
+    const tmp={
+      id:'preview', studentId:sid, studentName:student?.name||'—',
+      studentPhone:student?.phone||'', parentName:student?.parent_name||'',
+      groupId:student?.group_id||'', groupName:group?.name||'—',
+      level:$('gr-level').value, year:$('gr-year').value, session:$('gr-session').value,
+      date:$('gr-date').value, notes:($('gr-notes').value||'').trim(),
+      scores, avg, totalWeighted, maxTotal,
+      subjects:JSON.parse(JSON.stringify(this._subjects)),
+      mention:this.getMention(avg),
+    };
+    this._currentResult=tmp;
+    const sheet=$('modal-result-sheet');
+    if(sheet) sheet.innerHTML=this.buildSheet(tmp);
+    closeM('m-grade-entry');
+    openM('m-result-preview');
+  },
+
+  showResult(id) {
+    const r=this._results.find(x=>x.id===id);
+    if(!r) return;
+    this._currentResult=r;
+    const sheet=$('modal-result-sheet');
+    if(sheet) sheet.innerHTML=this.buildSheet(r);
+    openM('m-result-preview');
+  },
+
+  openEditModal(id) { this.openEntryModal(id); },
+
+  deleteResult(id) {
+    if(!confirm('هل تريد حذف هذه النتيجة نهائياً؟')) return;
+    this._results=this._results.filter(r=>r.id!==id);
+    this._saveResults();
+    toast('تم الحذف','ok');
+    this._renderPage();
+  },
+
+  _calcStats() {
+    const all=this._results, total=all.length;
+    const excellent=all.filter(r=>r.avg>=18).length;
+    const valid=all.filter(r=>r.avg!=null);
+    const avgAll=valid.length?(valid.reduce((a,r)=>a+r.avg,0)/valid.length).toFixed(2):'—';
+    return{total,excellent,avgAll};
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  //  buildSheet — ورقة النتيجة (نسخة رقمية من الورقة الأصلية)
+  // ══════════════════════════════════════════════════════════════
+  buildSheet(r) {
+    if(!r) return '';
+    const subjs=r.subjects||this._subjects;
+    const mention=r.mention||this.getMention(r.avg);
+    const dateF=r.date?new Date(r.date).toLocaleDateString('ar-MA',{day:'2-digit',month:'long',year:'numeric'}):'—';
+
+    const tableRows=subjs.map(s=>{
+      const sc=parseFloat(r.scores?.[s.id]);
+      const hasVal=!isNaN(sc)&&r.scores?.[s.id]!=='';
+      const wtd=hasVal?(sc*s.coef).toFixed(1):'—';
+      const sc_color=hasVal?(sc>=16?'#166534':sc>=12?'#1a3c6e':sc>=10?'#92400e':'#991b1b'):'#9ca3af';
+      const sc_bg=hasVal?(sc>=16?'#f0fdf4':sc>=12?'#eff6ff':sc>=10?'#fffbf0':'#fef2f2'):'#f9fafb';
+      return`<tr>
+        <td class="td-name">${s.name}</td>
+        <td style="text-align:center;font-weight:700">${s.coef}</td>
+        <td style="background:${sc_bg}"><span class="td-score" style="color:${sc_color}">${hasVal?sc.toFixed(2):'—'}</span></td>
+        <td class="td-total">${wtd}</td>
+      </tr>`;
+    }).join('');
+
+    return`<div class="result-sheet">
+      <div class="rs-frame-outer"></div><div class="rs-frame-inner"></div>
+      <div class="rs-content">
+        <!-- رأس الصفحة -->
+        <div class="rs-header">
+          <img class="rs-logo" src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار" onerror="this.style.opacity=.15">
+          <div class="rs-header-center">
+            <div class="rs-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+            <div class="rs-assoc-name">جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية<br>دار القرآن الكريم — الوفاق الكبير، بنسركاو</div>
+          </div>
+          <img class="rs-logo" src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار" onerror="this.style.opacity=.15">
+        </div>
+        <!-- عنوان النتيجة -->
+        <div style="text-align:center;margin:8px 0">
+          <span class="rs-title">نتيجة الدورة <span class="rs-session-badge">${r.session}</span></span>
+          <div style="font-size:9pt;color:#718096;margin-top:4px">${r.year}</div>
+        </div>
+        <!-- معلومات الطالب -->
+        <div class="rs-student-info">
+          <div class="rs-info-row"><span class="rs-info-label">اسم الطالب:</span><span class="rs-info-val">${r.studentName}</span></div>
+          <div class="rs-info-row"><span class="rs-info-label">الحلقة:</span><span class="rs-info-val">${r.groupName}</span></div>
+          <div class="rs-info-row"><span class="rs-info-label">المستوى:</span><span class="rs-info-val">${r.level||'—'}</span></div>
+          <div class="rs-info-row"><span class="rs-info-label">التاريخ:</span><span class="rs-info-val">${dateF}</span></div>
+        </div>
+        <!-- جدول المواد -->
+        <table class="rs-table">
+          <thead><tr>
+            <th style="width:38%;text-align:right">المادة</th>
+            <th style="width:12%">المعامل</th>
+            <th style="width:22%">النقطة /20</th>
+            <th style="width:28%">النقطة × المعامل</th>
+          </tr></thead>
+          <tbody>
+            ${tableRows}
+            <tr class="rs-tfoot">
+              <td colspan="3" style="text-align:right;padding-right:14px">المجموع العام</td>
+              <td>${r.totalWeighted!=null?r.totalWeighted.toFixed(1):'—'} / ${r.maxTotal||'—'}</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- بطاقة الملخص -->
+        <div class="rs-summary">
+          <div class="rs-sum-box"><div class="val">${r.totalWeighted!=null?r.totalWeighted.toFixed(1):'—'}</div><div class="lbl">مجموع النقاط</div></div>
+          <div class="rs-sum-box"><div class="val">${r.maxTotal||'—'}</div><div class="lbl">المجموع الأقصى</div></div>
+          <div class="rs-sum-box highlight"><div class="val">${r.avg!=null?r.avg.toFixed(2):'—'}</div><div class="lbl">المعدل /20</div></div>
+          <div class="rs-sum-box" style="border-color:${mention.color};background:${mention.bg}"><div class="val" style="font-size:13pt;color:${mention.color}">${mention.label}</div><div class="lbl" style="color:${mention.color}">التقدير</div></div>
+        </div>
+        <!-- التقدير -->
+        <div class="rs-mention-row">
+          <div class="rs-mention-box">
+            <span class="rs-mention-label">تقدير المجلس التعليمي:</span>
+            <span class="rs-mention-val">${mention.label}</span>
+          </div>
+        </div>
+        <!-- الملاحظات والقرار -->
+        <div class="rs-notes-row">
+          <div class="rs-notes-box">
+            <div class="rs-notes-title">ملاحظات الأستاذ</div>
+            <div class="rs-notes-text">${r.notes||'—'}</div>
+          </div>
+          <div class="rs-notes-box">
+            <div class="rs-notes-title">قرار المجلس</div>
+            <div class="rs-notes-text">${r.avg>=10?'<span style="color:#166534;font-weight:700">✓ مقبول</span> — ينتقل للمستوى الموالي':'<span style="color:#991b1b;font-weight:700">✗ غير مقبول</span> — يُعيد المستوى ذاته'}</div>
+          </div>
+        </div>
+        <!-- التوقيعات -->
+        <div class="rs-sigs">
+          <div class="rs-sig-box"><div class="rs-sig-title">إمضاء الأستاذ</div><div class="rs-seal">ختم</div></div>
+          <div class="rs-sig-box"><div class="rs-sig-title">إمضاء المسؤول عن القسم</div><div class="rs-seal">ختم</div></div>
+          <div class="rs-sig-box"><div class="rs-sig-title">ختم الجمعية</div><div class="rs-seal"><span>دار القرآن</span><span>الوفاق</span></div></div>
+        </div>
+        <!-- الحديث النبوي -->
+        <div class="rs-footer">
+          <div class="rs-hadith">${this.HADITH}</div>
+          <div class="rs-hadith-ref">${this.HADITH_REF}</div>
+          <div class="rs-footer-info">جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية — الوفاق الكبير، بنسركاو، المغرب</div>
+        </div>
+      </div>
     </div>`;
+  },
 
-  // رسم بياني تفاعلي
-  const days7=[];
-  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().split('T')[0];
-    const dayAtt=S.attendance.filter(a=>a.date===ds&&myGroupIds.has(a.group_id));
-    days7.push({l:d.toLocaleDateString('ar',{weekday:'short'}),ds,present:dayAtt.filter(a=>a.status==='حاضر').length,absent:dayAtt.filter(a=>a.status==='غائب'||a.status==='بعذر').length});}
-  const mx=Math.max(...days7.map(d=>d.present+d.absent),1);
-  $('att-chart').innerHTML=days7.map(d=>`
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .15s"
-         onclick="showDayAttDetail('${d.ds}')" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''">
-      <span style="font-size:9px;font-weight:700;color:${d.present>0?'var(--primary)':'var(--text3)'}">${d.present}</span>
-      <div style="width:100%;border-radius:5px 5px 0 0;overflow:hidden;min-height:3px" title="${d.present} حاضر · ${d.absent} غائب">
-        ${d.absent?`<div style="background:#fca5a5;height:${Math.max(d.absent/(mx)*60,2)}px"></div>`:''}
-        <div style="background:var(--primary);height:${Math.max(d.present/mx*60,d.present?3:1)}px"></div>
-      </div>
-      <span style="font-size:8px;color:var(--text3)">${d.l}</span>
-      ${d.ds===todayStr?`<span style="font-size:7px;background:var(--primary);color:#fff;border-radius:3px;padding:1px 3px">اليوم</span>`:''}
-    </div>`).join('');
+  // ══════════════════════════════════════════════════════════════
+  //  طباعة وإرسال
+  // ══════════════════════════════════════════════════════════════
+  printResult() {
+    if(!this._currentResult){toast('لا توجد نتيجة للطباعة','warn');return;}
+    const w=window.open('','_blank');
+    const css=this._getPrintCSS();
+    w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Tajawal',sans-serif}${css}</style>
+</head><body>${this.buildSheet(this._currentResult)}</body></html>`);
+    w.document.close();
+    w.onload=()=>{w.focus();w.print();};
+  },
 
-  // تنبيهات قابلة للنقر
-  const alerts=[];
-  const noAtt=myG.filter(g=>!S.attendance.some(a=>a.date===todayStr&&a.group_id===g.id));
-  noAtt.forEach(g=>alerts.push(`<div class="alert alert-w" style="cursor:pointer;transition:opacity .15s" onclick="nav('attendance');setTimeout(()=>{$('att-group').value='${g.id}';loadAttList()},300)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><i class="fas fa-clock"></i><div><strong>${g.name}</strong> — لم يُسجَّل الحضور <span style="font-size:11px;text-decoration:underline;color:var(--primary)">تسجيل الآن ←</span></div></div>`));
-  const highAbs=myS.filter(s=>S.attendance.filter(a=>a.student_id===s.id&&(a.status==='غائب'||a.status==='بعذر')).length>=5).slice(0,3);
-  highAbs.forEach(s=>{const cnt=S.attendance.filter(a=>a.student_id===s.id&&(a.status==='غائب'||a.status==='بعذر')).length;
-    alerts.push(`<div class="alert alert-d" style="cursor:pointer" onclick="openSDetail('${s.id}')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><i class="fas fa-user-times"></i><div><strong>${s.name}</strong> — ${cnt} غياب مسجل <span style="font-size:11px;text-decoration:underline">عرض الملف ←</span></div></div>`);});
-  $('dash-alerts').innerHTML=alerts.join('')||'<div class="alert alert-s"><i class="fas fa-check-circle"></i>لا توجد تنبيهات — أداء ممتاز 🎉</div>';
+  _getPrintCSS(){return`.result-sheet{width:210mm;min-height:295mm;background:#fff;font-family:'Tajawal',sans-serif;direction:rtl;position:relative;overflow:hidden;padding:14mm 18mm 10mm}.rs-frame-outer{position:absolute;inset:8mm;border:3px double #1a3c6e;border-radius:4px}.rs-frame-inner{position:absolute;inset:11mm;border:1px solid #1a3c6e;border-radius:3px;opacity:.4}.rs-content{position:relative;z-index:1}.rs-header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a3c6e;padding-bottom:8px;margin-bottom:10px}.rs-header-center{text-align:center;flex:1}.rs-logo{width:70px;height:70px;border-radius:50%;border:2px solid #1a3c6e;object-fit:cover}.rs-bismillah{font-family:'Amiri',serif;font-size:13pt;color:#1a3c6e;margin-bottom:3px}.rs-assoc-name{font-size:10pt;font-weight:700;color:#1a3c6e;line-height:1.4}.rs-title{font-family:'Amiri',serif;font-size:16pt;font-weight:700;color:#1a3c6e;border:1px solid #1a3c6e;padding:5px 16px;border-radius:4px;background:#f0f4f8;display:inline-block}.rs-session-badge{font-size:11pt;font-weight:700;color:#d97706}.rs-student-info{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;background:#f0f4f8;border:1px solid #d1dae6;border-radius:8px;padding:10px 14px;margin-bottom:10px}.rs-info-row{display:flex;align-items:center;gap:6px;font-size:10pt}.rs-info-label{font-weight:800;color:#1a3c6e;min-width:70px;flex-shrink:0}.rs-info-val{border-bottom:1px dotted #1a3c6e;flex:1;padding-bottom:1px}.rs-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10pt}.rs-table th{background:#1a3c6e;color:#fff;padding:7px 10px;text-align:center;font-weight:700;border:1px solid #1a3c6e;-webkit-print-color-adjust:exact;print-color-adjust:exact}.rs-table td{border:1px solid #c8d4e5;padding:6px 10px;text-align:center;vertical-align:middle}.rs-table .td-name{text-align:right;font-weight:600;background:#f7f9fc}.rs-table .td-score{font-weight:800;font-size:11pt}.rs-table .td-total{font-weight:800;color:#1a3c6e}.rs-table tr:nth-child(even) td{background:#f0f6ff}.rs-table tr:nth-child(even) td.td-name{background:#e8f0fb}.rs-tfoot td{background:#1a3c6e!important;color:#fff;font-weight:800;font-size:10.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}.rs-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.rs-sum-box{border:1.5px solid #c8d4e5;border-radius:8px;padding:8px 10px;text-align:center;background:#f7f9fc}.rs-sum-box .val{font-size:17pt;font-weight:900;color:#1a3c6e;line-height:1}.rs-sum-box .lbl{font-size:8.5pt;color:#4a5568;margin-top:3px}.rs-sum-box.highlight{background:#1a3c6e;border-color:#1a3c6e;-webkit-print-color-adjust:exact;print-color-adjust:exact}.rs-sum-box.highlight .val,.rs-sum-box.highlight .lbl{color:#fff}.rs-mention-row{display:flex;align-items:center;justify-content:center;margin-bottom:10px}.rs-mention-box{display:flex;align-items:center;gap:8px;border:2px solid #1a3c6e;border-radius:8px;padding:7px 20px;background:#f0f4f8}.rs-mention-label{font-size:10pt;font-weight:700;color:#1a3c6e}.rs-mention-val{font-size:13pt;font-weight:900;color:#d97706}.rs-notes-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}.rs-notes-box{border:1px solid #c8d4e5;border-radius:8px;padding:8px 12px;min-height:52px}.rs-notes-title{font-size:9.5pt;font-weight:800;color:#1a3c6e;border-bottom:1px solid #c8d4e5;padding-bottom:4px;margin-bottom:5px}.rs-notes-text{font-size:9.5pt;color:#374151;line-height:1.6}.rs-sigs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px}.rs-sig-box{border:1px solid #c8d4e5;border-radius:6px;padding:8px;text-align:center;min-height:60px}.rs-sig-title{font-size:9pt;font-weight:800;color:#1a3c6e;margin-bottom:20px}.rs-seal{width:55px;height:55px;border:2px solid #c8d4e5;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;opacity:.25;font-size:9pt;color:#1a3c6e;flex-direction:column;gap:2px}.rs-footer{border-top:2px solid #1a3c6e;padding-top:7px;text-align:center}.rs-hadith{font-family:'Amiri',serif;font-size:10.5pt;color:#1a3c6e;line-height:1.7;margin-bottom:3px}.rs-hadith-ref{font-size:8.5pt;color:#718096}.rs-footer-info{font-size:8.5pt;color:#4a5568;margin-top:3px}.score-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}`;},
 
-  // أفضل الطلبة — قابل للنقر بالكامل
-  const top5=myS.map(s=>({...s,stars:getStars(s.id),v:getTotalV(s.id),att:getAttRate(s.id),hizb:calcHizb(s.id)})).sort((a,b)=>b.stars-a.stars).slice(0,5);
-  $('top-students').innerHTML=top5.length?`<div style="display:flex;flex-direction:column;gap:6px">${top5.map((s,i)=>{
-    const g=S.groups.find(x=>x.id===s.group_id);const medals=['🥇','🥈','🥉'];
-    const hDisp=s.hizb>0?(s.hizb%1===0?s.hizb:s.hizb.toFixed(1)):0;
-    return`<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:${i===0?'#fef9c3':'#f8fafc'};border:1px solid ${i===0?'#fde68a':'var(--border)'};cursor:pointer;transition:all .2s"
-           onclick="openSDetail('${s.id}')" onmouseover="this.style.transform='translateX(-3px)';this.style.boxShadow='0 4px 12px rgba(26,60,110,.12)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <div style="font-size:18px;width:26px">${medals[i]||i+1}</div>
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">${s.name[0]}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
-      <div style="font-size:10px;color:var(--text3)">${g?.name||'—'} · ${hDisp} حزب · ${s.att}% حضور</div></div>
-      <div style="text-align:center;flex-shrink:0"><div style="font-size:15px;font-weight:800;color:#d97706">${s.stars}⭐</div><div style="font-size:9px;color:var(--text3)">${s.v.toLocaleString()} آية</div></div>
-    </div>`;}).join('')}
-    <button onclick="nav('reports')" style="width:100%;margin-top:4px;padding:8px;background:var(--bg);border:1.5px dashed var(--border);border-radius:8px;font-family:Tajawal,sans-serif;font-size:12px;color:var(--text3);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--primary-l)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">
-      عرض التقارير الكاملة ←
-    </button></div>`:'<div class="empty"><i class="fas fa-star"></i><p>لا توجد بيانات</p></div>';
+  sendWhatsApp() { if(this._currentResult) this._sendWAResult(this._currentResult); },
+  sendWhatsAppResult(id) { const r=this._results.find(x=>x.id===id); if(r) this._sendWAResult(r); },
 
-  // آخر الأنشطة — قابلة للنقر
-  const recent=S.recitations.filter(r=>myStudentIds.has(r.student_id)).slice(0,6);
-  const GC={'جيد جداً':'#0891b2','جيد':'#2563eb','حسن':'#d97706','ضعيف':'#ea580c','لم يحفظ':'#dc2626'};
-  $('recent-act').innerHTML=recent.length?`<div style="display:flex;flex-direction:column;gap:5px">${recent.map(r=>{
-    const s=S.students.find(x=>x.id===r.student_id);
-    const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);
-    return`<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .15s" onclick="openSDetail('${r.student_id}')" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''">
-      <div style="width:26px;height:26px;border-radius:7px;background:${r.type==='حفظ جديد'?'#dcfce7':'#dbeafe'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <i class="fas ${r.type==='حفظ جديد'?'fa-book-quran':'fa-redo'}" style="color:${r.type==='حفظ جديد'?'var(--accent)':'var(--info)'};font-size:10px"></i>
-      </div>
-      <div style="flex:1;min-width:0"><span style="font-weight:700">${s?.name||'—'}</span><span style="color:var(--text3)"> · ${fs?.name||'—'}→${ts?.name||'—'}</span></div>
-      ${r.grade?`<span style="font-size:10px;font-weight:700;color:${GC[r.grade]||'#666'};flex-shrink:0">${r.grade}</span>`:''}
-      <div style="color:var(--text3);font-size:9px;flex-shrink:0">${fmtDate(r.date)}</div>
-    </div>`;}).join('')}</div>`:'<div class="empty"><i class="fas fa-history"></i><p>لا توجد أنشطة</p></div>';
+  _sendWAResult(r) {
+    if(!r.studentPhone){toast('لا يوجد رقم هاتف لهذا الطالب','warn');return;}
+    const m=r.mention||this.getMention(r.avg);
+    const msg=`السلام عليكم ورحمة الله وبركاته 🌷\n\nيسرنا إطلاعكم على نتيجة ابنكم/ابنتكم:\n👤 ${r.studentName}\n\n📘 الحلقة: ${r.groupName}\n📅 الدورة ${r.session} — ${r.year}\n\n━━━━━━━━━━━━━━━\n📊 النتيجة النهائية\n━━━━━━━━━━━━━━━\n\n📈 المعدل: ${r.avg!=null?r.avg.toFixed(2):'—'} / 20\n🏅 التقدير: ${m.label}\n📊 المجموع: ${r.totalWeighted!=null?r.totalWeighted.toFixed(1):'—'} / ${r.maxTotal||'—'}\n\n━━━━━━━━━━━━━━━\n${r.notes?`📝 ملاحظة الأستاذ:\n${r.notes}\n\n━━━━━━━━━━━━━━━\n`:''}\nنسأل الله أن يبارك في ابنكم ويجعله من حفاظ كتابه.\n\n📍 دار القرآن الكريم — جمعية الوفاق\nالوفاق الكبير، بنسركاو، المغرب`;
+    let phone=r.studentPhone.replace(/\D/g,'');
+    if(phone.startsWith('0')) phone='212'+phone.substring(1);
+    else if(!phone.startsWith('212')) phone='212'+phone;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  //  إعدادات المواد
+  // ══════════════════════════════════════════════════════════════
+  openSubjectsConfig() { this._renderSubjectsConfig(); openM('m-subjects-config'); },
+
+  _renderSubjectsConfig() {
+    const container=$('subjects-config-list'); if(!container) return;
+    container.innerHTML=this._subjects.map(s=>`
+      <div class="subject-config-row" id="scr-${s.id}">
+        <div class="fg"><label style="font-size:11px">اسم المادة</label><input id="sname-${s.id}" type="text" value="${s.name}" placeholder="اسم المادة"></div>
+        <div class="fg"><label style="font-size:11px">المعامل</label><input id="scoef-${s.id}" type="number" min="1" max="10" step="1" value="${s.coef}" style="text-align:center;font-size:15px;font-weight:800"></div>
+        <div class="fg"><label style="font-size:11px">أقصى نقطة</label><input id="smax-${s.id}" type="number" min="10" max="100" step="10" value="${s.maxScore}" style="text-align:center;font-size:15px;font-weight:800"></div>
+        <button class="btn btn-sm" style="background:#fee2e2;color:var(--danger);border:1px solid #fca5a5;align-self:end" onclick="GradesSystem._deleteSubject('${s.id}')"><i class="fas fa-trash"></i></button>
+      </div>`).join('');
+  },
+
+  addSubject() {
+    const id=`gs_${Date.now()}`;
+    this._subjects.push({id,name:'مادة جديدة',coef:1,maxScore:20});
+    this._renderSubjectsConfig();
+  },
+
+  _deleteSubject(id) {
+    if(this._subjects.length<=1){toast('يجب أن تبقى مادة واحدة على الأقل','warn');return;}
+    if(!confirm('حذف هذه المادة؟')) return;
+    this._subjects=this._subjects.filter(s=>s.id!==id);
+    this._renderSubjectsConfig();
+  },
+
+  saveSubjectsConfig() {
+    const newSubs=[];
+    for(const s of this._subjects){
+      const name=($(`sname-${s.id}`)||{}).value?.trim();
+      const coef=parseInt(($(`scoef-${s.id}`)||{}).value);
+      const max =parseInt(($(`smax-${s.id}`) ||{}).value);
+      if(!name){toast('أدخل اسم المادة','warn');return;}
+      if(isNaN(coef)||coef<1){toast('المعامل يجب أن يكون 1 على الأقل','warn');return;}
+      newSubs.push({...s,name,coef,maxScore:isNaN(max)?20:max});
+    }
+    this._subjects=newSubs;
+    this._saveSubjectsLocal();
+    closeM('m-subjects-config');
+    toast('✅ تم حفظ إعدادات المواد','ok');
+    this._renderPage();
+  },
+
+  // ── ألوان مساعدة ────────────────────────────────────────────
+  _avgColor(avg)      { if(avg==null) return'var(--text3)'; if(avg>=16) return'#16a34a'; if(avg>=12) return'#1a3c6e'; if(avg>=10) return'#d97706'; return'#dc2626'; },
+  _scoreColor(sc)     { if(sc>=16) return'#166534'; if(sc>=12) return'#1a3c6e'; if(sc>=10) return'#92400e'; return'#991b1b'; },
+  _sessionColor(s)    { if(s==='الأولى') return'#1565c0'; if(s==='الثانية') return'#16a34a'; if(s==='الدورة الصيفية') return'#d97706'; return'#7c3aed'; },
 };
+// إغلاق المودالات عند الضغط خارجها — تُضاف للموجودة
+document.querySelectorAll('#m-grade-entry,#m-subjects-config,#m-result-preview').forEach(o=>{
+  o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});
+});
 
-// ═══ Override nav لدعم صفحة الفترات ═══
-const _origNav2=nav;
-nav=function(page){
-  if(page==='period-stats'){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    const pg=document.getElementById('page-period-stats');
-    if(pg)pg.classList.add('active');
-    document.getElementById('nav-period-stats')?.classList.add('active');
-    $('breadcrumb-txt').textContent='إحصائيات الفترات الزمنية';
-    const from=$('period-from'),to=$('period-to');
-    if(from&&!from.value){const d=new Date();d.setMonth(d.getMonth()-1);from.value=d.toISOString().split('T')[0];}
-    if(to&&!to.value)to.value=today();
-    renderAttendanceByPeriod();
-    closeSidebar();
-  }else{_origNav2(page);}
-};
-
-// ═══ Override showApp لتهيئة الصفحة الجديدة ═══
-const _origShowApp2=showApp;
-showApp=function(){_origShowApp2();setTimeout(initPeriodStatsPage,600);};
-
-console.log('✅ تحديثات الفترات الزمنية + التفاعلية الكاملة — تم تحميلها');
 </script>
 </body>
 </html>
