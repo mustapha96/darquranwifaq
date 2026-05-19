@@ -1948,6 +1948,7 @@ async function doLogout(){
   S.user=null;S.profile=null;S.groups=[];S.teachers=[];S.students=[];
   S.attendance=[];S.recitations=[];S.holidays=[];S.finance=[];S.manualStars=[];S._certs=[];
   EXAMS_DB=[];
+  _RESULTS_CACHE=null;_SUBJECTS_CACHE=null;
   $('app').style.display='none';
   $('login-page').style.display='none';
   $('landing').style.display='block';
@@ -6515,27 +6516,85 @@ const DEFAULT_SUBJECTS = [
 ];
 
 // مفتاح localStorage للمواد والنتائج
-const SUBJ_KEY    = 'wafaq_subjects';
-const RESULTS_KEY = 'wafaq_results';
+// ═══ النتائج والمواد — Supabase ═══
+let _SUBJECTS_CACHE = null;
+let _RESULTS_CACHE  = null;
 
-function loadSubjects() {
+// ── المواد ──
+async function loadSubjects() {
+  if (_SUBJECTS_CACHE) return _SUBJECTS_CACHE;
   try {
-    const raw = localStorage.getItem(SUBJ_KEY);
-    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
-  } catch { return JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)); }
+    const { data, error } = await db.from('subjects_config').select('subjects').eq('id','default').single();
+    if (!error && data?.subjects) { _SUBJECTS_CACHE = data.subjects; return _SUBJECTS_CACHE; }
+  } catch {}
+  _SUBJECTS_CACHE = JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+  return _SUBJECTS_CACHE;
 }
-function saveSubjects(subjs) {
-  localStorage.setItem(SUBJ_KEY, JSON.stringify(subjs));
+function loadSubjectsSync() {
+  return _SUBJECTS_CACHE || JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
 }
-function loadResults() {
+async function saveSubjects(subjs) {
+  _SUBJECTS_CACHE = subjs;
+  try { await db.from('subjects_config').upsert({ id: 'default', subjects: subjs }, { onConflict: 'id' }); }
+  catch (e) { console.error('saveSubjects:', e.message); }
+}
+
+// ── النتائج ──
+async function loadResults() {
+  if (_RESULTS_CACHE) return _RESULTS_CACHE;
   try {
-    const raw = localStorage.getItem(RESULTS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+    const isAdminOrSup = S.profile?.role === 'admin' || S.profile?.role === 'supervisor';
+    let q = db.from('session_results').select('*').order('created_at', { ascending: false });
+    if (!isAdminOrSup && S.profile?.id) q = q.eq('teacher_id', S.profile.id);
+    const { data, error } = await q;
+    if (!error && data) {
+      _RESULTS_CACHE = data.map(r => ({
+        ...r,
+        totalWeighted: r.total_weighted,
+        totalCoef: r.total_coef,
+        generalNote: r.general_note,
+        notes: typeof r.notes === 'string' ? JSON.parse(r.notes) : (r.notes || {})
+      }));
+      return _RESULTS_CACHE;
+    }
+  } catch (e) { console.error('loadResults:', e.message); }
+  _RESULTS_CACHE = [];
+  return _RESULTS_CACHE;
 }
-function saveResults(results) {
-  localStorage.setItem(RESULTS_KEY, JSON.stringify(results));
+function loadResultsSync() { return _RESULTS_CACHE || []; }
+
+async function saveOneResult(record) {
+  const row = {
+    id:             record.id,
+    student_id:     record.student_id,
+    student_name:   record.student_name,
+    level:          record.level || '',
+    session:        record.session,
+    year:           record.year,
+    notes:          record.notes,
+    avg:            record.avg,
+    appre:          record.appre,
+    total_weighted: record.totalWeighted,
+    total_coef:     record.totalCoef,
+    general_note:   record.generalNote || '',
+    teacher_id:     S.profile?.id || null,
+  };
+  const { error } = await db.from('session_results').upsert(row, { onConflict: 'id' });
+  if (error) throw error;
+  if (_RESULTS_CACHE) {
+    const fullRec = { ...row, totalWeighted: row.total_weighted, totalCoef: row.total_coef, generalNote: row.general_note, created_at: record.created_at || new Date().toISOString() };
+    const idx = _RESULTS_CACHE.findIndex(r => r.id === record.id);
+    if (idx >= 0) _RESULTS_CACHE[idx] = fullRec;
+    else _RESULTS_CACHE.unshift(fullRec);
+  }
 }
+async function deleteOneResult(rid) {
+  const { error } = await db.from('session_results').delete().eq('id', rid);
+  if (error) throw error;
+  if (_RESULTS_CACHE) _RESULTS_CACHE = _RESULTS_CACHE.filter(r => r.id !== rid);
+}
+function clearResultsCache() { _RESULTS_CACHE = null; }
+function clearSubjectsCache() { _SUBJECTS_CACHE = null; }
 
 // ═══ التقدير حسب المعدل ═══
 function getAppreciation(avg) {
@@ -6657,10 +6716,10 @@ function initResultsSystem() {
 }
 
 // ═══ عرض قائمة النتائج ═══
-function renderResultsList() {
+async function renderResultsList() {
   const myG     = myGroups();
   const myS     = myStudents();
-  const allRes  = loadResults();
+  const allRes  = await loadResults();
   const gf      = document.getElementById('res-filter-group')?.value   || '';
   const sf      = document.getElementById('res-filter-session')?.value  || '';
   const yf      = document.getElementById('res-filter-year')?.value     || '';
@@ -6735,9 +6794,9 @@ function openEditResult(rid) {
   buildResultModal(rid);
 }
 
-function buildResultModal(rid, prefillStudentId) {
-  const subjects = loadSubjects();
-  const allResults = loadResults();
+async function buildResultModal(rid, prefillStudentId) {
+  const subjects = await loadSubjects();
+  const allResults = await loadResults();
   const editing  = rid ? allResults.find(r => r.id === rid) : null;
   const myS = myStudents();
   const myG = myGroups();
@@ -6871,7 +6930,7 @@ function renderResultSubjectsTable(subjects, savedNotes) {
         <input type="number" id="note-${s.id}" min="0" max="${s.maxNote||20}" step="0.25"
           value="${savedNote}"
           style="width:70px;padding:6px;border:1.5px solid var(--border);border-radius:7px;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;text-align:center;outline:none"
-          oninput="updateResultCalc()" onchange="clampResultNote(this,${s.maxNote||20})">
+          oninput="updateResultCalcSync()" onchange="clampResultNote(this,${s.maxNote||20})">
       </td>
       <td id="result-${s.id}" style="text-align:center;font-size:13px;font-weight:700;color:var(--text3)">—</td>
       <td id="appre-${s.id}"  style="text-align:center;font-size:11px;color:var(--text3)">—</td>
@@ -6885,8 +6944,8 @@ function clampResultNote(inp, max) {
   else if (v > max)       inp.value = max;
 }
 
-function updateResultCalc() {
-  const subjects = loadSubjects();
+async function updateResultCalc() {
+  const subjects = await loadSubjects();
   const notes = {};
   subjects.forEach(s => {
     const el = document.getElementById(`note-${s.id}`);
@@ -6925,7 +6984,7 @@ function onResultStudentChange() {
 }
 
 // ═══ حفظ النتيجة ═══
-function saveResult(editId) {
+async function saveResult(editId) {
   const sid     = document.getElementById('re-student')?.value;
   const session = document.getElementById('re-session')?.value;
   const year    = document.getElementById('re-year')?.value;
@@ -6933,7 +6992,7 @@ function saveResult(editId) {
   if (!session) { toast('اختر الدورة','warn');   return; }
   if (!year)    { toast('اختر السنة','warn');    return; }
 
-  const subjects = loadSubjects();
+  const subjects = loadSubjectsSync();
   const notes = {};
   subjects.forEach(s => {
     const el = document.getElementById(`note-${s.id}`);
@@ -6957,33 +7016,34 @@ function saveResult(editId) {
     created_at:    editId ? undefined : Date.now(),
   };
 
-  const allResults = loadResults();
-  if (editId) {
-    const idx = allResults.findIndex(r => r.id === editId);
-    if (idx >= 0) { record.created_at = allResults[idx].created_at; allResults[idx] = record; }
-    else allResults.push(record);
-  } else {
-    allResults.push(record);
-  }
-  saveResults(allResults);
-  closeM('m-result-entry');
-  toast(`✅ تم حفظ نتيجة ${student?.name} — معدل: ${avg.toFixed(2)}`,'ok');
-  renderResultsList();
+  try {
+    if (editId) {
+      const existing = _RESULTS_CACHE?.find(r => r.id === editId);
+      record.created_at = existing?.created_at;
+    } else {
+      record.created_at = new Date().toISOString();
+    }
+    await saveOneResult(record);
+    closeM('m-result-entry');
+    toast(`✅ تم حفظ نتيجة ${student?.name} — معدل: ${avg.toFixed(2)}`,'ok');
+    renderResultsList();
+  } catch(e) { toast('خطأ في الحفظ: ' + e.message, 'err'); }
 }
 
-function deleteResult(rid) {
-  if (!confirm('هل تريد حذف هذه النتيجة؟')) return;
-  const list = loadResults().filter(r => r.id !== rid);
-  saveResults(list);
-  renderResultsList();
-  toast('تم الحذف','ok');
+async function deleteResult(rid) {
+  if (!confirm('هل تريد حذف هذه النتيجة؟ لا يمكن التراجع.')) return;
+  try {
+    await deleteOneResult(rid);
+    renderResultsList();
+    toast('✅ تم حذف النتيجة','ok');
+  } catch(e) { toast('خطأ في الحذف: ' + e.message,'err'); }
 }
 
 // ═══ معاينة قبل الحفظ ═══
-function previewBeforeSave() {
+async function previewBeforeSave() {
   const sid  = document.getElementById('re-student')?.value;
   if (!sid)  { toast('اختر الطالب أولاً','warn'); return; }
-  const subjects = loadSubjects();
+  const subjects = await loadSubjects();
   const notes = {};
   subjects.forEach(s => { const el = document.getElementById(`note-${s.id}`); notes[s.id] = el ? parseFloat(el.value)||0 : 0; });
   const student = S.students.find(x => x.id === sid);
@@ -6998,10 +7058,10 @@ function previewBeforeSave() {
   showResultPreviewModal(tempRecord, subjects);
 }
 
-function previewResult(rid) {
-  const record = loadResults().find(r => r.id === rid);
+async function previewResult(rid) {
+  const record = (await loadResults()).find(r => r.id === rid);
   if (!record) return;
-  showResultPreviewModal(record, loadSubjects());
+  showResultPreviewModal(record, await loadSubjects());
 }
 
 // ═══ نافذة معاينة النتيجة (شكل الورقة الرسمية) ═══
@@ -7046,108 +7106,163 @@ function showResultPreviewModal(record, subjects) {
   openM('m-result-preview');
 }
 
-// ═══ بناء شهادة النتيجة (نسخ تصميم الورقة الرسمية) ═══
+// ═══ بناء شهادة النتيجة — مطابق للتصميم الرسمي ═══
 function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef, student, group, teacher) {
-  const teacherDisplayName = (teacher?.name||'').replace(/^(الأستاذ|المشرف|المدير)\s*/,'').trim() || '—';
-  const tableRows = rows.map((r, i) => `
-    <tr style="border-bottom:1px solid #1565c0">
-      <td style="padding:7px 10px;text-align:right;font-size:13px;font-weight:600;border-left:1px solid #1565c0;background:${i%2===0?'#fff':'#f8faff'}">${r.name}</td>
-      <td style="padding:7px 10px;text-align:center;font-size:13px;font-weight:700;border-left:1px solid #1565c0;background:${i%2===0?'#fff':'#f8faff'}">${r.note > 0 || true ? r.note.toFixed(2) : '—'}</td>
-      <td style="padding:7px 10px;text-align:center;font-size:13px;border-left:1px solid #1565c0;background:${i%2===0?'#fff':'#f8faff'}">${r.coef}</td>
-      <td style="padding:7px 10px;text-align:center;font-size:13px;font-weight:700;border-left:1px solid #1565c0;background:${i%2===0?'#fff':'#f8faff'}">${r.result.toFixed(2)}</td>
-      <td style="padding:7px 10px;text-align:center;font-size:12px;font-weight:600;color:${getAppreciation(r.note).color||'#333'};background:${i%2===0?'#fff':'#f8faff'}">${r.appreciation}</td>
+  const teacherName_ = (teacher?.name||'').replace(/^(الأستاذ|المشرف|المدير)\s*/,'').trim() || '—';
+  const groupName_   = group?.name || '—';
+  const dateNow      = new Date().toLocaleDateString('ar-MA',{year:'numeric',month:'long',day:'numeric'});
+
+  // ألوان النقطة
+  const nc = n => n>=16?'#16a34a':n>=12?'#1565c0':n>=10?'#d97706':'#dc2626';
+
+  // صف كل مادة
+  const tableRows = rows.map((r,i) => `
+    <tr>
+      <td style="padding:7px 12px;border-bottom:1px solid #dce8f8;border-left:1px solid #dce8f8;font-size:13px;font-weight:600;background:${i%2?'#f4f8ff':'#fff'};text-align:right">${r.name}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid #dce8f8;border-left:1px solid #dce8f8;font-size:13px;font-weight:800;text-align:center;background:${i%2?'#f4f8ff':'#fff'};color:${nc(r.note)}">${r.note%1===0?r.note.toFixed(2):r.note.toFixed(2)}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid #dce8f8;border-left:1px solid #dce8f8;font-size:13px;font-weight:600;text-align:center;background:${i%2?'#f4f8ff':'#fff'}">${r.coef}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid #dce8f8;border-left:1px solid #dce8f8;font-size:13px;font-weight:700;text-align:center;background:${i%2?'#f4f8ff':'#fff'}">${r.result.toFixed(1)}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid #dce8f8;font-size:12px;font-weight:700;text-align:center;background:${i%2?'#f4f8ff':'#fff'};color:${nc(r.note)}">${r.appreciation}</td>
     </tr>`).join('');
 
-  const dateNow = new Date().toLocaleDateString('ar-MA', { year: 'numeric', month: 'long', day: 'numeric' });
+  // شعار SVG احتياطي
+  const fallback = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231565c0' stroke='%230a3d7a' stroke-width='2'/%3E%3Ctext x='40' y='50' text-anchor='middle' font-size='32' fill='white' font-family='serif'%3E%D9%88%3C/text%3E%3C/svg%3E`;
+  const logoHTML = `<img src="https://i.imgur.com/cNX0eZ4.jpeg" width="76" height="76"
+    style="width:76px;height:76px;border-radius:50%;border:2px solid #1565c0;object-fit:cover;display:block;opacity:1;filter:none"
+    onerror="this.src='${fallback}'">`;
 
-  return `
-  <div id="cert-printable" style="font-family:'Amiri','Tajawal',serif;direction:rtl;padding:24px 28px;min-height:600px;position:relative">
+  return `<div id="cert-printable" style="font-family:'Tajawal','Amiri',sans-serif;direction:rtl;padding:18px 22px;background:#fff;max-width:780px;margin:0 auto">
 
-    <!-- رأس الشهادة -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:3px double #1565c0;padding-bottom:10px">
-      <div style="text-align:center;flex:0 0 80px">
-        <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار" style="width:72px;height:72px;border-radius:50%;border:2px solid #1565c0;object-fit:cover" onerror="this.style.display='none'">
+  <!-- ══ بسملة ══ -->
+  <div style="text-align:center;font-family:'Amiri',serif;font-size:14px;color:#1a1a1a;margin-bottom:6px;font-weight:400">بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ</div>
+
+  <!-- ══ رأس: شعار + نصوص + شعار ══ -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div style="flex:0 0 80px">${logoHTML}</div>
+    <div style="flex:1;text-align:center;padding:0 8px">
+      <div style="font-size:16px;font-weight:700;color:#0d2e6e;line-height:1.5">جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية</div>
+      <div style="font-size:13px;color:#1565c0;margin:2px 0">دار القرآن الكريم — الوفاق الكبير، بنسركاو</div>
+      <!-- عنوان الدورة داخل مستطيل -->
+      <div style="margin-top:8px;display:inline-block;border:2px solid #1565c0;border-radius:6px;padding:5px 32px;background:#f0f6ff">
+        <span style="font-family:'Amiri',serif;font-size:20px;font-weight:700;color:#0d2e6e">نتيجة ${record.session||'الدورة الأولى'}</span>
       </div>
-      <div style="flex:1;text-align:center">
-        <div style="font-size:22px;font-weight:900;color:#0a3d7a;font-family:'Amiri',serif">جمعية الوفاق</div>
-        <div style="font-size:13px;color:#1565c0;margin:2px 0">للأنشطة التربوية والثقافية والاجتماعية</div>
-        <div style="font-size:18px;font-weight:800;color:#0a3d7a;margin-top:8px;border:2px solid #1565c0;display:inline-block;padding:4px 24px;border-radius:6px">
-          نتيجة ${record.session || 'الدورة الأولى'}
+      <div style="font-size:12px;color:#666;margin-top:3px">${record.year||''}</div>
+    </div>
+    <div style="flex:0 0 80px;display:flex;justify-content:flex-end">${logoHTML}</div>
+  </div>
+
+  <!-- ══ فاصل ══ -->
+  <div style="border-top:2px solid #1565c0;margin-bottom:8px"></div>
+
+  <!-- ══ بيانات الطالب: 3 أعمدة × صفّين ══ -->
+  <table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:10px">
+    <tr>
+      <td style="padding:5px 10px;width:35%">
+        <span style="color:#555">اسم الطالب:</span>
+        <span style="font-weight:700;font-size:13px;margin-right:4px">${record.student_name}</span>
+      </td>
+      <td style="padding:5px 10px;width:32%;border-right:1px dotted #ccc">
+        <span style="color:#555">الحلقة:</span>
+        <span style="font-weight:600;margin-right:4px">${groupName_}</span>
+      </td>
+      <td style="padding:5px 10px;width:33%;border-right:1px dotted #ccc">
+        <span style="color:#555">التاريخ:</span>
+        <span style="font-weight:600;margin-right:4px">${dateNow}</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:5px 10px;border-top:1px dotted #ddd">
+        <span style="color:#555">المستوى:</span>
+        <span style="font-weight:600;margin-right:4px">${record.level||'—'}</span>
+      </td>
+      <td style="padding:5px 10px;border-top:1px dotted #ddd;border-right:1px dotted #ccc" colspan="2">
+        <span style="color:#555">الأستاذ:</span>
+        <span style="font-weight:600;margin-right:4px">${teacherName_}</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ══ جدول المواد ══ -->
+  <table style="width:100%;border-collapse:collapse;border:1.5px solid #1565c0;margin-bottom:10px">
+    <thead>
+      <tr style="background:#1565c0;color:#fff">
+        <th style="padding:8px 12px;text-align:right;font-size:13px;font-weight:700;border-left:1px solid rgba(255,255,255,.3)">المادة</th>
+        <th style="padding:8px 8px;text-align:center;font-size:13px;font-weight:700;border-left:1px solid rgba(255,255,255,.3);width:70px">20/النقطة</th>
+        <th style="padding:8px 8px;text-align:center;font-size:13px;font-weight:700;border-left:1px solid rgba(255,255,255,.3);width:60px">المعامل</th>
+        <th style="padding:8px 8px;text-align:center;font-size:13px;font-weight:700;border-left:1px solid rgba(255,255,255,.3);width:90px">النقطة × المعامل</th>
+        <th style="padding:8px 8px;text-align:center;font-size:13px;font-weight:700;width:100px">ملاحظة الأستاذ</th>
+      </tr>
+    </thead>
+    <tbody>${tableRows}</tbody>
+    <!-- صف المجموع -->
+    <tr style="background:#0d2e6e;color:#fff">
+      <td colspan="3" style="padding:8px 12px;font-weight:700;font-size:13px;text-align:right;border-left:1px solid rgba(255,255,255,.2)">المجموع العام</td>
+      <td style="padding:8px 8px;text-align:center;font-size:14px;font-weight:900;border-left:1px solid rgba(255,255,255,.2)">${totalWeighted.toFixed(1)} / ${totalCoef*20}</td>
+      <td></td>
+    </tr>
+  </table>
+
+  <!-- ══ بطاقات النتيجة الإجمالية: 4 بطاقات مثل الصورة ══ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+    <!-- التقدير — أصفر مثل الصورة -->
+    <div style="text-align:center;border:2px solid #e6c200;border-radius:8px;overflow:hidden">
+      <div style="background:#e6c200;color:#5a4000;padding:5px 6px;font-size:11px;font-weight:700">التقدير</div>
+      <div style="padding:10px 4px;font-size:19px;font-weight:900;color:#5a4000">${appre.ar}</div>
+    </div>
+    <!-- المعدل -->
+    <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
+      <div style="background:#1565c0;color:#fff;padding:5px 6px;font-size:11px;font-weight:700">20/ المعدل</div>
+      <div style="padding:6px 4px;font-size:22px;font-weight:900;color:#1565c0">${avg.toFixed(2)}</div>
+    </div>
+    <!-- مجموع القسط -->
+    <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
+      <div style="background:#1565c0;color:#fff;padding:5px 6px;font-size:11px;font-weight:700">مجموع القسط</div>
+      <div style="padding:10px 4px;font-size:20px;font-weight:900;color:#1565c0">${totalCoef*20}</div>
+    </div>
+    <!-- مجموع النقاط -->
+    <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
+      <div style="background:#1565c0;color:#fff;padding:5px 6px;font-size:11px;font-weight:700">مجموع النقاط</div>
+      <div style="padding:10px 4px;font-size:20px;font-weight:900;color:#1565c0">${totalWeighted.toFixed(1)}</div>
+    </div>
+  </div>
+
+  <!-- ══ ملاحظات الأستاذ + إمضاء الأستاذ + ختم الجمعية ══ -->
+  <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:10px">
+    <!-- ملاحظات الأستاذ -->
+    <div style="border:1.5px solid #dce8f8;border-radius:6px;overflow:hidden">
+      <div style="background:#e8f0fb;color:#0d2e6e;padding:5px 12px;font-size:12px;font-weight:700;border-bottom:1px solid #dce8f8">ملاحظات الأستاذ</div>
+      <div style="padding:10px 14px;font-size:13px;min-height:68px;color:#333;line-height:1.7">${record.generalNote||''}</div>
+    </div>
+    <!-- إمضاء الأستاذ -->
+    <div style="border:1.5px solid #dce8f8;border-radius:6px;overflow:hidden;text-align:center">
+      <div style="background:#e8f0fb;color:#0d2e6e;padding:5px 8px;font-size:12px;font-weight:700;border-bottom:1px solid #dce8f8">إمضاء الأستاذ</div>
+      <div style="padding:10px 8px;min-height:68px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px">
+        <div style="border-top:1px solid #aaa;width:72px"></div>
+      </div>
+    </div>
+    <!-- ختم الجمعية -->
+    <div style="border:1.5px solid #dce8f8;border-radius:6px;overflow:hidden;text-align:center">
+      <div style="background:#e8f0fb;color:#0d2e6e;padding:5px 8px;font-size:12px;font-weight:700;border-bottom:1px solid #dce8f8">ختم الجمعية</div>
+      <div style="padding:8px;min-height:68px;display:flex;align-items:center;justify-content:center">
+        <div style="width:58px;height:58px;border:1.5px dashed #1565c0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f8fbff">
+          <span style="font-size:9px;color:#1565c0;text-align:center;line-height:1.5">جمعية<br>الوفاق</span>
         </div>
       </div>
-      <div style="text-align:center;flex:0 0 80px">
-        <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار" style="width:72px;height:72px;border-radius:50%;border:2px solid #1565c0;object-fit:cover" onerror="this.style.display='none'">
-      </div>
     </div>
+  </div>
 
-    <!-- بيانات الطالب -->
-    <div style="display:flex;gap:0;font-size:12.5px;margin-bottom:12px;flex-wrap:wrap;border:1px solid #1565c0;border-radius:6px;overflow:hidden">
-      <div style="flex:1;padding:7px 12px;border-left:1px solid #1565c0;background:#f0f6ff"><span style="color:#1565c0;font-weight:700">الاسم الكامل: </span><span style="font-weight:600">${record.student_name}</span></div>
-      <div style="flex:0 0 auto;padding:7px 12px;border-left:1px solid #1565c0;background:#f0f6ff"><span style="color:#1565c0;font-weight:700">المستوى: </span><span style="font-weight:600">${record.level||'—'}</span></div>
-      <div style="flex:0 0 auto;padding:7px 12px;border-left:1px solid #1565c0;background:#f0f6ff"><span style="color:#1565c0;font-weight:700">الأستاذ: </span><span style="font-weight:600">${teacherDisplayName}</span></div>
-      <div style="flex:0 0 auto;padding:7px 12px;background:#f0f6ff"><span style="color:#1565c0;font-weight:700">السنة: </span><span style="font-weight:600">${record.year||'—'}</span></div>
+  <!-- ══ الحديث النبوي ══ -->
+  <div style="border:1px solid #dce8f8;border-radius:6px;padding:9px 14px;text-align:center;background:#f8fbff;margin-bottom:4px">
+    <div style="font-family:'Amiri',serif;font-size:14px;color:#0d2e6e;line-height:2">
+      «مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ»
     </div>
+    <div style="font-size:11px;color:#888;margin-top:2px">رواه مسلم</div>
+  </div>
+  <div style="text-align:center;font-size:10px;color:#aaa;margin-top:5px">
+    جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية — الوفاق الكبير، بنسركاو
+  </div>
 
-    <!-- جدول المواد -->
-    <table style="width:100%;border-collapse:collapse;border:1.5px solid #1565c0;border-radius:6px;overflow:hidden;margin-bottom:14px;font-family:'Amiri','Tajawal',serif">
-      <thead>
-        <tr style="background:linear-gradient(135deg,#0a3d7a,#1565c0);color:#fff">
-          <th style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;border-left:1px solid rgba(255,255,255,.3)">المادة</th>
-          <th style="padding:9px 12px;text-align:center;font-size:13px;font-weight:700;border-left:1px solid rgba(255,255,255,.3);width:70px">النقطة</th>
-          <th style="padding:9px 12px;text-align:center;font-size:13px;font-weight:700;border-left:1px solid rgba(255,255,255,.3);width:60px">المعامل</th>
-          <th style="padding:9px 12px;text-align:center;font-size:13px;font-weight:700;border-left:1px solid rgba(255,255,255,.3);width:80px">نقطة × معامل</th>
-          <th style="padding:9px 12px;text-align:center;font-size:13px;font-weight:700;width:110px">ملاحظة الأستاذ</th>
-        </tr>
-      </thead>
-      <tbody>${tableRows}</tbody>
-    </table>
-
-    <!-- المعدل والتقدير -->
-    <div style="display:flex;gap:12px;margin-bottom:14px;align-items:stretch">
-      <div style="flex:1;border:1.5px solid #1565c0;border-radius:8px;overflow:hidden">
-        <div style="background:#0a3d7a;color:#fff;padding:6px 12px;font-size:12px;font-weight:700;text-align:center">ملاحظة عامة</div>
-        <div style="padding:10px 14px;font-size:13px;min-height:48px;color:#374151">${record.generalNote || '—'}</div>
-      </div>
-      <div style="flex:0 0 auto;border:1.5px solid #1565c0;border-radius:8px;overflow:hidden;min-width:200px">
-        <div style="background:#0a3d7a;color:#fff;padding:6px 12px;font-size:12px;font-weight:700;text-align:center">النتيجة الإجمالية</div>
-        <table style="width:100%;border-collapse:collapse">
-          <tr style="border-bottom:1px solid #e0eaf8">
-            <td style="padding:8px 12px;font-size:12px;font-weight:700;color:#1565c0;border-left:1px solid #e0eaf8">معدل الدورة</td>
-            <td style="padding:8px 12px;text-align:center;font-size:20px;font-weight:900;color:${appre.color}">${avg.toFixed(2)}</td>
-          </tr>
-          <tr style="border-bottom:1px solid #e0eaf8">
-            <td style="padding:8px 12px;font-size:12px;font-weight:700;color:#1565c0;border-left:1px solid #e0eaf8">التقدير</td>
-            <td style="padding:8px 12px;text-align:center;font-size:14px;font-weight:800;color:${appre.color}">${appre.ar}</td>
-          </tr>
-          <tr>
-            <td style="padding:8px 12px;font-size:12px;font-weight:700;color:#1565c0;border-left:1px solid #e0eaf8">المجموع</td>
-            <td style="padding:8px 12px;text-align:center;font-size:13px;font-weight:700;color:var(--text)">${totalWeighted.toFixed(2)} / ${totalCoef * 20}</td>
-          </tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- توقيعات -->
-    <div style="display:flex;justify-content:space-between;margin-bottom:14px;font-size:12px">
-      <div style="text-align:center;flex:1"><div style="font-weight:700;color:#0a3d7a;margin-bottom:20px">توقيع الأستاذ</div><div style="border-top:1px solid #999;width:100px;margin:0 auto"></div></div>
-      <div style="text-align:center;flex:1"><div style="font-weight:700;color:#0a3d7a;margin-bottom:4px">الختم</div>
-        <div style="width:72px;height:72px;border:2px dashed #1565c0;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;background:#f0f6ff">
-          <span style="font-size:9px;color:#1565c0;text-align:center">جمعية<br>الوفاق</span>
-        </div>
-      </div>
-      <div style="text-align:center;flex:1"><div style="font-weight:700;color:#0a3d7a;margin-bottom:4px">تاريخ الإصدار</div><div style="font-size:11px;color:#555;margin-top:4px">${dateNow}</div></div>
-    </div>
-
-    <!-- الحديث النبوي -->
-    <div style="border:1.5px solid #1565c0;border-radius:8px;padding:12px 18px;text-align:center;background:#f8fbff;margin-top:8px">
-      <div style="font-size:12px;font-weight:700;color:#0a3d7a;margin-bottom:6px">قال رسول الله صلى الله عليه وسلم:</div>
-      <div style="font-family:'Amiri',serif;font-size:15px;color:#1a2e42;line-height:1.9;border:1px solid #dbeafe;border-radius:6px;padding:8px 16px;display:inline-block;background:#fff">
-        « مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ »
-      </div>
-      <div style="font-size:10px;color:#888;margin-top:5px">صحيح مسلم</div>
-    </div>
-
-  </div>`;
+</div>`;
 }
 
 // ═══ طباعة النتيجة ═══
@@ -7171,10 +7286,10 @@ function printResultDirect() {
   w.document.close();
 }
 
-function printResult(rid) {
-  const record = loadResults().find(r => r.id === rid);
+async function printResult(rid) {
+  const record = (await loadResults()).find(r => r.id === rid);
   if (!record) return;
-  const subjects = loadSubjects();
+  const subjects = await loadSubjects();
   const notes  = record.notes || {};
   const { rows, totalWeighted, totalCoef, avg, appre } = computeResult(notes, subjects);
   const student = S.students.find(x => x.id === record.student_id);
@@ -7192,12 +7307,12 @@ function printResult(rid) {
 }
 
 // ═══ إرسال عبر واتساب ═══
-function sendResultWA(rid) {
-  const record = loadResults().find(r => r.id === rid);
+async function sendResultWA(rid) {
+  const record = (await loadResults()).find(r => r.id === rid);
   if (!record) return;
   const student = S.students.find(x => x.id === record.student_id);
   if (!student?.phone) { toast('لا يوجد رقم هاتف لولي الأمر','warn'); return; }
-  const subjects = loadSubjects();
+  const subjects = await loadSubjects();
   const notes = record.notes || {};
   const { rows, avg, appre } = computeResult(notes, subjects);
   const subjectLines = rows.map(r => `  • ${r.name}: ${r.note}/20 — ${r.appreciation}`).join('\n');
@@ -7206,8 +7321,8 @@ function sendResultWA(rid) {
 }
 
 // ═══ إعداد المواد والمعاملات ═══
-function openSubjectsConfig() {
-  const subjects = loadSubjects();
+async function openSubjectsConfig() {
+  const subjects = await loadSubjects();
   let modal = document.getElementById('m-subjects-config');
   if (!modal) {
     modal = document.createElement('div');
@@ -7229,7 +7344,7 @@ function openSubjectsConfig() {
       </div>
       <div class="mfoot">
         <button class="btn btn-o" onclick="closeM('m-subjects-config')">إلغاء</button>
-        <button class="btn btn-d btn-sm" onclick="if(confirm('استعادة المواد الافتراضية؟')){saveSubjects(JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)));openSubjectsConfig();}"><i class="fas fa-undo"></i> استعادة الافتراضي</button>
+        <button class="btn btn-d btn-sm" onclick="if(confirm('استعادة المواد الافتراضية؟')){saveSubjects(JSON.parse(JSON.stringify(DEFAULT_SUBJECTS))).then(()=>openSubjectsConfig());}"><i class="fas fa-undo"></i> استعادة الافتراضي</button>
         <button class="btn btn-s" onclick="applySubjectsConfig()"><i class="fas fa-save"></i> حفظ المواد</button>
       </div>
     </div>`;
@@ -7253,21 +7368,21 @@ function renderSubjectsConfigList(subjects) {
 }
 
 function addSubjectRow() {
-  const subjects = loadSubjects();
+  const subjects = loadSubjectsSync();
   const newS = { id: 'ns_' + Date.now(), name: '', coef: 1, maxNote: 20 };
   subjects.push(newS);
   renderSubjectsConfigList(subjects);
   setTimeout(() => document.getElementById(`sname-${newS.id}`)?.focus(), 50);
 }
 
-function removeSubjectRow(sid) {
-  const subjects = loadSubjects().filter(s => s.id !== sid);
-  saveSubjects(subjects);
+async function removeSubjectRow(sid) {
+  const subjects = loadSubjectsSync().filter(s => s.id !== sid);
+  await saveSubjects(subjects);
   renderSubjectsConfigList(subjects);
 }
 
-function applySubjectsConfig() {
-  const subjects = loadSubjects();
+async function applySubjectsConfig() {
+  const subjects = loadSubjectsSync();
   const updated = subjects.map(s => ({
     ...s,
     name: document.getElementById(`sname-${s.id}`)?.value?.trim() || s.name,
@@ -7282,7 +7397,7 @@ function applySubjectsConfig() {
       updated.push({ id: sid, name, coef, maxNote: 20 });
     }
   });
-  saveSubjects(updated);
+  await saveSubjects(updated);
   closeM('m-subjects-config');
   toast('✅ تم حفظ المواد والمعاملات', 'ok');
 }
@@ -7308,7 +7423,12 @@ nav = function(page) {
 const _origShowAppResults = showApp;
 showApp = function() {
   _origShowAppResults();
-  setTimeout(initResultsSystem, 700);
+  setTimeout(async () => {
+    initResultsSystem();
+    // تحميل النتائج والمواد مسبقاً للـ cache
+    await loadSubjects();
+    await loadResults();
+  }, 700);
 };
 
 // ═══ إضافة زر "نتيجة" في ملف الطالب ═══
@@ -7318,7 +7438,7 @@ openSDetail = function(id) {
   setTimeout(() => {
     const body = document.getElementById('sdetail-content');
     if (!body) return;
-    const allRes = loadResults().filter(r => r.student_id === id);
+    const allRes = loadResultsSync().filter(r => r.student_id === id);
     if (!allRes.length && document.getElementById('student-results-section')) return;
     if (document.getElementById('student-results-section')) return;
     const div = document.createElement('div');
