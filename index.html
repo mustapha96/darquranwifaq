@@ -6596,25 +6596,36 @@ async function deleteOneResult(rid) {
 function clearResultsCache() { _RESULTS_CACHE = null; }
 function clearSubjectsCache() { _SUBJECTS_CACHE = null; }
 
-// ═══ التقدير حسب المعدل ═══
+// ═══ سلّم التقديرات — جمعية الوفاق ═══
+// المعدل العام (للنتيجة الإجمالية)
 function getAppreciation(avg) {
-  if (avg >= 18)   return { ar: 'ممتاز',     fr: 'Excellent',      color: '#0369a1' };
-  if (avg >= 16)   return { ar: 'حسن جداً',  fr: 'Très Bien',      color: '#16a34a' };
-  if (avg >= 14)   return { ar: 'جيد',       fr: 'Bien',           color: '#65a30d' };
-  if (avg >= 12)   return { ar: 'مقبول',     fr: 'Assez Bien',     color: '#d97706' };
-  if (avg >= 10)   return { ar: 'لا بأس به', fr: 'Passable',       color: '#ea580c' };
-  return             { ar: 'ضعيف',       fr: 'Insuffisant',    color: '#dc2626' };
+  if (avg >= 18) return { ar: 'جيد جداً',  bg: '#dcfce7', border: '#16a34a', headerBg: '#16a34a', headerTxt: '#fff', valueTxt: '#14532d', emoji: '🌟' };
+  if (avg >= 16) return { ar: 'جيد',       bg: '#dbeafe', border: '#2563eb', headerBg: '#2563eb', headerTxt: '#fff', valueTxt: '#1e3a8a', emoji: '✅' };
+  if (avg >= 14) return { ar: 'حسن',       bg: '#fefce8', border: '#ca8a04', headerBg: '#ca8a04', headerTxt: '#fff', valueTxt: '#713f12', emoji: '👍' };
+  if (avg >= 12) return { ar: 'مستحسن',   bg: '#fff7ed', border: '#f97316', headerBg: '#f97316', headerTxt: '#fff', valueTxt: '#7c2d12', emoji: '📘' };
+  if (avg >= 10) return { ar: 'لا بأس به', bg: '#fff7ed', border: '#ea580c', headerBg: '#ea580c', headerTxt: '#fff', valueTxt: '#9a3412', emoji: '⚠️' };
+  return           { ar: 'متوسط',      bg: '#fef2f2', border: '#dc2626', headerBg: '#dc2626', headerTxt: '#fff', valueTxt: '#7f1d1d', emoji: '❗' };
+}
+
+// لون النقطة الفردية (للجدول)
+function getNoteColor(note) {
+  if (note >= 18) return '#15803d';
+  if (note >= 16) return '#1d4ed8';
+  if (note >= 14) return '#ca8a04';
+  if (note >= 12) return '#ea580c';
+  if (note >= 10) return '#dc2626';
+  return '#991b1b';
 }
 
 // التقدير حسب النقطة الفردية
 function getNoteAppreciation(note) {
-  if (note >= 18)  return 'ممتاز';
-  if (note >= 16)  return 'حسن جداً';
-  if (note >= 14)  return 'جيد جداً';
-  if (note >= 12)  return 'جيد';
+  if (note >= 18)  return 'جيد جداً';
+  if (note >= 16)  return 'جيد';
+  if (note >= 14)  return 'حسن';
+  if (note >= 12)  return 'مستحسن';
   if (note >= 10)  return 'لا بأس به';
-  if (note >= 8)   return 'مستحسن';
-  return 'ضعيف';
+  if (note >= 8)   return 'ضعيف';
+  return 'متوسط';
 }
 
 // ═══ حساب النتيجة ═══
@@ -6745,10 +6756,19 @@ async function renderResultsList() {
   const avgAll   = list.length ? (list.reduce((a, r) => a + r.avg, 0) / list.length).toFixed(2) : '—';
   const passCount = list.filter(r => r.avg >= 10).length;
   const topStudent = list.length ? list.reduce((a, b) => a.avg > b.avg ? a : b) : null;
+  const _avgNum  = avgAll !== '—' ? parseFloat(avgAll) : null;
+  const _avgApp  = _avgNum !== null ? getAppreciation(_avgNum) : null;
   document.getElementById('res-top-stats').innerHTML = `
     <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-file-alt"></i></div><div><div class="stat-h">${list.length}</div><div class="stat-p">نتائج مُسجّلة</div></div></div>
     <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-h">${passCount}</div><div class="stat-p">ناجحون (≥10)</div></div></div>
-    <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-star"></i></div><div><div class="stat-h">${avgAll}</div><div class="stat-p">متوسط المعدلات</div></div></div>
+    <div class="stat-card" style="${_avgApp?`border-top:3px solid ${_avgApp.border}`:''}">
+      <div class="stat-ic" style="${_avgApp?`background:${_avgApp.bg}`:'background:#fef3c7'}"><i class="fas fa-chart-line" style="${_avgApp?`color:${_avgApp.valueTxt}`:'color:#d97706'}"></i></div>
+      <div>
+        <div class="stat-h" style="${_avgApp?`color:${_avgApp.valueTxt}`:''}">${avgAll}</div>
+        <div class="stat-p">متوسط المعدلات</div>
+        ${_avgApp?`<div style="margin-top:4px"><span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${_avgApp.bg};border:1px solid ${_avgApp.border};color:${_avgApp.valueTxt};font-weight:700">${_avgApp.emoji} ${_avgApp.ar}</span></div>`:''}
+      </div>
+    </div>
     <div class="stat-card"><div class="stat-ic ic-purple"><i class="fas fa-trophy"></i></div><div><div class="stat-h" style="font-size:14px">${topStudent?.student_name || '—'}</div><div class="stat-p">الأول (${topStudent?.avg || '—'})</div></div></div>`;
 
   if (!list.length) {
@@ -6756,7 +6776,6 @@ async function renderResultsList() {
     return;
   }
 
-  const appColors = { 'ممتاز': '#0369a1', 'حسن جداً': '#16a34a', 'جيد': '#65a30d', 'مقبول': '#d97706', 'لا بأس به': '#ea580c', 'ضعيف': '#dc2626' };
   document.getElementById('results-list-body').innerHTML = `
     <div class="tbl-wrap"><table>
       <thead><tr><th>الطالب</th><th>الحلقة</th><th>الدورة</th><th>السنة</th><th>المعدل</th><th>التقدير</th><th>إجراءات</th></tr></thead>
@@ -6765,7 +6784,7 @@ async function renderResultsList() {
         const g   = s ? S.groups.find(x => x.id === s.group_id) : null;
         const app = getAppreciation(r.avg);
         const rank = [...list].filter(x => x.session === r.session && x.year === r.year).sort((a, b) => b.avg - a.avg).findIndex(x => x.id === r.id) + 1;
-        return `<tr>
+        return `<tr style="border-right:3px solid ${app.border}">
           <td><div style="display:flex;align-items:center;gap:8px">
             <div style="width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${(r.student_name||'؟')[0]}</div>
             <div><div style="font-weight:700;font-size:13px">${r.student_name}</div><div style="font-size:10px;color:var(--text3)">${r.level || '—'}</div></div>
@@ -6774,7 +6793,7 @@ async function renderResultsList() {
           <td><span class="bx bx-b" style="font-size:11px">${r.session}</span></td>
           <td style="font-size:12px;color:var(--text3)">${r.year}</td>
           <td><div style="font-size:18px;font-weight:800;color:${app.color}">${r.avg}</div></td>
-          <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:${app.color}20;color:${app.color}">${app.ar}</span></td>
+          <td><span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;background:${app.bg};border:1px solid ${app.border};color:${app.valueTxt}">${app.emoji} ${app.ar}</span></td>
           <td><div style="display:flex;gap:4px">
             <button class="btn btn-p btn-sm" onclick="previewResult('${r.id}')" title="عرض"><i class="fas fa-eye"></i></button>
             <button class="btn btn-sm" style="background:#25d366;color:#fff" onclick="printResult('${r.id}')" title="طباعة"><i class="fas fa-print"></i></button>
@@ -6871,29 +6890,82 @@ async function buildResultModal(rid, prefillStudentId) {
           </div>
         </div>
 
-        <!-- ملخص التلقائي -->
-        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:12px;padding:16px;margin-bottom:16px">
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
-            <div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:4px">مجموع النقاط</div>
-              <div id="re-total-w" style="font-size:24px;font-weight:800;color:var(--primary)">—</div>
+        <!-- ملخص تلقائي مع تقدير ملوّن -->
+        <div id="re-summary-box" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:14px;padding:18px;margin-bottom:16px;transition:background .4s,border-color .4s">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;margin-bottom:14px">
+            <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 6px">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600">مجموع النقاط</div>
+              <div id="re-total-w" style="font-size:22px;font-weight:800;color:var(--primary)">—</div>
             </div>
-            <div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:4px">مجموع المعاملات</div>
-              <div id="re-total-c" style="font-size:24px;font-weight:800;color:var(--primary)">—</div>
+            <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 6px">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600">مجموع المعاملات</div>
+              <div id="re-total-c" style="font-size:22px;font-weight:800;color:var(--primary)">—</div>
             </div>
-            <div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:4px">المعدل النهائي</div>
-              <div id="re-avg-display" style="font-size:28px;font-weight:800;color:#16a34a">—</div>
-              <div id="re-appre-display" style="font-size:12px;font-weight:700;margin-top:3px">—</div>
+            <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 6px">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600">المعدل النهائي / 20</div>
+              <div id="re-avg-display" style="font-size:30px;font-weight:900;color:#16a34a;line-height:1">—</div>
+            </div>
+          </div>
+          <!-- التقدير التلقائي البارز -->
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600"><i class="fas fa-award" style="margin-left:4px"></i>التقدير العام (تلقائي حسب المعدل)</div>
+            <div id="re-appre-display">—</div>
+            <!-- سلّم التقديرات مرجعي -->
+            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
+              <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#dcfce7;color:#14532d;border:1px solid #16a34a">18–20: جيد جداً 🌟</span>
+              <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#1e3a8a;border:1px solid #2563eb">16–18: جيد ✅</span>
+              <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#fefce8;color:#713f12;border:1px solid #ca8a04">14–16: حسن 👍</span>
+              <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#fff7ed;color:#7c2d12;border:1px solid #f97316">12–14: مستحسن 📘</span>
+              <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#fff7ed;color:#9a3412;border:1px solid #ea580c">10–12: لا بأس به ⚠️</span>
+              <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#fef2f2;color:#7f1d1d;border:1px solid #dc2626">أقل من 10: متوسط ❗</span>
             </div>
           </div>
         </div>
 
-        <!-- ملاحظة عامة -->
-        <div class="fg" style="margin-bottom:8px">
-          <label><i class="fas fa-comment-alt" style="color:var(--primary);margin-left:5px"></i>الملاحظة العامة (اختياري)</label>
-          <textarea id="re-general-note" rows="2" placeholder="أي ملاحظة تظهر في النتيجة..." style="resize:none">${editing?.generalNote||''}</textarea>
+        <!-- ملاحظة الأستاذ — منفصلة تماماً عن التقدير -->
+        <div style="background:#fafafa;border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+            <span><i class="fas fa-comment-alt" style="color:var(--primary-l);margin-left:6px"></i>ملاحظة الأستاذ <span style="font-size:11px;font-weight:400;color:var(--text3)">(اختياري — تظهر في ورقة النتيجة)</span></span>
+            <button type="button" onclick="document.getElementById('re-general-note').value='';document.getElementById('re-quick-note').selectedIndex=0" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:Tajawal,sans-serif">✕ مسح</button>
+          </div>
+          <!-- عبارات جاهزة -->
+          <div style="margin-bottom:8px">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">📋 عبارات جاهزة</label>
+            <select id="re-quick-note" onchange="applyResultQuickNote(this.value)"
+              style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13px;background:#fff;outline:none;cursor:pointer">
+              <option value="">— اختر عبارة جاهزة أو اكتب يدوياً —</option>
+              <optgroup label="✨ تشجيع وثناء">
+                <option value="أحسن الطالب في هذه الدورة وأبدى تفوقاً واضحاً، بارك الله فيه.">أحسن الطالب وأبدى تفوقاً واضحاً، بارك الله فيه.</option>
+                <option value="مستوى مشرف جداً، نتمنى الاستمرار والتقدم في الدورات القادمة.">مستوى مشرف جداً، نتمنى الاستمرار والتقدم.</option>
+                <option value="طالب مجتهد ومواظب، يستحق هذه النتيجة المتميزة.">طالب مجتهد ومواظب، يستحق هذه النتيجة المتميزة.</option>
+                <option value="أداء رائع في التسميع والتجويد، واصل وفقك الله.">أداء رائع في التسميع والتجويد، واصل وفقك الله.</option>
+              </optgroup>
+              <optgroup label="📘 توجيه وإرشاد">
+                <option value="مستوى جيد ويمكن تحسينه بالمراجعة المنتظمة في البيت.">مستوى جيد ويمكن تحسينه بالمراجعة المنتظمة في البيت.</option>
+                <option value="يحتاج إلى مزيد من الاجتهاد في أحكام التجويد.">يحتاج إلى مزيد من الاجتهاد في أحكام التجويد.</option>
+                <option value="نرجو من ولي الأمر متابعة المراجعة اليومية في المنزل.">نرجو من ولي الأمر متابعة المراجعة اليومية في المنزل.</option>
+                <option value="الطالب قادر على تحسين نتائجه بمزيد من الجهد والمثابرة.">الطالب قادر على تحسين نتائجه بمزيد من الجهد والمثابرة.</option>
+              </optgroup>
+              <optgroup label="⚠️ تنبيه ومتابعة">
+                <option value="يحتاج إلى متابعة دقيقة من الأسرة لتحسين مستواه في الدورة القادمة.">يحتاج إلى متابعة دقيقة من الأسرة لتحسين مستواه.</option>
+                <option value="غياب متكرر أثّر على النتيجة، نرجو الحرص على الحضور.">غياب متكرر أثّر على النتيجة، نرجو الحرص على الحضور.</option>
+                <option value="نتمنى مزيداً من الاجتهاد والمثابرة في الدورة القادمة.">نتمنى مزيداً من الاجتهاد والمثابرة في الدورة القادمة.</option>
+              </optgroup>
+            </select>
+          </div>
+          <!-- كتابة يدوية -->
+          <textarea id="re-general-note" rows="2"
+            placeholder="أو اكتب ملاحظة خاصة بالطالب..."
+            style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13px;resize:none;outline:none;line-height:1.7;background:#fff"
+            oninput="previewResultNote()"
+            onfocus="this.style.borderColor='var(--primary-l)'"
+            onblur="this.style.borderColor='var(--border)'"
+          >${editing?.generalNote||''}</textarea>
+          <!-- معاينة الملاحظة المدمجة -->
+          <div id="re-note-preview" style="display:none;margin-top:8px;padding:8px 12px;background:#fff;border-radius:8px;border-right:3px solid var(--primary-l);font-size:12px;color:var(--text);line-height:1.7">
+            <span style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">معاينة الملاحظة:</span>
+            <span id="re-note-preview-text"></span>
+          </div>
         </div>
 
       </div>
@@ -6916,6 +6988,15 @@ async function buildResultModal(rid, prefillStudentId) {
     onResultStudentChange();
   }
   updateResultCalc();
+  // مسح quick note السابق عند فتح المودال
+  setTimeout(() => {
+    const reNote = document.getElementById('re-general-note');
+    if (reNote && !editing) delete reNote.dataset.quick;
+    const reQuick = document.getElementById('re-quick-note');
+    if (reQuick && !editing) reQuick.selectedIndex = 0;
+    const rePrev = document.getElementById('re-note-preview');
+    if (rePrev && !editing) rePrev.style.display = 'none';
+  }, 50);
 }
 
 function renderResultSubjectsTable(subjects, savedNotes) {
@@ -6944,6 +7025,9 @@ function clampResultNote(inp, max) {
   else if (v > max)       inp.value = max;
 }
 
+// نسخة متزامنة تُستدعى من oninput — تستدعي النسخة الأصلية
+function updateResultCalcSync() { updateResultCalc(); }
+
 async function updateResultCalc() {
   const subjects = await loadSubjects();
   const notes = {};
@@ -6956,18 +7040,54 @@ async function updateResultCalc() {
   rows.forEach(r => {
     const reEl = document.getElementById(`result-${r.id}`);
     const apEl = document.getElementById(`appre-${r.id}`);
-    if (reEl) reEl.textContent  = r.result.toFixed(2);
-    if (apEl) { apEl.textContent = r.appreciation; apEl.style.color = getAppreciation(r.note).color || '#666'; }
+    if (reEl) { reEl.textContent = r.result.toFixed(2); reEl.style.color = getNoteColor(r.note); reEl.style.fontWeight = '700'; }
+    if (apEl) { apEl.textContent = r.appreciation; apEl.style.color = getNoteColor(r.note); apEl.style.fontWeight = '700'; }
   });
 
   const avgEl  = document.getElementById('re-avg-display');
   const appEl  = document.getElementById('re-appre-display');
   const totWEl = document.getElementById('re-total-w');
   const totCEl = document.getElementById('re-total-c');
-  if (avgEl)  { avgEl.textContent  = avg.toFixed(2); avgEl.style.color = appre.color; }
-  if (appEl)  { appEl.textContent  = appre.ar;        appEl.style.color = appre.color; }
-  if (totWEl) totWEl.textContent   = totalWeighted.toFixed(2);
-  if (totCEl) totCEl.textContent   = totalCoef;
+  const sumBox = document.getElementById('re-summary-box');
+  if (avgEl)  { avgEl.textContent = avg.toFixed(2); avgEl.style.color = appre.valueTxt; }
+  if (appEl)  { appEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;background:${appre.bg};border:1.5px solid ${appre.border};color:${appre.valueTxt};padding:5px 16px;border-radius:20px;font-size:13px;font-weight:800">${appre.emoji} ${appre.ar}</span>`; }
+  if (totWEl) totWEl.textContent = totalWeighted.toFixed(2);
+  if (totCEl) totCEl.textContent = totalCoef;
+  if (sumBox) { sumBox.style.background = `linear-gradient(135deg,${appre.bg},#fff)`; sumBox.style.borderColor = appre.border; }
+}
+
+// ── دوال ملاحظة الأستاذ في نتيجة الدورة ──
+function applyResultQuickNote(val) {
+  if (!val) return;
+  const ta = document.getElementById('re-general-note');
+  if (!ta) return;
+  ta.dataset.quick = val;
+  previewResultNote();
+}
+
+function previewResultNote() {
+  const ta   = document.getElementById('re-general-note');
+  const prev = document.getElementById('re-note-preview');
+  const txt  = document.getElementById('re-note-preview-text');
+  if (!ta || !prev || !txt) return;
+  const quick  = (ta.dataset.quick || '').trim();
+  const manual = ta.value.trim();
+  let full = '';
+  if (quick && manual) full = quick + ' ' + manual;
+  else if (quick)      full = quick;
+  else if (manual)     full = manual;
+  if (full) { txt.textContent = full; prev.style.display = 'block'; }
+  else       { prev.style.display = 'none'; }
+}
+
+function getFinalResultNote() {
+  const ta = document.getElementById('re-general-note');
+  if (!ta) return '';
+  const quick  = (ta.dataset.quick || '').trim();
+  const manual = ta.value.trim();
+  if (quick && manual) return quick + ' ' + manual;
+  if (quick)           return quick;
+  return manual;
 }
 
 function onResultStudentChange() {
@@ -7012,7 +7132,7 @@ async function saveResult(editId) {
     appre:         appre.ar,
     totalWeighted,
     totalCoef,
-    generalNote:   document.getElementById('re-general-note')?.value || '',
+    generalNote:   getFinalResultNote(),
     created_at:    editId ? undefined : Date.now(),
   };
 
@@ -7053,7 +7173,7 @@ async function previewBeforeSave() {
     level:   document.getElementById('re-level')?.value || student?.level || '—',
     session: document.getElementById('re-session')?.value,
     year:    document.getElementById('re-year')?.value,
-    notes, generalNote: document.getElementById('re-general-note')?.value||'',
+    notes, generalNote: getFinalResultNote(),
   };
   showResultPreviewModal(tempRecord, subjects);
 }
@@ -7112,8 +7232,8 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
   const groupName_   = group?.name || '—';
   const dateNow      = new Date().toLocaleDateString('ar-MA',{year:'numeric',month:'long',day:'numeric'});
 
-  // ألوان النقطة
-  const nc = n => n>=16?'#16a34a':n>=12?'#1565c0':n>=10?'#d97706':'#dc2626';
+  // ألوان النقطة — متوافقة مع سلّم تقديرات الجمعية
+  const nc = n => n>=18?'#15803d':n>=16?'#1d4ed8':n>=14?'#ca8a04':n>=12?'#ea580c':n>=10?'#dc2626':'#991b1b';
 
   // صف كل مادة
   const tableRows = rows.map((r,i) => `
@@ -7202,17 +7322,22 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
     </tr>
   </table>
 
-  <!-- ══ بطاقات النتيجة الإجمالية: 4 بطاقات مثل الصورة ══ -->
+  <!-- ══ بطاقات النتيجة الإجمالية: 4 بطاقات بألوان ديناميكية ══ -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-    <!-- التقدير — أصفر مثل الصورة -->
-    <div style="text-align:center;border:2px solid #e6c200;border-radius:8px;overflow:hidden">
-      <div style="background:#e6c200;color:#5a4000;padding:5px 6px;font-size:11px;font-weight:700">التقدير</div>
-      <div style="padding:10px 4px;font-size:19px;font-weight:900;color:#5a4000">${appre.ar}</div>
+    <!-- التقدير — لون ديناميكي حسب المعدل -->
+    <div style="text-align:center;border:2px solid ${appre.border};border-radius:8px;overflow:hidden">
+      <div style="background:${appre.headerBg};color:${appre.headerTxt};padding:5px 6px;font-size:11px;font-weight:700">التقدير العام</div>
+      <div style="padding:6px 4px 10px;background:${appre.bg}">
+        <div style="font-size:18px;margin-bottom:2px">${appre.emoji}</div>
+        <div style="font-size:16px;font-weight:900;color:${appre.valueTxt}">${appre.ar}</div>
+      </div>
     </div>
-    <!-- المعدل -->
-    <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
-      <div style="background:#1565c0;color:#fff;padding:5px 6px;font-size:11px;font-weight:700">20/ المعدل</div>
-      <div style="padding:6px 4px;font-size:22px;font-weight:900;color:#1565c0">${avg.toFixed(2)}</div>
+    <!-- المعدل — مُلوَّن حسب التقدير -->
+    <div style="text-align:center;border:2px solid ${appre.border};border-radius:8px;overflow:hidden">
+      <div style="background:${appre.headerBg};color:${appre.headerTxt};padding:5px 6px;font-size:11px;font-weight:700">المعدل / 20</div>
+      <div style="padding:6px 4px;background:${appre.bg}">
+        <div style="font-size:24px;font-weight:900;color:${appre.valueTxt}">${avg.toFixed(2)}</div>
+      </div>
     </div>
     <!-- مجموع القسط -->
     <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
@@ -7230,8 +7355,8 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
   <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:10px">
     <!-- ملاحظات الأستاذ -->
     <div style="border:1.5px solid #dce8f8;border-radius:6px;overflow:hidden">
-      <div style="background:#e8f0fb;color:#0d2e6e;padding:5px 12px;font-size:12px;font-weight:700;border-bottom:1px solid #dce8f8">ملاحظات الأستاذ</div>
-      <div style="padding:10px 14px;font-size:13px;min-height:68px;color:#333;line-height:1.7">${record.generalNote||''}</div>
+      <div style="background:#e8f0fb;color:#0d2e6e;padding:5px 12px;font-size:12px;font-weight:700;border-bottom:1px solid #dce8f8">ملاحظة الأستاذ</div>
+      <div style="padding:10px 14px;font-size:13px;min-height:68px;color:#333;line-height:1.8">${record.generalNote ? record.generalNote : '<span style="color:#aaa;font-style:italic">لا توجد ملاحظة</span>'}</div>
     </div>
     <!-- إمضاء الأستاذ -->
     <div style="border:1.5px solid #dce8f8;border-radius:6px;overflow:hidden;text-align:center">
@@ -7316,7 +7441,7 @@ async function sendResultWA(rid) {
   const notes = record.notes || {};
   const { rows, avg, appre } = computeResult(notes, subjects);
   const subjectLines = rows.map(r => `  • ${r.name}: ${r.note}/20 — ${r.appreciation}`).join('\n');
-  const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n\nنتيجة ${record.session} للطالب:\n👤 ${record.student_name}\n📚 المستوى: ${record.level||'—'}\n📅 السنة الدراسية: ${record.year}\n\n━━━━━━━━━━━━━━\nنتائج المواد:\n${subjectLines}\n\n━━━━━━━━━━━━━━\n📊 معدل الدورة: ${avg.toFixed(2)} / 20\n🏆 التقدير: ${appre.ar}\n${record.generalNote?'\n📝 ملاحظة: '+record.generalNote:''}\n\nنسأل الله التوفيق والسداد 🌹\n\n📍 دار القرآن الكريم — جمعية الوفاق`;
+  const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n\nنتيجة ${record.session} للطالب:\n👤 ${record.student_name}\n📚 المستوى: ${record.level||'—'}\n📅 السنة الدراسية: ${record.year}\n\n━━━━━━━━━━━━━━\nنتائج المواد:\n${subjectLines}\n\n━━━━━━━━━━━━━━\n📊 معدل الدورة: ${avg.toFixed(2)} / 20\n${appre.emoji} التقدير: ${appre.ar}\n${record.generalNote?'\n📝 ملاحظة الأستاذ: '+record.generalNote:''}\n\nنسأل الله التوفيق والسداد 🌹\n\n📍 دار القرآن الكريم — جمعية الوفاق`;
   openWA(student.phone, msg);
 }
 
