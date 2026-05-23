@@ -3656,8 +3656,9 @@ async function saveExamToDB(result){
 
 function showExamResultModal(r){
   const stars = r.pct>=90?'⭐⭐⭐':r.pct>=75?'⭐⭐':r.pct>=60?'⭐':'';
+  const _ea = getAppreciation(r.avg||0);
   const status = r.pct>=60
-    ? `<span class="bx bx-g" style="font-size:13px;padding:6px 16px">ناجح ✅</span>`
+    ? `<span style="font-size:13px;padding:6px 16px;border-radius:20px;background:${_ea.bg};border:1px solid ${_ea.border};color:${_ea.valueTxt};font-weight:800">${_ea.emoji} ${_ea.ar}</span>`
     : `<span class="bx bx-r" style="font-size:13px;padding:6px 16px">يحتاج مراجعة ⚠️</span>`;
   const color = r.pct>=80?'#16a34a':r.pct>=60?'#d97706':'#dc2626';
 
@@ -6597,24 +6598,34 @@ function clearResultsCache() { _RESULTS_CACHE = null; }
 function clearSubjectsCache() { _SUBJECTS_CACHE = null; }
 
 // ═══ التقدير حسب المعدل ═══
+// ══ سلّم تقديرات جمعية الوفاق ══
 function getAppreciation(avg) {
-  if (avg >= 18)   return { ar: 'ممتاز',     fr: 'Excellent',      color: '#0369a1' };
-  if (avg >= 16)   return { ar: 'حسن جداً',  fr: 'Très Bien',      color: '#16a34a' };
-  if (avg >= 14)   return { ar: 'جيد',       fr: 'Bien',           color: '#65a30d' };
-  if (avg >= 12)   return { ar: 'مقبول',     fr: 'Assez Bien',     color: '#d97706' };
-  if (avg >= 10)   return { ar: 'لا بأس به', fr: 'Passable',       color: '#ea580c' };
-  return             { ar: 'ضعيف',       fr: 'Insuffisant',    color: '#dc2626' };
+  if (avg >= 18) return { ar:'جيد جداً',   emoji:'🌟', bg:'#dcfce7', border:'#16a34a', headerBg:'#16a34a', headerTxt:'#fff', valueTxt:'#14532d' };
+  if (avg >= 16) return { ar:'جيد',        emoji:'✅', bg:'#dbeafe', border:'#2563eb', headerBg:'#2563eb', headerTxt:'#fff', valueTxt:'#1e3a8a' };
+  if (avg >= 14) return { ar:'حسن',        emoji:'👍', bg:'#fefce8', border:'#ca8a04', headerBg:'#ca8a04', headerTxt:'#fff', valueTxt:'#713f12' };
+  if (avg >= 12) return { ar:'مستحسن',    emoji:'📘', bg:'#fff7ed', border:'#f97316', headerBg:'#f97316', headerTxt:'#fff', valueTxt:'#7c2d12' };
+  if (avg >= 10) return { ar:'لا بأس به', emoji:'⚠️', bg:'#fff7ed', border:'#ea580c', headerBg:'#ea580c', headerTxt:'#fff', valueTxt:'#9a3412' };
+  return           { ar:'متوسط',      emoji:'❗', bg:'#fef2f2', border:'#dc2626', headerBg:'#dc2626', headerTxt:'#fff', valueTxt:'#7f1d1d' };
 }
 
 // التقدير حسب النقطة الفردية
 function getNoteAppreciation(note) {
-  if (note >= 18)  return 'ممتاز';
-  if (note >= 16)  return 'حسن جداً';
-  if (note >= 14)  return 'جيد جداً';
-  if (note >= 12)  return 'جيد';
+  if (note >= 18)  return 'جيد جداً';
+  if (note >= 16)  return 'جيد';
+  if (note >= 14)  return 'حسن';
+  if (note >= 12)  return 'مستحسن';
   if (note >= 10)  return 'لا بأس به';
-  if (note >= 8)   return 'مستحسن';
-  return 'ضعيف';
+  return 'متوسط';
+}
+
+// لون النقطة الفردية — متوافق مع السلّم
+function getNoteColor(note) {
+  if (note >= 18) return '#15803d';
+  if (note >= 16) return '#1d4ed8';
+  if (note >= 14) return '#ca8a04';
+  if (note >= 12) return '#ea580c';
+  if (note >= 10) return '#dc2626';
+  return '#991b1b';
 }
 
 // ═══ حساب النتيجة ═══
@@ -6745,10 +6756,12 @@ async function renderResultsList() {
   const avgAll   = list.length ? (list.reduce((a, r) => a + r.avg, 0) / list.length).toFixed(2) : '—';
   const passCount = list.filter(r => r.avg >= 10).length;
   const topStudent = list.length ? list.reduce((a, b) => a.avg > b.avg ? a : b) : null;
+  const _aNum = avgAll !== '—' ? parseFloat(avgAll) : null;
+  const _aApp = _aNum !== null ? getAppreciation(_aNum) : null;
   document.getElementById('res-top-stats').innerHTML = `
     <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-file-alt"></i></div><div><div class="stat-h">${list.length}</div><div class="stat-p">نتائج مُسجّلة</div></div></div>
     <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-h">${passCount}</div><div class="stat-p">ناجحون (≥10)</div></div></div>
-    <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-star"></i></div><div><div class="stat-h">${avgAll}</div><div class="stat-p">متوسط المعدلات</div></div></div>
+    <div class="stat-card" style="${_aApp?`border-top:3px solid ${_aApp.border}`:''}"><div class="stat-ic" style="${_aApp?`background:${_aApp.bg}`:'background:#fef3c7'}"><i class="fas fa-chart-line" style="${_aApp?`color:${_aApp.valueTxt}`:'color:#d97706'}"></i></div><div><div class="stat-h" style="${_aApp?`color:${_aApp.valueTxt}`:''};">${avgAll}</div><div class="stat-p">متوسط المعدلات</div>${_aApp?`<div style="margin-top:4px"><span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${_aApp.bg};border:1px solid ${_aApp.border};color:${_aApp.valueTxt};font-weight:700">${_aApp.emoji} ${_aApp.ar}</span></div>`:''}</div></div>
     <div class="stat-card"><div class="stat-ic ic-purple"><i class="fas fa-trophy"></i></div><div><div class="stat-h" style="font-size:14px">${topStudent?.student_name || '—'}</div><div class="stat-p">الأول (${topStudent?.avg || '—'})</div></div></div>`;
 
   if (!list.length) {
@@ -6756,7 +6769,7 @@ async function renderResultsList() {
     return;
   }
 
-  const appColors = { 'ممتاز': '#0369a1', 'حسن جداً': '#16a34a', 'جيد': '#65a30d', 'مقبول': '#d97706', 'لا بأس به': '#ea580c', 'ضعيف': '#dc2626' };
+  // appColors محذوف — استخدم getAppreciation() مباشرة
   document.getElementById('results-list-body').innerHTML = `
     <div class="tbl-wrap"><table>
       <thead><tr><th>الطالب</th><th>الحلقة</th><th>الدورة</th><th>السنة</th><th>المعدل</th><th>التقدير</th><th>إجراءات</th></tr></thead>
@@ -6774,7 +6787,7 @@ async function renderResultsList() {
           <td><span class="bx bx-b" style="font-size:11px">${r.session}</span></td>
           <td style="font-size:12px;color:var(--text3)">${r.year}</td>
           <td><div style="font-size:18px;font-weight:800;color:${app.color}">${r.avg}</div></td>
-          <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:${app.color}20;color:${app.color}">${app.ar}</span></td>
+          <td><span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;background:${app.bg||'#f0fdf4'};border:1px solid ${app.border||'#16a34a'};color:${app.valueTxt||'#14532d'}">${app.emoji||''} ${app.ar}</span></td>
           <td><div style="display:flex;gap:4px">
             <button class="btn btn-p btn-sm" onclick="previewResult('${r.id}')" title="عرض"><i class="fas fa-eye"></i></button>
             <button class="btn btn-sm" style="background:#25d366;color:#fff" onclick="printResult('${r.id}')" title="طباعة"><i class="fas fa-print"></i></button>
@@ -6956,18 +6969,27 @@ async function updateResultCalc() {
   rows.forEach(r => {
     const reEl = document.getElementById(`result-${r.id}`);
     const apEl = document.getElementById(`appre-${r.id}`);
-    if (reEl) reEl.textContent  = r.result.toFixed(2);
-    if (apEl) { apEl.textContent = r.appreciation; apEl.style.color = getAppreciation(r.note).color || '#666'; }
+    const nc = typeof getNoteColor === 'function' ? getNoteColor : (n => n>=16?'#15803d':n>=12?'#1d4ed8':n>=10?'#ea580c':'#dc2626');
+    if (reEl) { reEl.textContent = r.result.toFixed(2); reEl.style.color = nc(r.note); reEl.style.fontWeight = '700'; }
+    if (apEl) { apEl.textContent = r.appreciation; apEl.style.color = nc(r.note); apEl.style.fontWeight = '700'; }
   });
 
   const avgEl  = document.getElementById('re-avg-display');
   const appEl  = document.getElementById('re-appre-display');
   const totWEl = document.getElementById('re-total-w');
   const totCEl = document.getElementById('re-total-c');
-  if (avgEl)  { avgEl.textContent  = avg.toFixed(2); avgEl.style.color = appre.color; }
-  if (appEl)  { appEl.textContent  = appre.ar;        appEl.style.color = appre.color; }
-  if (totWEl) totWEl.textContent   = totalWeighted.toFixed(2);
-  if (totCEl) totCEl.textContent   = totalCoef;
+  const sumBox = document.getElementById('re-summary-box');
+  if (avgEl)  { avgEl.textContent = avg.toFixed(2); avgEl.style.color = appre.valueTxt || appre.border || '#1565c0'; }
+  if (appEl)  {
+    const vt = appre.valueTxt || '#333';
+    const bg = appre.bg || '#f0fdf4';
+    const br = appre.border || '#16a34a';
+    const em = appre.emoji || '';
+    appEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;background:${bg};border:1.5px solid ${br};color:${vt};padding:5px 16px;border-radius:20px;font-size:13px;font-weight:800">${em} ${appre.ar}</span>`;
+  }
+  if (totWEl) totWEl.textContent = totalWeighted.toFixed(2);
+  if (totCEl) totCEl.textContent = totalCoef;
+  if (sumBox) { sumBox.style.background = `linear-gradient(135deg,${appre.bg||'#f0fdf4'},#fff)`; sumBox.style.borderColor = appre.border || '#16a34a'; }
 }
 
 function onResultStudentChange() {
@@ -7113,7 +7135,7 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
   const dateNow      = new Date().toLocaleDateString('ar-MA',{year:'numeric',month:'long',day:'numeric'});
 
   // ألوان النقطة
-  const nc = n => n>=16?'#16a34a':n>=12?'#1565c0':n>=10?'#d97706':'#dc2626';
+  const nc = n => n>=18?'#15803d':n>=16?'#1d4ed8':n>=14?'#ca8a04':n>=12?'#ea580c':n>=10?'#dc2626':'#991b1b';
 
   // صف كل مادة
   const tableRows = rows.map((r,i) => `
@@ -7205,9 +7227,12 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
   <!-- ══ بطاقات النتيجة الإجمالية: 4 بطاقات مثل الصورة ══ -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
     <!-- التقدير — أصفر مثل الصورة -->
-    <div style="text-align:center;border:2px solid #e6c200;border-radius:8px;overflow:hidden">
-      <div style="background:#e6c200;color:#5a4000;padding:5px 6px;font-size:11px;font-weight:700">التقدير</div>
-      <div style="padding:10px 4px;font-size:19px;font-weight:900;color:#5a4000">${appre.ar}</div>
+    <div style="text-align:center;border:2px solid ${appre.border||'#16a34a'};border-radius:8px;overflow:hidden">
+      <div style="background:${appre.headerBg||appre.border||'#16a34a'};color:${appre.headerTxt||'#fff'};padding:5px 6px;font-size:11px;font-weight:700">التقدير العام</div>
+      <div style="padding:6px 4px 10px;background:${appre.bg||'#dcfce7'}">
+        <div style="font-size:18px;margin-bottom:2px">${appre.emoji||'📋'}</div>
+        <div style="font-size:16px;font-weight:900;color:${appre.valueTxt||'#14532d'}">${appre.ar}</div>
+      </div>
     </div>
     <!-- المعدل -->
     <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
@@ -7316,7 +7341,7 @@ async function sendResultWA(rid) {
   const notes = record.notes || {};
   const { rows, avg, appre } = computeResult(notes, subjects);
   const subjectLines = rows.map(r => `  • ${r.name}: ${r.note}/20 — ${r.appreciation}`).join('\n');
-  const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n\nنتيجة ${record.session} للطالب:\n👤 ${record.student_name}\n📚 المستوى: ${record.level||'—'}\n📅 السنة الدراسية: ${record.year}\n\n━━━━━━━━━━━━━━\nنتائج المواد:\n${subjectLines}\n\n━━━━━━━━━━━━━━\n📊 معدل الدورة: ${avg.toFixed(2)} / 20\n🏆 التقدير: ${appre.ar}\n${record.generalNote?'\n📝 ملاحظة: '+record.generalNote:''}\n\nنسأل الله التوفيق والسداد 🌹\n\n📍 دار القرآن الكريم — جمعية الوفاق`;
+  const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n\nنتيجة ${record.session} للطالب:\n👤 ${record.student_name}\n📚 المستوى: ${record.level||'—'}\n📅 السنة الدراسية: ${record.year}\n\n━━━━━━━━━━━━━━\nنتائج المواد:\n${subjectLines}\n\n━━━━━━━━━━━━━━\n📊 معدل الدورة: ${avg.toFixed(2)} / 20\n${appre.emoji||'🏆'} التقدير: ${appre.ar}\n${record.generalNote?'\n📝 ملاحظة: '+record.generalNote:''}\n\nنسأل الله التوفيق والسداد 🌹\n\n📍 دار القرآن الكريم — جمعية الوفاق`;
   openWA(student.phone, msg);
 }
 
