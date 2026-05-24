@@ -552,18 +552,6 @@ textarea{resize:vertical;min-height:80px}
   .cert-paper *{visibility:visible}
   .cert-paper{position:fixed;inset:0;width:100%;height:100%;max-width:none;border-radius:0;box-shadow:none}
 }
-
-/* ═══ Programs System ═══ */
-#page-programs .prog-type-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 4px 14px rgba(0,0,0,.1)!important;
-}
-#program-type-cards > div:hover{
-  box-shadow:0 8px 24px rgba(0,0,0,.12);
-}
-#m-program .prog-type-btn{
-  transition:all .2s;
-}
 </style>
 </head>
 <body>
@@ -779,8 +767,7 @@ textarea{resize:vertical;min-height:80px}
     <div class="nav-sec">
       <div class="nav-sec-title">برامج خاصة</div>
       <div class="nav-item" onclick="nav('exams')"><i class="fas fa-graduation-cap"></i> الامتحانات</div>
-      <div class="nav-item" onclick="nav('programs')"><i class="fas fa-layer-group"></i> البرامج المستقلة</div>
-      <div class="nav-item" id="nav-summer-legacy" onclick="nav('summer')" style="display:none"><i class="fas fa-sun"></i> الدورة الصيفية</div>
+      <div class="nav-item" onclick="nav('summer-program')"><i class="fas fa-sun"></i> الدورة الصيفية</div>
       <div class="nav-item" onclick="nav('certificates')"><i class="fas fa-scroll"></i> الشهادات</div>
     </div>
     <div class="nav-sec" id="nav-settings">
@@ -794,18 +781,6 @@ textarea{resize:vertical;min-height:80px}
 
   <!-- MAIN -->
   <div class="main">
-    <!-- Program Context Bar -->
-    <div id="program-context-bar" style="display:none;background:#1565c0;color:#fff;padding:8px 20px;align-items:center;gap:12px;font-size:13px;font-weight:600;position:sticky;top:0;z-index:91;box-shadow:0 2px 8px rgba(0,0,0,.15)">
-      <i id="ctx-prog-icon" class="fas fa-sun" style="font-size:16px"></i>
-      <span>أنت الآن في برنامج:</span>
-      <strong id="ctx-prog-name" style="font-size:14px"></strong>
-      <div style="margin-right:auto;display:flex;gap:8px">
-        <button onclick="nav('programs')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 12px;border-radius:6px;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer"><i class="fas fa-cog" style="margin-left:4px"></i>إدارة البرنامج</button>
-        <button onclick="ProgramContext.exitToMain()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 12px;border-radius:6px;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer"><i class="fas fa-home" style="margin-left:4px"></i>النظام الرئيسي</button>
-      </div>
-      <button onclick="document.getElementById('program-context-bar').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:16px">✕</button>
-    </div>
-
     <!-- Session bar -->
     <div id="session-bar">
       <i class="fas fa-bell" style="animation:spin 3s linear infinite"></i>
@@ -1118,72 +1093,11 @@ textarea{resize:vertical;min-height:80px}
         </div>
       </div>
 
-      <!-- PROGRAMS — البرامج المستقلة -->
-      <div class="page" id="page-programs">
-        <div class="ph">
-          <div>
-            <h1><i class="fas fa-layer-group" style="color:var(--primary-l);margin-left:8px"></i>البرامج المستقلة</h1>
-            <p>إدارة الدورات والبرامج الخاصة بشكل مستقل عن الموسم الدراسي</p>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-p" onclick="openProgramModal()"><i class="fas fa-plus"></i> برنامج جديد</button>
-          </div>
-        </div>
-
-        <!-- أنواع البرامج السريعة -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px" id="program-type-cards">
-          <div onclick="openProgramModal('summer')" style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#fef9c3,#fde68a);border:1.5px solid #fbbf24;cursor:pointer;text-align:center;transition:all .2s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-            <i class="fas fa-sun" style="font-size:26px;color:#d97706;display:block;margin-bottom:8px"></i>
-            <div style="font-size:13px;font-weight:700;color:#92400e">دورة صيفية</div>
-          </div>
-          <div onclick="openProgramModal('camp')" style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1.5px solid #4ade80;cursor:pointer;text-align:center;transition:all .2s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-            <i class="fas fa-campground" style="font-size:26px;color:#16a34a;display:block;margin-bottom:8px"></i>
-            <div style="font-size:13px;font-weight:700;color:#14532d">مخيم</div>
-          </div>
-          <div onclick="openProgramModal('competition')" style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:1.5px solid #60a5fa;cursor:pointer;text-align:center;transition:all .2s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-            <i class="fas fa-trophy" style="font-size:26px;color:#2563eb;display:block;margin-bottom:8px"></i>
-            <div style="font-size:13px;font-weight:700;color:#1e3a8a">مسابقة قرآنية</div>
-          </div>
-          <div onclick="openProgramModal('women')" style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#fae8ff,#e9d5ff);border:1.5px solid #c084fc;cursor:pointer;text-align:center;transition:all .2s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-            <i class="fas fa-female" style="font-size:26px;color:#9333ea;display:block;margin-bottom:8px"></i>
-            <div style="font-size:13px;font-weight:700;color:#581c87">برنامج النساء</div>
-          </div>
-          <div onclick="openProgramModal('children')" style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#ffedd5,#fed7aa);border:1.5px solid #fb923c;cursor:pointer;text-align:center;transition:all .2s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-            <i class="fas fa-child" style="font-size:26px;color:#ea580c;display:block;margin-bottom:8px"></i>
-            <div style="font-size:13px;font-weight:700;color:#7c2d12">برنامج الأطفال</div>
-          </div>
-          <div onclick="openProgramModal('seasonal')" style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#e0f2fe,#bae6fd);border:1.5px solid #38bdf8;cursor:pointer;text-align:center;transition:all .2s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-            <i class="fas fa-calendar-star" style="font-size:26px;color:#0284c7;display:block;margin-bottom:8px"></i>
-            <div style="font-size:13px;font-weight:700;color:#0c4a6e">دورة موسمية</div>
-          </div>
-          <div onclick="openProgramModal('independent')" style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border:1.5px solid #94a3b8;cursor:pointer;text-align:center;transition:all .2s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-            <i class="fas fa-graduation-cap" style="font-size:26px;color:#475569;display:block;margin-bottom:8px"></i>
-            <div style="font-size:13px;font-weight:700;color:#1e293b">حلقة مستقلة</div>
-          </div>
-        </div>
-
-        <!-- قائمة البرامج -->
-        <div class="tabs">
-          <div class="tab active" onclick="switchTab('programs','active-tab',this)"><i class="fas fa-play-circle"></i> البرامج النشطة</div>
-          <div class="tab" onclick="switchTab('programs','archived-tab',this)"><i class="fas fa-archive"></i> المؤرشفة</div>
-        </div>
-        <div class="tab-pane active" id="programs-active-tab">
-          <div id="programs-active-list"></div>
-        </div>
-        <div class="tab-pane" id="programs-archived-tab">
-          <div id="programs-archived-list"></div>
-        </div>
-      </div>
-
-      <!-- PROGRAM DASHBOARD — لوحة تحكم البرنامج -->
-      <div class="page" id="page-program-dash">
-        <div id="program-dash-content"></div>
-      </div>
-
-      <!-- SUMMER (legacy — kept for compatibility) -->
-      <div class="page" id="page-summer" style="display:none">
-        <div class="ph"><div><h1><i class="fas fa-sun" style="color:var(--gold);margin-left:8px"></i>الدورة الصيفية</h1></div></div>
-        <div class="card"><div class="card-body"><div class="alert alert-i"><i class="fas fa-info-circle"></i>انتقل إلى قسم "البرامج المستقلة" لإدارة الدورة الصيفية.</div></div></div>
+      <!-- SUMMER -->
+      <div class="page" id="page-summer-old" style="display:none">
+        <div class="ph"><div><h1><i class="fas fa-sun" style="color:var(--gold);margin-left:8px"></i>الدورة الصيفية</h1><p>برنامج مستقل عن الموسم الدراسي</p></div><button class="btn btn-w" onclick="openSummerConfig()"><i class="fas fa-cog"></i> إعدادات الدورة</button></div>
+        <div id="summer-banner" style="margin-bottom:16px"></div>
+        <div class="card"><div class="card-body"><div class="alert alert-i"><i class="fas fa-info-circle"></i> قم بإعداد الدورة الصيفية من زر "إعدادات الدورة" ثم أضف الطلبة والحلقات الخاصة بها.</div></div></div>
       </div>
 
       <!-- SETTINGS -->
@@ -1615,74 +1529,19 @@ textarea{resize:vertical;min-height:80px}
   </div>
 </div>
 
-<!-- Modal البرنامج المستقل -->
-<div class="overlay" id="m-program">
-  <div class="modal modal-lg">
-    <div class="mh" id="m-prog-header" style="background:linear-gradient(135deg,#0f2447,#1565c0)">
-      <h3 id="m-prog-title" style="color:#fff"><i class="fas fa-layer-group" style="margin-left:8px"></i>برنامج جديد</h3>
-      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-program')">✕</button>
-    </div>
-    <div class="mbody" style="padding:20px">
-      <input type="hidden" id="prog-id">
-      <!-- النوع والأيقونة -->
-      <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block">نوع البرنامج</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px" id="prog-type-btns">
-          <button type="button" data-type="summer"      data-icon="fas fa-sun"           data-color="#d97706" onclick="selectProgType(this)" class="prog-type-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid #fbbf24;background:#fef9c3;color:#92400e;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-sun" style="margin-left:5px"></i>دورة صيفية</button>
-          <button type="button" data-type="camp"        data-icon="fas fa-campground"    data-color="#16a34a" onclick="selectProgType(this)" class="prog-type-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid #86efac;background:#dcfce7;color:#14532d;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-campground" style="margin-left:5px"></i>مخيم</button>
-          <button type="button" data-type="competition" data-icon="fas fa-trophy"        data-color="#2563eb" onclick="selectProgType(this)" class="prog-type-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid #93c5fd;background:#dbeafe;color:#1e3a8a;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-trophy" style="margin-left:5px"></i>مسابقة قرآنية</button>
-          <button type="button" data-type="women"       data-icon="fas fa-female"        data-color="#9333ea" onclick="selectProgType(this)" class="prog-type-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid #c084fc;background:#fae8ff;color:#581c87;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-female" style="margin-left:5px"></i>برنامج النساء</button>
-          <button type="button" data-type="children"    data-icon="fas fa-child"         data-color="#ea580c" onclick="selectProgType(this)" class="prog-type-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid #fb923c;background:#ffedd5;color:#7c2d12;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-child" style="margin-left:5px"></i>برنامج الأطفال</button>
-          <button type="button" data-type="seasonal"    data-icon="fas fa-calendar-alt"  data-color="#0284c7" onclick="selectProgType(this)" class="prog-type-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid #7dd3fc;background:#e0f2fe;color:#0c4a6e;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-calendar-alt" style="margin-left:5px"></i>دورة موسمية</button>
-          <button type="button" data-type="independent" data-icon="fas fa-graduation-cap" data-color="#475569" onclick="selectProgType(this)" class="prog-type-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid #94a3b8;background:#f1f5f9;color:#1e293b;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-graduation-cap" style="margin-left:5px"></i>حلقة مستقلة</button>
-        </div>
-        <input type="hidden" id="prog-type" value="summer">
-        <input type="hidden" id="prog-icon" value="fas fa-sun">
-        <input type="hidden" id="prog-color" value="#d97706">
-      </div>
+<!-- Modal Summer Config -->
+<div class="overlay" id="m-summer">
+  <div class="modal">
+    <div class="mh"><h3><i class="fas fa-sun" style="color:var(--gold);margin-left:6px"></i>إعدادات الدورة الصيفية</h3><button class="mclose" onclick="closeM('m-summer')">✕</button></div>
+    <div class="mbody">
       <div class="fgrid">
-        <div class="fg full"><label>اسم البرنامج *</label><input id="prog-name" placeholder="مثال: الدورة الصيفية 2025"></div>
-        <div class="fg full"><label>وصف البرنامج</label><textarea id="prog-desc" rows="2" placeholder="أهداف البرنامج أو ملاحظات..."></textarea></div>
-        <div class="fg"><label>تاريخ البداية</label><input id="prog-start" type="date"></div>
-        <div class="fg"><label>تاريخ النهاية</label><input id="prog-end" type="date"></div>
-        <div class="fg full"><label>المشرف المسؤول</label>
-          <select id="prog-supervisor">
-            <option value="">— اختر مشرفاً —</option>
-          </select>
-        </div>
-      </div>
-      <!-- استنساخ من برنامج سابق -->
-      <div style="margin-top:14px;padding:12px 16px;background:#f0f6ff;border-radius:10px;border:1px solid #dbeafe">
-        <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px"><i class="fas fa-copy" style="margin-left:5px"></i>استنساخ إعدادات من برنامج سابق (اختياري)</div>
-        <select id="prog-clone-from" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:Tajawal,sans-serif;font-size:13px">
-          <option value="">— ابدأ من الصفر —</option>
-        </select>
-        <div style="font-size:11px;color:var(--text3);margin-top:5px">سيتم نسخ نوع البرنامج والإعدادات العامة فقط — البيانات لن تُنسخ</div>
+        <div class="fg full"><label>اسم الدورة</label><input id="sum-name" placeholder="الدورة الصيفية 2025"></div>
+        <div class="fg"><label>تاريخ البداية</label><input id="sum-start" type="date"></div>
+        <div class="fg"><label>تاريخ النهاية</label><input id="sum-end" type="date"></div>
+        <div class="fg full"><label>وصف الدورة</label><textarea id="sum-desc" rows="2"></textarea></div>
       </div>
     </div>
-    <div class="mfoot">
-      <button class="btn btn-o" onclick="closeM('m-program')">إلغاء</button>
-      <button class="btn btn-p" onclick="saveProgram()"><i class="fas fa-save"></i> حفظ البرنامج</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal تأكيد أرشفة برنامج -->
-<div class="overlay" id="m-prog-archive">
-  <div class="modal" style="max-width:420px">
-    <div class="mh" style="background:linear-gradient(135deg,#78350f,#d97706)">
-      <h3 style="color:#fff"><i class="fas fa-archive" style="margin-left:8px"></i>أرشفة البرنامج</h3>
-      <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-prog-archive')">✕</button>
-    </div>
-    <div class="mbody" style="padding:24px;text-align:center">
-      <div style="font-size:40px;margin-bottom:12px">📦</div>
-      <p style="font-size:15px;font-weight:700;color:var(--warn);margin-bottom:8px">أرشفة البرنامج</p>
-      <p id="prog-archive-msg" style="font-size:13px;color:var(--text3);line-height:1.7">سيُؤرشف البرنامج وتبقى جميع البيانات محفوظة. يمكنك استعادته لاحقاً.</p>
-    </div>
-    <div class="mfoot" style="justify-content:center;gap:12px">
-      <button class="btn btn-o" onclick="closeM('m-prog-archive')" style="min-width:120px">إلغاء</button>
-      <button class="btn btn-w" id="prog-archive-confirm-btn" style="min-width:120px"><i class="fas fa-archive"></i> أرشفة</button>
-    </div>
+    <div class="mfoot"><button class="btn btn-o" onclick="closeM('m-summer')">إلغاء</button><button class="btn btn-w" onclick="saveSummer()"><i class="fas fa-save"></i> حفظ</button></div>
   </div>
 </div>
 
@@ -1776,55 +1635,6 @@ textarea{resize:vertical;min-height:80px}
 <div id="toasts"></div>
 
 <script>
-/* ══════════════════════════════════════════════════════════════
-   نظام البرامج المستقلة — SQL المطلوب في Supabase
-   شغّل هذا مرة واحدة فقط
-
-   -- 1. جدول البرامج
-   create table if not exists public.programs (
-     id            uuid primary key default gen_random_uuid(),
-     name          text not null,
-     type          text not null default 'summer',
-     description   text,
-     start_date    date,
-     end_date      date,
-     supervisor_id uuid references public.profiles(id) on delete set null,
-     status        text not null default 'active',
-     color         text default '#1565c0',
-     icon          text default 'fas fa-sun',
-     settings      jsonb default '{}',
-     created_by    uuid references public.profiles(id) on delete set null,
-     created_at    timestamptz not null default now(),
-     updated_at    timestamptz not null default now()
-   );
-   alter table public.programs enable row level security;
-   create policy "programs: auth users manage"
-     on public.programs for all using (auth.uid() is not null);
-
-   -- 2. عمود program_id في groups
-   alter table public.groups
-     add column if not exists program_id uuid references public.programs(id) on delete cascade;
-   create index if not exists idx_groups_program on public.groups(program_id);
-
-   -- 3. عمود program_id في students
-   alter table public.students
-     add column if not exists program_id uuid references public.programs(id) on delete cascade;
-   create index if not exists idx_students_program on public.students(program_id);
-
-   -- 4. عمود program_id في attendance
-   alter table public.attendance
-     add column if not exists program_id uuid references public.programs(id) on delete cascade;
-
-   -- 5. عمود program_id في recitations
-   alter table public.recitations
-     add column if not exists program_id uuid references public.programs(id) on delete cascade;
-
-   -- 6. عمود program_id في exams
-   alter table public.exams
-     add column if not exists program_id uuid references public.programs(id) on delete cascade;
-
-   ══════════════════════════════════════════════════════════════ */
-
 // ===================== SUPABASE =====================
 const { createClient } = supabase;
 const db = createClient(
@@ -1868,126 +1678,6 @@ const S = {
 
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 let EXAMS_DB = []; // سجل محلي للامتحانات - يُحمَّل من Supabase عند الدخول
-
-// ══════════════════════════════════════════════════════════════
-//  ProgramContext — نظام البرامج المستقلة
-//  كل برنامج (دورة صيفية، مخيم، مسابقة...) يعمل كـ context مستقل
-// ══════════════════════════════════════════════════════════════
-const ProgramContext = (() => {
-  let _active = null;   // null = النظام الرئيسي | uuid = برنامج مستقل
-  let _programs = [];   // قائمة كل البرامج المحملة
-
-  return {
-    // ── Getters ──────────────────────────────────────────────
-    get active()    { return _active; },
-    get programs()  { return _programs; },
-    get isMain()    { return _active === null; },
-    get activeData(){ return _programs.find(p => p.id === _active) || null; },
-
-    // ── Setters ──────────────────────────────────────────────
-    setPrograms(list){ _programs = list || []; },
-
-    /** الدخول لبرنامج — يُغيّر الـ context ويُعيد تحميل البيانات */
-    async enter(programId) {
-      _active = programId;
-      await ProgramContext.loadProgramData(programId);
-      ProgramContext.updateUI();
-    },
-
-    /** العودة للنظام الرئيسي */
-    async exitToMain() {
-      _active = null;
-      await loadData();      // إعادة تحميل بيانات النظام الرئيسي
-      ProgramContext.updateUI();
-      nav('dashboard');
-    },
-
-    /** تحميل بيانات برنامج محدد في AppState */
-    async loadProgramData(programId) {
-      try {
-        const [grp, stu, att, rec] = await Promise.allSettled([
-          db.from('groups').select('*').eq('program_id', programId).order('name'),
-          db.from('students').select('*').eq('program_id', programId).eq('is_archived', false).order('name'),
-          db.from('attendance').select('*').eq('program_id', programId).order('date', {ascending:false}),
-          db.from('recitations').select('*').eq('program_id', programId).order('date', {ascending:false}).limit(300),
-        ]);
-        S.groups      = grp.value?.data      || [];
-        S.students    = stu.value?.data      || [];
-        S.attendance  = att.value?.data      || [];
-        S.recitations = rec.value?.data      || [];
-        S.finance     = [];   // المالية مستقلة لاحقاً
-        clearHizbCache && clearHizbCache();
-      } catch(e) { toast('خطأ في تحميل بيانات البرنامج: ' + e.message, 'err'); }
-    },
-
-    /** تحديث واجهة المستخدم عند تغيير الـ context */
-    updateUI() {
-      const prog     = this.activeData;
-      const banner   = document.getElementById('program-context-bar');
-      const mainArea = document.getElementById('app');
-
-      if (prog) {
-        // شريط السياق — يظهر عند دخول برنامج
-        if (banner) {
-          banner.style.display  = 'flex';
-          banner.style.background = prog.color || '#1565c0';
-          const namEl = document.getElementById('ctx-prog-name');
-          const icEl  = document.getElementById('ctx-prog-icon');
-          if (namEl) namEl.textContent = prog.name;
-          if (icEl)  icEl.className    = prog.icon || 'fas fa-sun';
-        }
-        // تغيير عنوان الصفحة
-        document.title = prog.name + ' — دار القرآن الكريم';
-      } else {
-        if (banner) banner.style.display = 'none';
-        document.title = 'دار القرآن الكريم — الوفاق';
-      }
-    },
-
-    /** حفظ برنامج جديد أو تحديث قائم */
-    async save(payload) {
-      const isNew = !payload.id;
-      if (isNew) payload.created_by = S.profile?.id;
-      payload.updated_at = new Date().toISOString();
-      const { data, error } = isNew
-        ? await db.from('programs').insert(payload).select().single()
-        : await db.from('programs').update(payload).eq('id', payload.id).select().single();
-      if (error) throw error;
-      if (isNew) _programs.unshift(data);
-      else       _programs = _programs.map(p => p.id === data.id ? data : p);
-      return data;
-    },
-
-    /** أرشفة برنامج — لا حذف */
-    async archive(id) {
-      const { error } = await db.from('programs').update({ status: 'archived' }).eq('id', id);
-      if (error) throw error;
-      _programs = _programs.map(p => p.id === id ? { ...p, status: 'archived' } : p);
-    },
-
-    /** تحميل كل البرامج من Supabase */
-    async loadAll() {
-      try {
-        const { data } = await db.from('programs').select('*').order('created_at', { ascending: false });
-        _programs = data || [];
-      } catch(e) { _programs = []; }
-    },
-
-    /** نسخ إعدادات برنامج سابق كقالب */
-    async cloneFrom(sourceId, newName) {
-      const src = _programs.find(p => p.id === sourceId);
-      if (!src) throw new Error('البرنامج المصدر غير موجود');
-      return await this.save({
-        name:        newName,
-        type:        src.type,
-        description: src.description,
-        color:       src.color,
-        icon:        src.icon,
-        settings:    src.settings,
-      });
-    },
-  };
-})();
 
 // ===================== IMAGE FALLBACK =====================
 // شعار SVG بديل عند فشل تحميل الصورة
@@ -2147,11 +1837,8 @@ function closeM(id){const el=$(id)||document.querySelector('#'+id);if(el)el.clas
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 
 function myGroups(){
-  // إذا كنا في سياق برنامج — نُعيد حلقاته فقط
   const r=S.profile?.role;
-  const all = S.groups;
-  if(r==='admin'||r==='supervisor') return all;
-  return all.filter(g=>g.teacher_id===S.profile?.id);
+  return(r==='admin'||r==='supervisor')?S.groups:S.groups.filter(g=>g.teacher_id===S.profile?.id);
 }
 function myStudents(){
   const r=S.profile?.role;
@@ -2326,9 +2013,6 @@ async function loadProfile(){
 async function loadData(){
   const isAdmin=S.profile?.role==='admin'||S.profile?.role==='supervisor';
   try{
-    // Programs — تحميل البرامج المستقلة أولاً
-    await ProgramContext.loadAll();
-
     // Groups
     const{data:g}=await db.from('groups').select('*').eq('is_summer',false).order('name');
     S.groups=g||[];
@@ -2463,7 +2147,7 @@ async function checkAuth(){
 }
 
 // ===================== NAV =====================
-const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب','absence-stats':'إحصائيات الغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',programs:'البرامج المستقلة','program-dash':'لوحة تحكم البرنامج',settings:'الإعدادات',certificates:'الشهادات',results:'نتائج الدورات'};
+const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب','absence-stats':'إحصائيات الغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات',certificates:'الشهادات'};
 
 function nav(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -2472,8 +2156,6 @@ function nav(page){
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+page+"'"))n.classList.add('active')});
   $('breadcrumb-txt').textContent=PAGE_TITLES[page]||page;
   if(page==='absence-stats')initAbsStats();
-  if(page==='programs'){ProgramContext.loadAll().then(renderPrograms);}
-  if(page==='program-dash'){const p=ProgramContext.activeData;if(p)renderProgramDash(p);else nav('programs');}
   if(page==='dashboard')renderDash();
   if(page==='groups')renderGroups();
   if(page==='teachers')renderTeachers();
@@ -2855,8 +2537,7 @@ async function saveGroup(){
   const days=schedule.map(s=>s.day);
   if(!days.length){toast('اختر يوماً واحداً على الأقل','warn');return}
   const newTeacherId=$('g-teacher').value||null;
-  const _progId = ProgramContext.active || null;
-  const data={name,teacher_id:newTeacherId,level:$('g-level').value,schedule,days,notes:$('g-notes').value,program_id:_progId,is_summer:!!_progId};
+  const data={name,teacher_id:newTeacherId,level:$('g-level').value,schedule,days,notes:$('g-notes').value};
   try{
     if(id){
       const{error}=await db.from('groups').update(data).eq('id',id);
@@ -2982,8 +2663,7 @@ async function saveStudent(){
   // teacher_id يُؤخذ من الحلقة المختارة وليس من المستخدم الحالي
   const selectedGroup=S.groups.find(g=>g.id===gid);
   const teacherId=selectedGroup?.teacher_id||S.profile?.id||null;
-  const _sProgId = ProgramContext.active || null;
-  const data={name,group_id:gid,phone:$('s-phone').value.trim(),parent_name:$('s-parent').value.trim(),dob:$('s-dob').value||null,gender:$('s-gender').value,level:$('s-level').value,join_date:$('s-join').value||null,photo_url:$('s-photo').value.trim()||null,notes:$('s-notes').value,teacher_id:teacherId,is_summer:!!_sProgId,program_id:_sProgId};
+  const data={name,group_id:gid,phone:$('s-phone').value.trim(),parent_name:$('s-parent').value.trim(),dob:$('s-dob').value||null,gender:$('s-gender').value,level:$('s-level').value,join_date:$('s-join').value||null,photo_url:$('s-photo').value.trim()||null,notes:$('s-notes').value,teacher_id:teacherId,is_summer:false};
   try{
     if(id){const{error}=await db.from('students').update(data).eq('id',id);if(error)throw error;S.students=S.students.map(s=>s.id===id?{...s,...data}:s)}
     else{const{data:ns,error}=await db.from('students').insert(data).select().single();if(error)throw error;S.students.push(ns)}
@@ -3078,7 +2758,7 @@ async function saveAtt(){
   rows.forEach(row=>{
     const sid=row.dataset.sid;
     const on=row.querySelector('.att-btn.on');
-    if(on)records.push({student_id:sid,group_id:gid,date:dt,status:on.title,teacher_id:S.profile?.id,program_id:ProgramContext.active||null});
+    if(on)records.push({student_id:sid,group_id:gid,date:dt,status:on.title,teacher_id:S.profile?.id});
   });
   if(!records.length){toast('لم يتم تحديد حالة لأي طالب','warn');return}
   try{
@@ -3292,7 +2972,7 @@ async function saveRec(){
   const stars=starsRaw; // قد يكون سالباً (لم يحفظ = -1)
   const type=document.querySelector('input[name="r-type"]:checked')?.value||'حفظ جديد';
   const finalNote=getFinalNote();
-  const record={student_id:sid,type,surah_from:sf,verse_from:vf,surah_to:st,verse_to:vt,verses_count:v,grade,stars,date:dt,notes:finalNote,teacher_id:S.profile?.id,program_id:ProgramContext.active||null};
+  const record={student_id:sid,type,surah_from:sf,verse_from:vf,surah_to:st,verse_to:vt,verses_count:v,grade,stars,date:dt,notes:finalNote,teacher_id:S.profile?.id};
   try{
     const{data,error}=await db.from('recitations').insert(record).select().single();
     if(error)throw error;
@@ -3574,429 +3254,13 @@ function renderFinance(){
   $('fin-tbody').innerHTML=S.finance.length?S.finance.map(f=>{const s=S.students.find(x=>x.id===f.student_id);return`<tr><td><strong>${f.description||'—'}</strong></td><td>${s?.name||'—'}</td><td><span class="bx ${f.type==='دخل'?'bx-g':'bx-r'}">${f.type}</span></td><td style="font-weight:700;color:${f.type==='دخل'?'var(--accent)':'var(--danger)'}">${(f.amount||0).toLocaleString()} د.م.</td><td>${fmtDate(f.date)}</td><td><div style="display:flex;gap:3px"><button class="btn btn-g btn-sm btn-ic" onclick="openFinModal('${f.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-g btn-sm btn-ic" style="color:var(--danger)" onclick="delFinance('${f.id}')"><i class="fas fa-trash"></i></button></div></td></tr>`}).join(''):`<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3)">لا توجد سجلات</td></tr>`;
 }
 
-// ════════════════════════════════════════════════════════════
-//  نظام البرامج المستقلة — Programs System
-// ════════════════════════════════════════════════════════════
-
-// أنواع البرامج
-const PROGRAM_TYPES = {
-  summer:      { label:'دورة صيفية',      icon:'fas fa-sun',            color:'#d97706', bg:'#fef9c3', border:'#fbbf24' },
-  camp:        { label:'مخيم',             icon:'fas fa-campground',     color:'#16a34a', bg:'#dcfce7', border:'#4ade80' },
-  competition: { label:'مسابقة قرآنية',   icon:'fas fa-trophy',         color:'#2563eb', bg:'#dbeafe', border:'#93c5fd' },
-  women:       { label:'برنامج النساء',   icon:'fas fa-female',          color:'#9333ea', bg:'#fae8ff', border:'#c084fc' },
-  children:    { label:'برنامج الأطفال',  icon:'fas fa-child',           color:'#ea580c', bg:'#ffedd5', border:'#fb923c' },
-  seasonal:    { label:'دورة موسمية',     icon:'fas fa-calendar-alt',    color:'#0284c7', bg:'#e0f2fe', border:'#7dd3fc' },
-  independent: { label:'حلقة مستقلة',    icon:'fas fa-graduation-cap',  color:'#475569', bg:'#f1f5f9', border:'#94a3b8' },
-};
-
-// Legacy compatibility
-function openSummerConfig(){ nav('programs'); }
-async function saveSummer(){ nav('programs'); }
-
-// ── إنشاء / تعديل برنامج ──────────────────────────────────
-function openProgramModal(defaultType, editId) {
-  $('prog-id').value = editId || '';
-  $('prog-name').value  = '';
-  $('prog-desc').value  = '';
-  $('prog-start').value = '';
-  $('prog-end').value   = '';
-  $('prog-type').value  = defaultType || 'summer';
-  $('prog-icon').value  = PROGRAM_TYPES[defaultType||'summer']?.icon  || 'fas fa-sun';
-  $('prog-color').value = PROGRAM_TYPES[defaultType||'summer']?.color || '#d97706';
-
-  // تحديد نوع البرنامج في الأزرار
-  document.querySelectorAll('.prog-type-btn').forEach(b => {
-    b.style.outline = b.dataset.type === (defaultType||'summer') ? '2px solid #1565c0' : 'none';
-    b.style.boxShadow = b.dataset.type === (defaultType||'summer') ? '0 0 0 3px rgba(21,101,192,.15)' : 'none';
-  });
-
-  // تعبئة قائمة المشرفين
-  $('prog-supervisor').innerHTML =
-    '<option value="">— اختر مشرفاً —</option>' +
-    S.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-
-  // تعبئة قائمة الاستنساخ
-  const cloneSel = $('prog-clone-from');
-  cloneSel.innerHTML = '<option value="">— ابدأ من الصفر —</option>' +
-    ProgramContext.programs
-      .filter(p => p.status !== 'archived')
-      .map(p => `<option value="${p.id}">${PROGRAM_TYPES[p.type]?.label||p.type} — ${p.name}</option>`)
-      .join('');
-
-  // إذا تعديل — تعبئة البيانات
-  if (editId) {
-    const prog = ProgramContext.programs.find(p => p.id === editId);
-    if (prog) {
-      $('prog-name').value        = prog.name  || '';
-      $('prog-desc').value        = prog.description || '';
-      $('prog-start').value       = prog.start_date  || '';
-      $('prog-end').value         = prog.end_date    || '';
-      $('prog-supervisor').value  = prog.supervisor_id || '';
-      $('prog-type').value        = prog.type  || 'summer';
-      $('prog-icon').value        = prog.icon  || 'fas fa-sun';
-      $('prog-color').value       = prog.color || '#d97706';
-    }
-    $('m-prog-title').innerHTML = '<i class="fas fa-edit" style="margin-left:8px"></i>تعديل البرنامج';
-  } else {
-    $('m-prog-title').innerHTML = '<i class="fas fa-layer-group" style="margin-left:8px"></i>برنامج جديد';
-  }
-  openM('m-program');
-}
-
-function selectProgType(btn) {
-  document.querySelectorAll('.prog-type-btn').forEach(b => {
-    b.style.outline = 'none'; b.style.boxShadow = 'none';
-  });
-  btn.style.outline    = '2px solid #1565c0';
-  btn.style.boxShadow  = '0 0 0 3px rgba(21,101,192,.15)';
-  $('prog-type').value  = btn.dataset.type;
-  $('prog-icon').value  = btn.dataset.icon;
-  $('prog-color').value = btn.dataset.color;
-}
-
-async function saveProgram() {
-  const id    = $('prog-id').value;
-  const name  = $('prog-name').value.trim();
-  const type  = $('prog-type').value;
-  if (!name) { toast('أدخل اسم البرنامج', 'warn'); return; }
-
-  // استنساخ إن اختار المستخدم قالباً
-  const cloneId = $('prog-clone-from').value;
-  if (cloneId && !id) {
-    try {
-      const cloned = await ProgramContext.cloneFrom(cloneId, name);
-      // تحديث بالحقول الأخرى
-      const extra = {
-        description:   $('prog-desc').value,
-        start_date:    $('prog-start').value || null,
-        end_date:      $('prog-end').value   || null,
-        supervisor_id: $('prog-supervisor').value || null,
-      };
-      await db.from('programs').update(extra).eq('id', cloned.id);
-      Object.assign(cloned, extra);
-      toast(`✅ تم إنشاء "${name}" بناءً على القالب`, 'ok');
-      closeM('m-program');
-      renderPrograms();
-      return;
-    } catch(e) { toast('خطأ في الاستنساخ: ' + e.message, 'err'); return; }
-  }
-
-  const payload = {
-    id:            id || undefined,
-    name,
-    type,
-    icon:          $('prog-icon').value  || PROGRAM_TYPES[type]?.icon  || 'fas fa-sun',
-    color:         $('prog-color').value || PROGRAM_TYPES[type]?.color || '#1565c0',
-    description:   $('prog-desc').value,
-    start_date:    $('prog-start').value || null,
-    end_date:      $('prog-end').value   || null,
-    supervisor_id: $('prog-supervisor').value || null,
-    status:        'active',
-  };
-  if (id) payload.id = id;
-
-  try {
-    const saved = await ProgramContext.save(payload);
-    toast(`✅ تم حفظ البرنامج: ${saved.name}`, 'ok');
-    closeM('m-program');
-    renderPrograms();
-  } catch(e) { toast('خطأ: ' + e.message, 'err'); }
-}
-
-// ── عرض قائمة البرامج ────────────────────────────────────
-function renderPrograms() {
-  const active   = ProgramContext.programs.filter(p => p.status !== 'archived');
-  const archived = ProgramContext.programs.filter(p => p.status === 'archived');
-
-  $('programs-active-list').innerHTML   = buildProgramCards(active,   false);
-  $('programs-archived-list').innerHTML = buildProgramCards(archived, true);
-}
-
-function buildProgramCards(list, isArchived) {
-  if (!list.length) return `
-    <div class="empty card" style="padding:60px">
-      <i class="${isArchived ? 'fas fa-archive' : 'fas fa-layer-group'}"></i>
-      <p>${isArchived ? 'لا توجد برامج مؤرشفة' : 'لا توجد برامج نشطة — أنشئ برنامجاً جديداً'}</p>
-      ${!isArchived ? '<button class="btn btn-p" style="margin-top:16px" onclick="openProgramModal()"><i class="fas fa-plus"></i> برنامج جديد</button>' : ''}
-    </div>`;
-
-  return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:16px">
-    ${list.map(p => {
-      const type   = PROGRAM_TYPES[p.type] || PROGRAM_TYPES.summer;
-      const sup    = S.teachers.find(t => t.id === p.supervisor_id);
-      const today  = new Date().toISOString().split('T')[0];
-      const active = p.start_date && p.end_date
-        ? (today >= p.start_date && today <= p.end_date)
-        : (p.status === 'active');
-      const grpCnt = 0; // يُحسب لاحقاً
-      const stuCnt = 0;
-
-      return `<div style="background:#fff;border-radius:16px;border:1.5px solid ${type.border};overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.06);transition:all .25s"
-                   onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 32px rgba(0,0,0,.1)'"
-                   onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(0,0,0,.06)'">
-        <!-- رأس البطاقة -->
-        <div style="background:${type.bg};padding:18px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid ${type.border}">
-          <div style="width:46px;height:46px;border-radius:12px;background:${type.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px ${type.color}44">
-            <i class="${type.icon}" style="color:#fff;font-size:20px"></i>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:15px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-            <div style="font-size:11px;color:${type.color};font-weight:600;margin-top:2px">${type.label}</div>
-          </div>
-          ${active ? `<span style="background:${type.color};color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">نشط</span>` : ''}
-          ${isArchived ? `<span style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">مؤرشف</span>` : ''}
-        </div>
-        <!-- جسم البطاقة -->
-        <div style="padding:14px 18px">
-          ${p.description ? `<p style="font-size:12px;color:#64748b;margin-bottom:10px;line-height:1.65">${p.description}</p>` : ''}
-          <div style="display:flex;gap:12px;font-size:11px;color:#94a3b8;margin-bottom:12px;flex-wrap:wrap">
-            ${p.start_date ? `<span><i class="fas fa-calendar" style="margin-left:4px;color:${type.color}"></i>${fmtDate(p.start_date)} → ${fmtDate(p.end_date)}</span>` : ''}
-            ${sup ? `<span><i class="fas fa-user-shield" style="margin-left:4px;color:${type.color}"></i>${sup.name}</span>` : ''}
-          </div>
-          <!-- أزرار الإجراءات -->
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${!isArchived ? `
-            <button onclick="enterProgram('${p.id}')"
-              style="flex:1;padding:9px 12px;background:${type.color};color:#fff;border:none;border-radius:9px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s"
-              onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-              <i class="fas fa-door-open"></i> دخول البرنامج
-            </button>
-            <button onclick="openProgramModal(null,'${p.id}')" class="btn btn-g btn-sm btn-ic" title="تعديل"><i class="fas fa-edit"></i></button>
-            <button onclick="confirmArchiveProgram('${p.id}')" class="btn btn-g btn-sm btn-ic" style="color:var(--warn)" title="أرشفة"><i class="fas fa-archive"></i></button>
-            ` : `
-            <button onclick="restoreProgram('${p.id}')" class="btn btn-o btn-sm" style="flex:1"><i class="fas fa-undo"></i> استعادة</button>
-            `}
-          </div>
-        </div>
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
-// ── دخول برنامج ──────────────────────────────────────────
-async function enterProgram(programId) {
-  const prog = ProgramContext.programs.find(p => p.id === programId);
-  if (!prog) return;
-  toast(`⏳ جاري تحميل بيانات "${prog.name}"...`);
-  await ProgramContext.enter(programId);
-  renderProgramDash(prog);
-  nav('program-dash');
-}
-
-// ── لوحة تحكم البرنامج ───────────────────────────────────
-function renderProgramDash(prog) {
-  if (!prog) prog = ProgramContext.activeData;
-  if (!prog) return;
-  const type = PROGRAM_TYPES[prog.type] || PROGRAM_TYPES.summer;
-  const groups   = S.groups;
-  const students = S.students;
-  const att      = S.attendance;
-  const recs     = S.recitations;
-  const presentToday = att.filter(a => a.date === today() && a.status === 'حاضر').length;
-  const totalV   = recs.filter(r => r.type === 'حفظ جديد').reduce((a,r) => a + (r.verses_count||0), 0);
-
-  $('program-dash-content').innerHTML = `
-  <!-- رأس لوحة التحكم -->
-  <div style="background:linear-gradient(135deg,${prog.color||'#1565c0'},${prog.color||'#1565c0'}99);border-radius:16px;padding:24px;color:#fff;margin-bottom:20px;display:flex;align-items:center;gap:18px">
-    <div style="width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">
-      <i class="${type.icon}"></i>
-    </div>
-    <div style="flex:1">
-      <div style="font-size:11px;opacity:.75;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">${type.label}</div>
-      <h1 style="font-size:22px;font-weight:800;margin:0 0 4px">${prog.name}</h1>
-      ${prog.start_date ? `<div style="font-size:12px;opacity:.75">${fmtDate(prog.start_date)} — ${fmtDate(prog.end_date)}</div>` : ''}
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="openProgramModal(null,'${prog.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:8px 16px;border-radius:8px;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-edit" style="margin-left:5px"></i>تعديل</button>
-      <button onclick="ProgramContext.exitToMain()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:8px 16px;border-radius:8px;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-home" style="margin-left:5px"></i>العودة</button>
-    </div>
-  </div>
-
-  <!-- إحصائيات البرنامج -->
-  <div class="stats-grid" style="margin-bottom:20px">
-    <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-user-graduate"></i></div><div><div class="stat-h">${students.length}</div><div class="stat-p">الطلبة</div></div></div>
-    <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-users"></i></div><div><div class="stat-h">${groups.length}</div><div class="stat-p">الأفواج</div></div></div>
-    <div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-clipboard-check"></i></div><div><div class="stat-h">${presentToday}</div><div class="stat-p">حاضرون اليوم</div></div></div>
-    <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-quran"></i></div><div><div class="stat-h">${totalV.toLocaleString()}</div><div class="stat-p">آيات محفوظة</div></div></div>
-  </div>
-
-  <!-- أزرار العمليات السريعة -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
-    ${[
-      {label:'إضافة فوج',       icon:'fas fa-users',         fn:`openProgramGroupModal('${prog.id}')`, bg:prog.color||'#1565c0'},
-      {label:'إضافة طالب',      icon:'fas fa-user-plus',     fn:`openProgramStudentModal('${prog.id}')`, bg:prog.color||'#1565c0'},
-      {label:'تسجيل حضور',      icon:'fas fa-clipboard-check',fn:`openProgramAttendance('${prog.id}')`, bg:prog.color||'#1565c0'},
-      {label:'تسجيل حفظ',       icon:'fas fa-book-open',     fn:`openProgramRecitation('${prog.id}')`, bg:prog.color||'#1565c0'},
-      {label:'تقرير البرنامج',  icon:'fas fa-chart-bar',     fn:`openProgramReport('${prog.id}')`, bg:prog.color||'#1565c0'},
-      {label:'ترتيب الطلبة',    icon:'fas fa-trophy',        fn:`openProgramRanking('${prog.id}')`, bg:prog.color||'#1565c0'},
-    ].map(btn => `
-      <button onclick="${btn.fn}"
-        style="padding:16px 12px;background:${btn.bg};color:#fff;border:none;border-radius:12px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:center;box-shadow:0 4px 12px ${btn.bg}44;transition:all .2s"
-        onmouseover="this.style.opacity='.88';this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.opacity='1';this.style.transform=''">
-        <i class="${btn.icon}"></i>${btn.label}
-      </button>`).join('')}
-  </div>
-
-  <!-- أفضل الطلبة + آخر الأنشطة -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div class="card">
-      <div class="card-head"><h3><i class="fas fa-trophy" style="color:var(--gold);margin-left:6px"></i>أفضل الطلبة</h3></div>
-      <div class="card-body">
-        ${students.length ?
-          [...students]
-            .map(s => ({...s, stars: getStars(s.id), v: getTotalV(s.id)}))
-            .sort((a,b) => b.stars - a.stars)
-            .slice(0,5)
-            .map((s,i) => `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9">
-              <div style="width:22px;text-align:center;font-size:11px;font-weight:700;color:${i<3?'#d97706':'var(--text3)'}">${i+1}</div>
-              <div style="width:30px;height:30px;border-radius:50%;background:${prog.color||'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${s.name[0]}</div>
-              <div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div></div>
-              <div style="font-size:14px;font-weight:800;color:#d97706">${s.stars}⭐</div>
-            </div>`).join('')
-          : '<div class="empty"><i class="fas fa-user-graduate"></i><p>لا يوجد طلبة</p></div>'
-        }
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3><i class="fas fa-history" style="color:var(--info);margin-left:6px"></i>آخر الأنشطة</h3></div>
-      <div class="card-body">
-        ${recs.length ?
-          recs.slice(0,5).map(r => {
-            const s = students.find(x => x.id === r.student_id);
-            return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:12px">
-              <div style="width:26px;height:26px;border-radius:6px;background:#dcfce7;display:flex;align-items:center;justify-content:center"><i class="fas fa-book-open" style="color:var(--accent);font-size:10px"></i></div>
-              <span style="flex:1">${s?.name||'—'}</span>
-              <span style="color:var(--text3);font-size:10px">${fmtDate(r.date)}</span>
-            </div>`;
-          }).join('')
-          : '<div class="empty"><i class="fas fa-history"></i><p>لا توجد أنشطة</p></div>'
-        }
-      </div>
-    </div>
-  </div>`;
-}
-
-// ── إضافة فوج للبرنامج ───────────────────────────────────
-function openProgramGroupModal(programId) {
-  // نفتح مودال المجموعة العادي لكن نضبط program_id
-  S._pendingProgramId = programId;
-  openGroupModal();
-  toast('💡 سيُضاف الفوج لهذا البرنامج تلقائياً', '');
-}
-
-// ── إضافة طالب للبرنامج ──────────────────────────────────
-function openProgramStudentModal(programId) {
-  S._pendingProgramId = programId;
-  openStudentModal();
-  toast('💡 سيُضاف الطالب لهذا البرنامج تلقائياً', '');
-}
-
-// ── الحضور الخاص بالبرنامج ───────────────────────────────
-function openProgramAttendance(programId) {
-  nav('attendance');  // يستخدم نفس صفحة الحضور لكن بـ context البرنامج
-}
-
-// ── التسميع الخاص بالبرنامج ──────────────────────────────
-function openProgramRecitation(programId) {
-  openRecModal();
-}
-
-// ── تقرير البرنامج ───────────────────────────────────────
-function openProgramReport(programId) {
-  const prog = ProgramContext.programs.find(p => p.id === programId);
-  if (!prog) return;
-  const students = S.students;
-  const att      = S.attendance;
-  const recs     = S.recitations;
-  const totalV   = recs.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
-  const avgAtt   = att.length ? Math.round(att.filter(a=>a.status==='حاضر').length/att.length*100) : 0;
-  const type     = PROGRAM_TYPES[prog.type] || PROGRAM_TYPES.summer;
-  const rows     = students.map(s => {
-    const v    = getTotalV(s.id);
-    const att2 = getAttRate(s.id);
-    const st   = getStars(s.id);
-    return `<tr><td><strong>${s.name}</strong></td><td>${v.toLocaleString()}</td><td>${fmtHizb(calcHizb(s.id))}</td><td>${att2}%</td><td style="color:#d97706;font-weight:700">${st}⭐</td></tr>`;
-  }).join('');
-  makePDF(`تقرير برنامج: ${prog.name}`,
-    `<div><span class="sb"><h3>${students.length}</h3><p>طلبة</p></span><span class="sb"><h3>${totalV.toLocaleString()}</h3><p>آيات</p></span><span class="sb"><h3>${avgAtt}%</h3><p>حضور</p></span></div>
-     <table><thead><tr><th>الطالب</th><th>الآيات</th><th>الأحزاب</th><th>الحضور</th><th>النجوم</th></tr></thead><tbody>${rows}</tbody></table>`
-  );
-}
-
-// ── ترتيب الطلبة ─────────────────────────────────────────
-function openProgramRanking(programId) {
-  const prog    = ProgramContext.programs.find(p => p.id === programId);
-  const students = S.students;
-  const ranked  = [...students]
-    .map(s=>({...s, stars:getStars(s.id), v:getTotalV(s.id), att:getAttRate(s.id)}))
-    .sort((a,b)=>b.stars-a.stars);
-  const type = PROGRAM_TYPES[prog?.type] || PROGRAM_TYPES.summer;
-  const medals = {0:'🥇',1:'🥈',2:'🥉'};
-
-  let modal = $('m-prog-ranking');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'm-prog-ranking'; modal.className = 'overlay';
-    modal.innerHTML = `<div class="modal modal-lg">
-      <div class="mh" id="rank-header" style="background:linear-gradient(135deg,#0f2447,#1565c0)">
-        <h3 style="color:#fff"><i class="fas fa-trophy" style="color:#fbbf24;margin-left:8px"></i>ترتيب الطلبة</h3>
-        <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-prog-ranking')">✕</button>
-      </div>
-      <div class="mbody" id="rank-content" style="padding:20px;max-height:70vh;overflow-y:auto"></div>
-      <div class="mfoot"><button class="btn btn-p btn-sm" onclick="exportProgramRankPDF('${programId||''}')"><i class="fas fa-file-pdf"></i> تصدير PDF</button><button class="btn btn-o" onclick="closeM('m-prog-ranking')">إغلاق</button></div>
-    </div>`;
-    modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
-    document.body.appendChild(modal);
-  }
-  if (prog) $('rank-header').style.background = `linear-gradient(135deg,${prog.color},${prog.color}99)`;
-  $('rank-content').innerHTML = ranked.length
-    ? ranked.map((s,i) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:${i<3?['#fef9c3','#f1f5f9','#fff7ed'][i]:'#f8fafc'};border:1px solid ${i<3?['#fde68a','#94a3b8','#fdba74'][i]:'var(--border)'};margin-bottom:6px">
-        <div style="font-size:20px;width:28px;text-align:center">${medals[i]||i+1}</div>
-        <div style="width:36px;height:36px;border-radius:50%;background:${prog?.color||'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">${s.name[0]}</div>
-        <div style="flex:1"><div style="font-size:14px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--text3)">${s.v.toLocaleString()} آية · ${s.att}% حضور</div></div>
-        <div style="font-size:18px;font-weight:800;color:#d97706">${s.stars}⭐</div>
-      </div>`).join('')
-    : '<div class="empty"><i class="fas fa-user-graduate"></i><p>لا يوجد طلبة مسجلون</p></div>';
-  openM('m-prog-ranking');
-}
-
-// ── أرشفة / استعادة ─────────────────────────────────────
-function confirmArchiveProgram(id) {
-  const prog = ProgramContext.programs.find(p => p.id === id);
-  if (!prog) return;
-  $('prog-archive-msg').textContent = `سيُؤرشف برنامج "${prog.name}" وتبقى جميع البيانات محفوظة. يمكنك استعادته لاحقاً.`;
-  $('prog-archive-confirm-btn').onclick = async () => {
-    try {
-      await ProgramContext.archive(id);
-      closeM('m-prog-archive');
-      renderPrograms();
-      toast(`📦 تم أرشفة "${prog.name}"`, 'ok');
-    } catch(e) { toast('خطأ: ' + e.message, 'err'); }
-  };
-  openM('m-prog-archive');
-}
-
-async function restoreProgram(id) {
-  try {
-    await db.from('programs').update({ status: 'active' }).eq('id', id);
-    ProgramContext.programs.find(p=>p.id===id) && (ProgramContext.programs.find(p=>p.id===id).status='active');
-    renderPrograms();
-    toast('✅ تم استعادة البرنامج', 'ok');
-  } catch(e) { toast('خطأ: ' + e.message, 'err'); }
-}
-
-// ── تصدير ترتيب الطلبة PDF ──────────────────────────────
-function exportProgramRankPDF(programId) {
-  const prog    = ProgramContext.programs.find(p => p.id === programId);
-  const students = S.students;
-  const ranked  = [...students]
-    .map(s=>({...s, stars:getStars(s.id), v:getTotalV(s.id), att:getAttRate(s.id)}))
-    .sort((a,b)=>b.stars-a.stars);
-  const rows = ranked.map((s,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${s.name}</td><td style="text-align:center">${s.v.toLocaleString()}</td><td style="text-align:center">${fmtHizb(calcHizb(s.id))}</td><td style="text-align:center">${s.att}%</td><td style="text-align:center;font-weight:700;color:#d97706">${s.stars}</td></tr>`).join('');
-  makePDF(`ترتيب طلبة: ${prog?.name||'البرنامج'}`,
-    `<table><thead><tr><th>#</th><th>الطالب</th><th>الآيات</th><th>الأحزاب</th><th>الحضور</th><th>النجوم</th></tr></thead><tbody>${rows}</tbody></table>`);
+// ===================== SUMMER =====================
+function openSummerConfig(){openM('m-summer')}
+async function saveSummer(){
+  const cfg={name:$('sum-name').value.trim(),start:$('sum-start').value,end:$('sum-end').value,desc:$('sum-desc').value};
+  if(!cfg.name||!cfg.start||!cfg.end){toast('أكمل البيانات','warn');return}
+  try{await db.from('settings').upsert({key:'summer_config',value:JSON.stringify(cfg)},{onConflict:'key'});closeM('m-summer');toast('تم حفظ الدورة الصيفية','ok')}
+  catch(e){toast('خطأ: '+e.message,'err')}
 }
 
 // ===================== PDF EXPORT =====================
@@ -4392,8 +3656,9 @@ async function saveExamToDB(result){
 
 function showExamResultModal(r){
   const stars = r.pct>=90?'⭐⭐⭐':r.pct>=75?'⭐⭐':r.pct>=60?'⭐':'';
+  const _ea = getAppreciation(r.avg||0);
   const status = r.pct>=60
-    ? `<span class="bx bx-g" style="font-size:13px;padding:6px 16px">ناجح ✅</span>`
+    ? `<span style="font-size:13px;padding:6px 16px;border-radius:20px;background:${_ea.bg};border:1px solid ${_ea.border};color:${_ea.valueTxt};font-weight:800">${_ea.emoji} ${_ea.ar}</span>`
     : `<span class="bx bx-r" style="font-size:13px;padding:6px 16px">يحتاج مراجعة ⚠️</span>`;
   const color = r.pct>=80?'#16a34a':r.pct>=60?'#d97706':'#dc2626';
 
@@ -4847,11 +4112,6 @@ function fillSelects(){
   const mg=myGroups();
   const fg=$('filter-group');
   if(fg)fg.innerHTML='<option value="">كل الحلقات</option>'+mg.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
-  // تحديث قائمة الحلقات في صفحة الحضور أيضاً
-  const ag=$('att-group');
-  if(ag&&!ag.options.length){
-    ag.innerHTML='<option value="">— اختر الحلقة —</option>'+mg.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
-  }
 }
 
 // ===================== INIT =====================
@@ -7338,24 +6598,34 @@ function clearResultsCache() { _RESULTS_CACHE = null; }
 function clearSubjectsCache() { _SUBJECTS_CACHE = null; }
 
 // ═══ التقدير حسب المعدل ═══
+// ══ سلّم تقديرات جمعية الوفاق ══
 function getAppreciation(avg) {
-  if (avg >= 18)   return { ar: 'ممتاز',     fr: 'Excellent',      color: '#0369a1' };
-  if (avg >= 16)   return { ar: 'حسن جداً',  fr: 'Très Bien',      color: '#16a34a' };
-  if (avg >= 14)   return { ar: 'جيد',       fr: 'Bien',           color: '#65a30d' };
-  if (avg >= 12)   return { ar: 'مقبول',     fr: 'Assez Bien',     color: '#d97706' };
-  if (avg >= 10)   return { ar: 'لا بأس به', fr: 'Passable',       color: '#ea580c' };
-  return             { ar: 'ضعيف',       fr: 'Insuffisant',    color: '#dc2626' };
+  if (avg >= 18) return { ar:'جيد جداً',   emoji:'🌟', bg:'#dcfce7', border:'#16a34a', headerBg:'#16a34a', headerTxt:'#fff', valueTxt:'#14532d' };
+  if (avg >= 16) return { ar:'جيد',        emoji:'✅', bg:'#dbeafe', border:'#2563eb', headerBg:'#2563eb', headerTxt:'#fff', valueTxt:'#1e3a8a' };
+  if (avg >= 14) return { ar:'حسن',        emoji:'👍', bg:'#fefce8', border:'#ca8a04', headerBg:'#ca8a04', headerTxt:'#fff', valueTxt:'#713f12' };
+  if (avg >= 12) return { ar:'مستحسن',    emoji:'📘', bg:'#fff7ed', border:'#f97316', headerBg:'#f97316', headerTxt:'#fff', valueTxt:'#7c2d12' };
+  if (avg >= 10) return { ar:'لا بأس به', emoji:'⚠️', bg:'#fff7ed', border:'#ea580c', headerBg:'#ea580c', headerTxt:'#fff', valueTxt:'#9a3412' };
+  return           { ar:'متوسط',      emoji:'❗', bg:'#fef2f2', border:'#dc2626', headerBg:'#dc2626', headerTxt:'#fff', valueTxt:'#7f1d1d' };
 }
 
 // التقدير حسب النقطة الفردية
 function getNoteAppreciation(note) {
-  if (note >= 18)  return 'ممتاز';
-  if (note >= 16)  return 'حسن جداً';
-  if (note >= 14)  return 'جيد جداً';
-  if (note >= 12)  return 'جيد';
+  if (note >= 18)  return 'جيد جداً';
+  if (note >= 16)  return 'جيد';
+  if (note >= 14)  return 'حسن';
+  if (note >= 12)  return 'مستحسن';
   if (note >= 10)  return 'لا بأس به';
-  if (note >= 8)   return 'مستحسن';
-  return 'ضعيف';
+  return 'متوسط';
+}
+
+// لون النقطة الفردية — متوافق مع السلّم
+function getNoteColor(note) {
+  if (note >= 18) return '#15803d';
+  if (note >= 16) return '#1d4ed8';
+  if (note >= 14) return '#ca8a04';
+  if (note >= 12) return '#ea580c';
+  if (note >= 10) return '#dc2626';
+  return '#991b1b';
 }
 
 // ═══ حساب النتيجة ═══
@@ -7486,10 +6756,12 @@ async function renderResultsList() {
   const avgAll   = list.length ? (list.reduce((a, r) => a + r.avg, 0) / list.length).toFixed(2) : '—';
   const passCount = list.filter(r => r.avg >= 10).length;
   const topStudent = list.length ? list.reduce((a, b) => a.avg > b.avg ? a : b) : null;
+  const _aNum = avgAll !== '—' ? parseFloat(avgAll) : null;
+  const _aApp = _aNum !== null ? getAppreciation(_aNum) : null;
   document.getElementById('res-top-stats').innerHTML = `
     <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-file-alt"></i></div><div><div class="stat-h">${list.length}</div><div class="stat-p">نتائج مُسجّلة</div></div></div>
     <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-h">${passCount}</div><div class="stat-p">ناجحون (≥10)</div></div></div>
-    <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-star"></i></div><div><div class="stat-h">${avgAll}</div><div class="stat-p">متوسط المعدلات</div></div></div>
+    <div class="stat-card" style="${_aApp?`border-top:3px solid ${_aApp.border}`:''}"><div class="stat-ic" style="${_aApp?`background:${_aApp.bg}`:'background:#fef3c7'}"><i class="fas fa-chart-line" style="${_aApp?`color:${_aApp.valueTxt}`:'color:#d97706'}"></i></div><div><div class="stat-h" style="${_aApp?`color:${_aApp.valueTxt}`:''};">${avgAll}</div><div class="stat-p">متوسط المعدلات</div>${_aApp?`<div style="margin-top:4px"><span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${_aApp.bg};border:1px solid ${_aApp.border};color:${_aApp.valueTxt};font-weight:700">${_aApp.emoji} ${_aApp.ar}</span></div>`:''}</div></div>
     <div class="stat-card"><div class="stat-ic ic-purple"><i class="fas fa-trophy"></i></div><div><div class="stat-h" style="font-size:14px">${topStudent?.student_name || '—'}</div><div class="stat-p">الأول (${topStudent?.avg || '—'})</div></div></div>`;
 
   if (!list.length) {
@@ -7497,7 +6769,7 @@ async function renderResultsList() {
     return;
   }
 
-  const appColors = { 'ممتاز': '#0369a1', 'حسن جداً': '#16a34a', 'جيد': '#65a30d', 'مقبول': '#d97706', 'لا بأس به': '#ea580c', 'ضعيف': '#dc2626' };
+  // appColors محذوف — استخدم getAppreciation() مباشرة
   document.getElementById('results-list-body').innerHTML = `
     <div class="tbl-wrap"><table>
       <thead><tr><th>الطالب</th><th>الحلقة</th><th>الدورة</th><th>السنة</th><th>المعدل</th><th>التقدير</th><th>إجراءات</th></tr></thead>
@@ -7515,7 +6787,7 @@ async function renderResultsList() {
           <td><span class="bx bx-b" style="font-size:11px">${r.session}</span></td>
           <td style="font-size:12px;color:var(--text3)">${r.year}</td>
           <td><div style="font-size:18px;font-weight:800;color:${app.color}">${r.avg}</div></td>
-          <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:${app.color}20;color:${app.color}">${app.ar}</span></td>
+          <td><span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;background:${app.bg||'#f0fdf4'};border:1px solid ${app.border||'#16a34a'};color:${app.valueTxt||'#14532d'}">${app.emoji||''} ${app.ar}</span></td>
           <td><div style="display:flex;gap:4px">
             <button class="btn btn-p btn-sm" onclick="previewResult('${r.id}')" title="عرض"><i class="fas fa-eye"></i></button>
             <button class="btn btn-sm" style="background:#25d366;color:#fff" onclick="printResult('${r.id}')" title="طباعة"><i class="fas fa-print"></i></button>
@@ -7697,18 +6969,27 @@ async function updateResultCalc() {
   rows.forEach(r => {
     const reEl = document.getElementById(`result-${r.id}`);
     const apEl = document.getElementById(`appre-${r.id}`);
-    if (reEl) reEl.textContent  = r.result.toFixed(2);
-    if (apEl) { apEl.textContent = r.appreciation; apEl.style.color = getAppreciation(r.note).color || '#666'; }
+    const nc = typeof getNoteColor === 'function' ? getNoteColor : (n => n>=16?'#15803d':n>=12?'#1d4ed8':n>=10?'#ea580c':'#dc2626');
+    if (reEl) { reEl.textContent = r.result.toFixed(2); reEl.style.color = nc(r.note); reEl.style.fontWeight = '700'; }
+    if (apEl) { apEl.textContent = r.appreciation; apEl.style.color = nc(r.note); apEl.style.fontWeight = '700'; }
   });
 
   const avgEl  = document.getElementById('re-avg-display');
   const appEl  = document.getElementById('re-appre-display');
   const totWEl = document.getElementById('re-total-w');
   const totCEl = document.getElementById('re-total-c');
-  if (avgEl)  { avgEl.textContent  = avg.toFixed(2); avgEl.style.color = appre.color; }
-  if (appEl)  { appEl.textContent  = appre.ar;        appEl.style.color = appre.color; }
-  if (totWEl) totWEl.textContent   = totalWeighted.toFixed(2);
-  if (totCEl) totCEl.textContent   = totalCoef;
+  const sumBox = document.getElementById('re-summary-box');
+  if (avgEl)  { avgEl.textContent = avg.toFixed(2); avgEl.style.color = appre.valueTxt || appre.border || '#1565c0'; }
+  if (appEl)  {
+    const vt = appre.valueTxt || '#333';
+    const bg = appre.bg || '#f0fdf4';
+    const br = appre.border || '#16a34a';
+    const em = appre.emoji || '';
+    appEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;background:${bg};border:1.5px solid ${br};color:${vt};padding:5px 16px;border-radius:20px;font-size:13px;font-weight:800">${em} ${appre.ar}</span>`;
+  }
+  if (totWEl) totWEl.textContent = totalWeighted.toFixed(2);
+  if (totCEl) totCEl.textContent = totalCoef;
+  if (sumBox) { sumBox.style.background = `linear-gradient(135deg,${appre.bg||'#f0fdf4'},#fff)`; sumBox.style.borderColor = appre.border || '#16a34a'; }
 }
 
 function onResultStudentChange() {
@@ -7854,7 +7135,7 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
   const dateNow      = new Date().toLocaleDateString('ar-MA',{year:'numeric',month:'long',day:'numeric'});
 
   // ألوان النقطة
-  const nc = n => n>=16?'#16a34a':n>=12?'#1565c0':n>=10?'#d97706':'#dc2626';
+  const nc = n => n>=18?'#15803d':n>=16?'#1d4ed8':n>=14?'#ca8a04':n>=12?'#ea580c':n>=10?'#dc2626':'#991b1b';
 
   // صف كل مادة
   const tableRows = rows.map((r,i) => `
@@ -7946,9 +7227,12 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
   <!-- ══ بطاقات النتيجة الإجمالية: 4 بطاقات مثل الصورة ══ -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
     <!-- التقدير — أصفر مثل الصورة -->
-    <div style="text-align:center;border:2px solid #e6c200;border-radius:8px;overflow:hidden">
-      <div style="background:#e6c200;color:#5a4000;padding:5px 6px;font-size:11px;font-weight:700">التقدير</div>
-      <div style="padding:10px 4px;font-size:19px;font-weight:900;color:#5a4000">${appre.ar}</div>
+    <div style="text-align:center;border:2px solid ${appre.border||'#16a34a'};border-radius:8px;overflow:hidden">
+      <div style="background:${appre.headerBg||appre.border||'#16a34a'};color:${appre.headerTxt||'#fff'};padding:5px 6px;font-size:11px;font-weight:700">التقدير العام</div>
+      <div style="padding:6px 4px 10px;background:${appre.bg||'#dcfce7'}">
+        <div style="font-size:18px;margin-bottom:2px">${appre.emoji||'📋'}</div>
+        <div style="font-size:16px;font-weight:900;color:${appre.valueTxt||'#14532d'}">${appre.ar}</div>
+      </div>
     </div>
     <!-- المعدل -->
     <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
@@ -8057,7 +7341,7 @@ async function sendResultWA(rid) {
   const notes = record.notes || {};
   const { rows, avg, appre } = computeResult(notes, subjects);
   const subjectLines = rows.map(r => `  • ${r.name}: ${r.note}/20 — ${r.appreciation}`).join('\n');
-  const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n\nنتيجة ${record.session} للطالب:\n👤 ${record.student_name}\n📚 المستوى: ${record.level||'—'}\n📅 السنة الدراسية: ${record.year}\n\n━━━━━━━━━━━━━━\nنتائج المواد:\n${subjectLines}\n\n━━━━━━━━━━━━━━\n📊 معدل الدورة: ${avg.toFixed(2)} / 20\n🏆 التقدير: ${appre.ar}\n${record.generalNote?'\n📝 ملاحظة: '+record.generalNote:''}\n\nنسأل الله التوفيق والسداد 🌹\n\n📍 دار القرآن الكريم — جمعية الوفاق`;
+  const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n\nنتيجة ${record.session} للطالب:\n👤 ${record.student_name}\n📚 المستوى: ${record.level||'—'}\n📅 السنة الدراسية: ${record.year}\n\n━━━━━━━━━━━━━━\nنتائج المواد:\n${subjectLines}\n\n━━━━━━━━━━━━━━\n📊 معدل الدورة: ${avg.toFixed(2)} / 20\n${appre.emoji||'🏆'} التقدير: ${appre.ar}\n${record.generalNote?'\n📝 ملاحظة: '+record.generalNote:''}\n\nنسأل الله التوفيق والسداد 🌹\n\n📍 دار القرآن الكريم — جمعية الوفاق`;
   openWA(student.phone, msg);
 }
 
@@ -8204,6 +7488,1012 @@ openSDetail = function(id) {
 };
 
 console.log('✅ نظام نتائج الدورات — تم التحميل');
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  نظام البرامج المستقلة — الدورة الصيفية                      ║
+// ╚══════════════════════════════════════════════════════════════╝
+const SUMMER={config:null,groups:[],students:[],attendance:[],recitations:[],stars:[],loaded:false,loading:false};
+
+async function loadSummerData(force=false){
+  if(SUMMER.loading)return;if(SUMMER.loaded&&!force)return;SUMMER.loading=true;
+  try{
+    const{data:cfgData}=await db.from('settings').select('*').eq('key','summer_config').single();
+    if(cfgData?.value){try{SUMMER.config=JSON.parse(cfgData.value)}catch{}}
+    const{data:groups}=await db.from('groups').select('*').eq('is_summer',true).order('name');
+    SUMMER.groups=groups||[];
+    const{data:students}=await db.from('students').select('*').eq('is_summer',true).order('name');
+    SUMMER.students=students||[];
+    if(SUMMER.students.length>0){
+      const sids=SUMMER.students.map(s=>s.id);
+      const d60=new Date();d60.setDate(d60.getDate()-60);
+      const{data:att}=await db.from('attendance').select('*').in('student_id',sids).gte('date',d60.toISOString().split('T')[0]).order('date',{ascending:false});
+      SUMMER.attendance=att||[];
+      const{data:recs}=await db.from('recitations').select('*').in('student_id',sids).order('date',{ascending:false}).limit(500);
+      SUMMER.recitations=recs||[];
+      try{const{data:st}=await db.from('student_stars').select('*').in('student_id',sids).limit(500);SUMMER.stars=st||[]}catch{SUMMER.stars=[]}
+    }else{SUMMER.attendance=[];SUMMER.recitations=[];SUMMER.stars=[];}
+    SUMMER.loaded=true;
+  }catch(e){console.error('loadSummerData:',e.message);toast('خطأ في تحميل بيانات الدورة','warn')}
+  finally{SUMMER.loading=false;}
+}
+
+function getSummerStars(sid){
+  let t=0;
+  SUMMER.recitations.filter(r=>r.student_id===sid).forEach(r=>t+=(r.stars||0));
+  SUMMER.attendance.filter(a=>a.student_id===sid&&a.status==='حاضر').forEach(()=>t++);
+  SUMMER.stars.filter(m=>m.student_id===sid).forEach(m=>t+=(m.stars||0));
+  return Math.max(t,0);
+}
+function getSummerAttRate(sid){const a=SUMMER.attendance.filter(x=>x.student_id===sid);return a.length?Math.round(a.filter(x=>x.status==='حاضر').length/a.length*100):0}
+function getSummerTotalV(sid){return SUMMER.recitations.filter(r=>r.student_id===sid&&r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0)}
+function getSummerStatus(){
+  if(!SUMMER.config)return{label:'غير مُعدّة',color:'#94a3b8',icon:'fas fa-cog'};
+  const now=today();
+  if(now<SUMMER.config.start)return{label:'لم تبدأ بعد',color:'#d97706',icon:'fas fa-hourglass-start'};
+  if(now>SUMMER.config.end)return{label:'منتهية',color:'#6b7280',icon:'fas fa-flag-checkered'};
+  return{label:'جارية الآن',color:'#16a34a',icon:'fas fa-circle'};
+}
+
+function buildSummerPage(){
+  if(document.getElementById('page-summer-program'))return;
+  const page=document.createElement('div');
+  page.id='page-summer-program';page.className='page';
+  page.innerHTML=`
+  <div class="ph">
+    <div>
+      <h1><i class="fas fa-sun" style="color:#d97706;margin-left:8px"></i><span id="summer-page-title">الدورة الصيفية</span></h1>
+      <p id="summer-page-sub">برنامج مستقل عن الموسم الدراسي العادي</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-w btn-sm" onclick="openSummerConfig()"><i class="fas fa-cog"></i> إعدادات الدورة</button>
+      <button class="btn btn-p btn-sm" onclick="refreshSummerData()"><i class="fas fa-sync"></i> تحديث البيانات</button>
+    </div>
+  </div>
+  <div class="tabs" id="summer-tabs-bar">
+    <div class="tab active" onclick="goSumTab('dashboard',this)"><i class="fas fa-home"></i> لوحة التحكم</div>
+    <div class="tab" onclick="goSumTab('groups',this)"><i class="fas fa-users"></i> الأفواج</div>
+    <div class="tab" onclick="goSumTab('students',this)"><i class="fas fa-user-graduate"></i> الطلبة</div>
+    <div class="tab" onclick="goSumTab('attendance',this)"><i class="fas fa-clipboard-check"></i> الحضور</div>
+    <div class="tab" onclick="goSumTab('recitations',this)"><i class="fas fa-book-open"></i> الحفظ</div>
+    <div class="tab" onclick="goSumTab('reports',this)"><i class="fas fa-chart-bar"></i> الإحصائيات</div>
+    <div class="tab" onclick="goSumTab('honor',this)"><i class="fas fa-trophy"></i> لوحة الشرف</div>
+  </div>
+  <div id="sum-tab-dashboard" class="tab-pane active"></div>
+  <div id="sum-tab-groups" class="tab-pane"></div>
+  <div id="sum-tab-students" class="tab-pane"></div>
+  <div id="sum-tab-attendance" class="tab-pane"></div>
+  <div id="sum-tab-recitations" class="tab-pane"></div>
+  <div id="sum-tab-reports" class="tab-pane"></div>
+  <div id="sum-tab-honor" class="tab-pane"></div>`;
+  document.querySelector('.content').appendChild(page);
+}
+
+let _curSumTab='dashboard';
+function goSumTab(tab,el){
+  _curSumTab=tab;
+  document.querySelectorAll('#summer-tabs-bar .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#page-summer-program .tab-pane').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sum-tab-'+tab)?.classList.add('active');
+  renderSumTab(tab);
+}
+function renderSumTab(tab){
+  const m={dashboard:renderSumDash,groups:renderSumGroups,students:renderSumStudents,attendance:renderSumAttendance,recitations:renderSumRecitations,reports:renderSumReports,honor:renderSumHonor};
+  m[tab]&&m[tab]();
+}
+
+// ─ لوحة التحكم ─
+function renderSumDash(){
+  const st=getSummerStatus();
+  const todayStr=today();
+  const todayAtt=SUMMER.attendance.filter(a=>a.date===todayStr);
+  const present=todayAtt.filter(a=>a.status==='حاضر').length;
+  const absent=todayAtt.filter(a=>a.status==='غائب'||a.status==='بعذر').length;
+  const totalV=SUMMER.recitations.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
+  const top5=SUMMER.students.map(s=>({...s,stars:getSummerStars(s.id),v:getSummerTotalV(s.id),att:getSummerAttRate(s.id),g:SUMMER.groups.find(g=>g.id===s.group_id)})).sort((a,b)=>b.stars-a.stars).slice(0,5);
+  const days7=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().split('T')[0];const da=SUMMER.attendance.filter(a=>a.date===ds);days7.push({l:d.toLocaleDateString('ar',{weekday:'short'}),p:da.filter(a=>a.status==='حاضر').length,ab:da.filter(a=>a.status==='غائب').length});}
+  const mx=Math.max(...days7.map(d=>d.p+d.ab),1);
+  const configBanner=SUMMER.config?`
+  <div class="card" style="margin-bottom:16px;border:1.5px solid #fde68a;background:linear-gradient(135deg,#fffbf0,#fef3c7)">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="font-size:36px">☀️</div>
+        <div style="flex:1">
+          <div style="font-size:17px;font-weight:700;color:#92400e">${SUMMER.config.name||'الدورة الصيفية'}</div>
+          <div style="font-size:13px;color:#b45309;margin-top:3px"><i class="fas fa-calendar" style="margin-left:5px"></i>من ${fmtDate(SUMMER.config.start)} إلى ${fmtDate(SUMMER.config.end)}</div>
+          ${SUMMER.config.desc?`<div style="font-size:12px;color:#78350f;margin-top:4px">${SUMMER.config.desc}</div>`:''}
+        </div>
+        <span style="padding:6px 18px;border-radius:20px;font-size:13px;font-weight:700;background:${st.color}22;border:1px solid ${st.color}55;color:${st.color}"><i class="${st.icon}" style="margin-left:5px"></i>${st.label}</span>
+      </div>
+    </div>
+  </div>`:`
+  <div class="alert alert-w" style="margin-bottom:16px">
+    <i class="fas fa-exclamation-circle"></i>
+    <div>لم يتم إعداد الدورة الصيفية بعد.
+      <button onclick="openSummerConfig()" style="background:none;border:none;color:#92400e;text-decoration:underline;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;font-size:13px">اضغط هنا للإعداد</button>
+    </div>
+  </div>`;
+  document.getElementById('sum-tab-dashboard').innerHTML=`
+  ${configBanner}
+  <div class="stats-grid" style="margin-bottom:16px">
+    <div class="stat-card clickable" onclick="goSumTab('students',document.querySelectorAll('#summer-tabs-bar .tab')[2])"><div class="stat-ic ic-blue"><i class="fas fa-user-graduate"></i></div><div><div class="stat-h">${SUMMER.students.length}</div><div class="stat-p">الطلبة</div></div></div>
+    <div class="stat-card clickable" onclick="goSumTab('groups',document.querySelectorAll('#summer-tabs-bar .tab')[1])"><div class="stat-ic ic-green"><i class="fas fa-users"></i></div><div><div class="stat-h">${SUMMER.groups.length}</div><div class="stat-p">الأفواج</div></div></div>
+    <div class="stat-card clickable" onclick="goSumTab('attendance',document.querySelectorAll('#summer-tabs-bar .tab')[3])"><div class="stat-ic ic-orange"><i class="fas fa-clipboard-check"></i></div><div><div class="stat-h">${present}</div><div class="stat-p">حاضرون اليوم</div></div></div>
+    <div class="stat-card" style="border-top:3px solid #dc2626"><div class="stat-ic" style="background:#fee2e2"><i class="fas fa-user-times" style="color:#dc2626"></i></div><div><div class="stat-h" style="color:#dc2626">${absent}</div><div class="stat-p">غائبون اليوم</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-quran"></i></div><div><div class="stat-h">${totalV.toLocaleString()}</div><div class="stat-p">آيات محفوظة</div></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="card">
+      <div class="card-head"><h3><i class="fas fa-chart-bar" style="color:var(--primary-l);margin-left:6px"></i>الحضور — آخر 7 أيام</h3></div>
+      <div class="card-body">
+        <div style="display:flex;align-items:flex-end;gap:6px;height:100px">
+          ${days7.map(d=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+            <span style="font-size:9px;font-weight:700;color:var(--primary)">${d.p}</span>
+            <div style="width:100%;border-radius:3px 3px 0 0;overflow:hidden">
+              ${d.ab?`<div style="background:#fca5a5;height:${Math.max(d.ab/mx*60,2)}px"></div>`:''}
+              <div style="background:var(--primary);height:${Math.max(d.p/mx*60,d.p?3:1)}px"></div>
+            </div>
+            <span style="font-size:8px;color:var(--text3)">${d.l}</span>
+          </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;font-size:10px">
+          <span><span style="display:inline-block;width:8px;height:8px;background:var(--primary);border-radius:2px;margin-left:4px"></span>حاضر</span>
+          <span><span style="display:inline-block;width:8px;height:8px;background:#fca5a5;border-radius:2px;margin-left:4px"></span>غائب</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3><i class="fas fa-trophy" style="color:var(--gold);margin-left:6px"></i>أفضل الطلبة</h3></div>
+      <div class="card-body">
+        ${top5.length?top5.map((s,i)=>{const medals=['🥇','🥈','🥉'];return`
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="openSumStudentDetail('${s.id}')">
+          <div style="font-size:16px;width:22px">${medals[i]||i+1}</div>
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${s.name[0]}</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:10px;color:var(--text3)">${s.g?.name||'—'} · ${s.att}% حضور</div></div>
+          <div style="font-size:14px;font-weight:800;color:#d97706">${s.stars}⭐</div>
+        </div>`;}).join(''):'<div class="empty"><i class="fas fa-star"></i><p>لا توجد بيانات</p></div>'}
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+    <button onclick="goSumTab('groups',document.querySelectorAll('#summer-tabs-bar .tab')[1])" class="btn btn-o" style="padding:14px;flex-direction:column;height:auto;gap:6px"><i class="fas fa-users" style="font-size:20px"></i><span>الأفواج</span></button>
+    <button onclick="goSumTab('students',document.querySelectorAll('#summer-tabs-bar .tab')[2])" class="btn btn-o" style="padding:14px;flex-direction:column;height:auto;gap:6px"><i class="fas fa-user-plus" style="font-size:20px"></i><span>إضافة طالب</span></button>
+    <button onclick="goSumTab('attendance',document.querySelectorAll('#summer-tabs-bar .tab')[3])" class="btn btn-s" style="padding:14px;flex-direction:column;height:auto;gap:6px"><i class="fas fa-clipboard-check" style="font-size:20px"></i><span>تسجيل الحضور</span></button>
+    <button onclick="goSumTab('recitations',document.querySelectorAll('#summer-tabs-bar .tab')[4])" class="btn btn-p" style="padding:14px;flex-direction:column;height:auto;gap:6px"><i class="fas fa-book-open" style="font-size:20px"></i><span>تسميع الحفظ</span></button>
+    <button onclick="goSumTab('honor',document.querySelectorAll('#summer-tabs-bar .tab')[6])" class="btn btn-w" style="padding:14px;flex-direction:column;height:auto;gap:6px"><i class="fas fa-trophy" style="font-size:20px"></i><span>لوحة الشرف</span></button>
+    <button onclick="exportSummerPDF()" class="btn btn-g" style="padding:14px;flex-direction:column;height:auto;gap:6px;border:1.5px solid var(--border)"><i class="fas fa-file-pdf" style="font-size:20px;color:var(--danger)"></i><span>تصدير PDF</span></button>
+  </div>`;
+}
+
+// ─ الأفواج ─
+function renderSumGroups(){
+  document.getElementById('sum-tab-groups').innerHTML=`
+  <div class="ph" style="margin-bottom:16px">
+    <div><h2 style="font-size:18px;font-weight:700"><i class="fas fa-users" style="color:var(--primary);margin-left:6px"></i>أفواج الدورة الصيفية</h2></div>
+    <button class="btn btn-p btn-sm" onclick="openSumGroupModal()"><i class="fas fa-plus"></i> فوج جديد</button>
+  </div>
+  ${SUMMER.groups.length?`<div class="card"><div class="tbl-wrap"><table>
+    <thead><tr><th>اسم الفوج</th><th>الأستاذ</th><th>المستوى</th><th>الطلبة</th><th>الأوقات</th><th>إجراءات</th></tr></thead>
+    <tbody>${SUMMER.groups.map(g=>{
+      const cnt=SUMMER.students.filter(s=>s.group_id===g.id).length;
+      const sch=Array.isArray(g.schedule)?g.schedule:[];
+      const schHtml=sch.length?sch.map(s=>`<div style="font-size:11px"><b>${s.day}</b>: ${s.start||'—'}–${s.end||'—'}</div>`).join(''):'—';
+      return`<tr>
+        <td><strong>${g.name}</strong></td>
+        <td>${teacherName(g.teacher_id)}</td>
+        <td><span class="bx bx-b">${g.level||'—'}</span></td>
+        <td><span class="bx bx-g">${cnt} طالب</span></td>
+        <td>${schHtml}</td>
+        <td><div style="display:flex;gap:3px">
+          <button class="btn btn-g btn-sm btn-ic" onclick="openSumGroupModal('${g.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-g btn-sm btn-ic" style="color:var(--danger)" onclick="deleteSumGroup('${g.id}')"><i class="fas fa-trash"></i></button>
+        </div></td>
+      </tr>`;}).join('')}</tbody>
+  </table></div></div>`:`
+  <div class="empty card" style="padding:60px">
+    <i class="fas fa-users"></i><p>لا توجد أفواج بعد — أضف أول فوج للدورة</p>
+    <button class="btn btn-p" style="margin-top:16px" onclick="openSumGroupModal()"><i class="fas fa-plus"></i> إضافة فوج</button>
+  </div>`}`;
+}
+
+function openSumGroupModal(id){
+  const g=id?SUMMER.groups.find(x=>x.id===id):null;
+  $('g-id').value=id||'';
+  $('g-name').value=g?.name||'';$('g-level').value=g?.level||'تمهيدي';$('g-notes').value=g?.notes||'';
+  $('g-times').innerHTML='';document.querySelectorAll('#g-days .day-cb').forEach(d=>d.classList.remove('on'));
+  $('m-group-title').textContent=id?'تعديل الفوج':'إضافة فوج جديد للدورة الصيفية ☀️';
+  $('g-teacher').innerHTML='<option value="">— اختر —</option>'+S.teachers.filter(t=>t.role!=='admin').map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  if(g){$('g-teacher').value=g.teacher_id||'';setScheduleUI(Array.isArray(g.schedule)?g.schedule:[]);}
+  $('g-id').dataset.summerGroup='true';
+  openM('m-group');
+}
+
+async function deleteSumGroup(id){
+  if(!confirm('حذف هذا الفوج من الدورة الصيفية؟'))return;
+  const{error}=await db.from('groups').delete().eq('id',id);
+  if(!error){SUMMER.groups=SUMMER.groups.filter(g=>g.id!==id);renderSumGroups();toast('تم الحذف','ok')}
+  else toast('خطأ: '+error.message,'err');
+}
+
+// ─ الطلبة ─
+function renderSumStudents(){
+  const gf=document.getElementById('sf2-group')?.value||'';
+  const search=(document.getElementById('sf2-search')?.value||'').trim().toLowerCase();
+  let list=gf?SUMMER.students.filter(s=>s.group_id===gf):SUMMER.students;
+  if(search)list=list.filter(s=>s.name.toLowerCase().includes(search));
+  document.getElementById('sum-tab-students').innerHTML=`
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end">
+    <div class="fg" style="flex:1;min-width:140px">
+      <label>الفوج</label>
+      <select id="sf2-group" onchange="renderSumStudents()" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:13px">
+        <option value="">كل الأفواج</option>
+        ${SUMMER.groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fg" style="flex:2;min-width:180px">
+      <label>بحث بالاسم</label>
+      <input type="text" id="sf2-search" placeholder="اكتب اسم الطالب..." oninput="renderSumStudents()" value="${search}"
+        style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:13px;outline:none">
+    </div>
+    <button class="btn btn-p" onclick="openSumStudentModal()"><i class="fas fa-user-plus"></i> إضافة طالب</button>
+  </div>
+  <div style="margin-bottom:10px;font-size:13px;color:var(--text3)">${list.length} طالب</div>
+  ${list.length?`<div class="student-grid">
+    ${list.map(s=>{
+      const g=SUMMER.groups.find(x=>x.id===s.group_id);
+      const att=getSummerAttRate(s.id);const v=getSummerTotalV(s.id);const stars=getSummerStars(s.id);
+      return`<div class="s-card" onclick="openSumStudentDetail('${s.id}')">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div class="s-av">${s.name[0]||'؟'}</div>
+          <div><h4 style="font-size:14px;font-weight:700">${s.name}</h4><p style="font-size:12px;color:var(--text3)">${g?.name||'—'}</p></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span class="bx bx-b" style="font-size:10px">${s.gender||'—'}</span>
+          <span style="font-size:13px;color:#d97706;font-weight:700">${stars}⭐</span>
+        </div>
+        <div style="margin-bottom:4px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>الحضور</span><span>${att}%</span></div>
+          <div class="prog"><div class="prog-bar" style="width:${att}%"></div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px;color:var(--text3)">
+          <span><i class="fas fa-quran" style="color:var(--accent)"></i> ${v} آية</span>
+          <div style="display:flex;gap:4px">
+            <button onclick="event.stopPropagation();openSumStudentModal('${s.id}')" style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:14px"><i class="fas fa-edit"></i></button>
+            <button onclick="event.stopPropagation();deleteSumStudent('${s.id}')" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:14px"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>`;}).join('')}
+  </div>`:`<div class="empty card" style="padding:60px">
+    <i class="fas fa-user-graduate"></i><p>لا يوجد طلبة في الدورة الصيفية بعد</p>
+    <button class="btn btn-p" style="margin-top:16px" onclick="openSumStudentModal()"><i class="fas fa-plus"></i> إضافة طالب</button>
+  </div>`}`;
+  if(gf)document.getElementById('sf2-group').value=gf;
+}
+
+function openSumStudentModal(id){
+  const s=id?SUMMER.students.find(x=>x.id===id):null;
+  $('s-id').value=id||'';
+  $('s-name').value=s?.name||'';$('s-phone').value=s?.phone||'';$('s-parent').value=s?.parent_name||'';
+  $('s-dob').value=s?.dob||'';$('s-gender').value=s?.gender||'ذكر';$('s-level').value=s?.level||'تمهيدي';
+  $('s-join').value=s?.join_date||today();$('s-photo').value=s?.photo_url||'';$('s-notes').value=s?.notes||'';
+  $('m-student-title').textContent=id?'تعديل بيانات الطالب':'إضافة طالب للدورة الصيفية ☀️';
+  $('s-group').innerHTML='<option value="">— اختر الفوج —</option>'+
+    SUMMER.groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  if(s)$('s-group').value=s.group_id||'';
+  $('s-id').dataset.summerStudent='true';
+  openM('m-student');
+}
+
+async function deleteSumStudent(id){
+  if(!confirm('حذف هذا الطالب من الدورة الصيفية؟'))return;
+  try{
+    await db.from('attendance').delete().eq('student_id',id);
+    await db.from('recitations').delete().eq('student_id',id);
+    await db.from('students').delete().eq('id',id);
+    SUMMER.students=SUMMER.students.filter(s=>s.id!==id);
+    SUMMER.attendance=SUMMER.attendance.filter(a=>a.student_id!==id);
+    SUMMER.recitations=SUMMER.recitations.filter(r=>r.student_id!==id);
+    renderSumStudents();toast('تم الحذف','ok');
+  }catch(e){toast('خطأ: '+e.message,'err')}
+}
+
+function openSumStudentDetail(id){
+  const s=SUMMER.students.find(x=>x.id===id);if(!s)return;
+  const g=SUMMER.groups.find(x=>x.id===s.group_id);
+  const att=getSummerAttRate(id),v=getSummerTotalV(id),stars=getSummerStars(id);
+  const recs=SUMMER.recitations.filter(r=>r.student_id===id);
+  const absCount=SUMMER.attendance.filter(a=>a.student_id===id&&(a.status==='غائب'||a.status==='بعذر')).length;
+  $('sdetail-content').innerHTML=`
+  <div style="background:linear-gradient(135deg,#78350f,#d97706);padding:28px;color:#fff;display:flex;align-items:center;gap:20px">
+    <div style="width:70px;height:70px;border-radius:50%;border:3px solid rgba(255,255,255,.3);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;flex-shrink:0">${s.name[0]||'؟'}</div>
+    <div style="flex:1"><h2 style="font-size:20px;font-weight:800">${s.name}</h2><p style="opacity:.75">${g?.name||'—'} • الدورة الصيفية ☀️</p></div>
+    <div style="font-size:32px;font-weight:800;color:#fbbf24">${stars}⭐</div>
+  </div>
+  <div style="padding:20px">
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-quran"></i></div><div><div class="stat-h">${v}</div><div class="stat-p">آيات</div></div></div>
+      <div class="stat-card"><div class="stat-ic ic-orange"><i class="fas fa-percentage"></i></div><div><div class="stat-h">${att}%</div><div class="stat-p">حضور</div></div></div>
+      <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-star"></i></div><div><div class="stat-h">${stars}</div><div class="stat-p">نجوم</div></div></div>
+      <div class="stat-card"><div class="stat-ic ic-red"><i class="fas fa-user-times"></i></div><div><div class="stat-h" style="color:#dc2626">${absCount}</div><div class="stat-p">غيابات</div></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:14px">
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px"><b>ولي الأمر:</b> ${s.parent_name||'—'}</div>
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px"><b>الهاتف:</b> ${s.phone||'—'}</div>
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px"><b>الجنس:</b> ${s.gender||'—'}</div>
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px"><b>الالتحاق:</b> ${fmtDate(s.join_date)}</div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-head"><h3>آخر جلسات التسميع (${recs.length})</h3></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>النوع</th><th>من</th><th>إلى</th><th>الآيات</th><th>التقييم</th><th>التاريخ</th></tr></thead>
+        <tbody>${recs.slice(0,8).map(r=>{
+          const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);
+          return`<tr><td><span class="bx ${r.type==='حفظ جديد'?'bx-g':'bx-b'}">${r.type}</span></td>
+            <td style="font-size:12px">${fs?.name||'—'} (${r.verse_from})</td><td style="font-size:12px">${ts?.name||'—'} (${r.verse_to})</td>
+            <td><strong>${r.verses_count}</strong></td><td>${r.grade||'—'}</td><td>${fmtDate(r.date)}</td></tr>`;
+        }).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">لا توجد سجلات</td></tr>'}</tbody>
+      </table></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-o btn-sm" onclick="openSumStudentModal('${id}');closeM('m-sdetail')"><i class="fas fa-edit"></i> تعديل</button>
+      ${s.phone?`<button class="wa-btn" onclick="openWAReportModal('${id}')"><i class="fab fa-whatsapp"></i> تقرير واتساب</button>`:''}
+    </div>
+  </div>`;
+  openM('m-sdetail');
+}
+
+// ─ الحضور ─
+function renderSumAttendance(){
+  document.getElementById('sum-tab-attendance').innerHTML=`
+  <div class="card" style="margin-bottom:16px"><div class="card-body">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div class="fg" style="flex:1;min-width:160px"><label>الفوج</label>
+        <select id="satt2-group" onchange="loadSumAttList()">
+          <option value="">— اختر الفوج —</option>
+          ${SUMMER.groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg" style="flex:1;min-width:160px"><label>التاريخ</label>
+        <input type="date" id="satt2-date" value="${today()}" onchange="loadSumAttList()">
+      </div>
+      <button class="btn btn-s" onclick="saveSumAtt()"><i class="fas fa-save"></i> حفظ</button>
+      <button class="btn btn-g" onclick="setAllSumAtt('حاضر')"><i class="fas fa-check-double"></i> الكل حاضر</button>
+      <button class="btn" style="background:#25d366;color:#fff" onclick="sendSumAbsenceBulk()" title="إرسال تنبيه الغياب"><i class="fab fa-whatsapp"></i></button>
+    </div>
+  </div></div>
+  <div id="satt2-summary" style="margin-bottom:12px"></div>
+  <div class="card"><div class="card-head"><h3 id="satt2-title">قائمة الطلبة</h3></div><div id="satt2-list">
+    <div class="empty" style="padding:40px"><i class="fas fa-users"></i><p>اختر الفوج لعرض الطلبة</p></div>
+  </div></div>`;
+}
+
+function loadSumAttList(){
+  const gid=$('satt2-group')?.value;const dt=$('satt2-date')?.value;
+  if(!gid)return;
+  const g=SUMMER.groups.find(x=>x.id===gid);
+  $('satt2-title').textContent=`${g?.name||''} — ${fmtDate(dt)}`;
+  const gStudents=SUMMER.students.filter(s=>s.group_id===gid);
+  const todayAtt=SUMMER.attendance.filter(a=>a.date===dt&&a.group_id===gid);
+  const p=todayAtt.filter(a=>a.status==='حاضر').length;
+  const ab=todayAtt.filter(a=>a.status==='غائب').length;
+  const ex=todayAtt.filter(a=>a.status==='بعذر').length;
+  $('satt2-summary').innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap">
+    <span class="bx bx-g" style="font-size:13px;padding:6px 14px">✅ ${p}</span>
+    <span class="bx bx-r" style="font-size:13px;padding:6px 14px">❌ ${ab}</span>
+    <span class="bx bx-b" style="font-size:13px;padding:6px 14px">📝 ${ex}</span>
+    <span class="bx bx-gray" style="font-size:13px;padding:6px 14px">${gStudents.length} إجمالي</span>
+  </div>`;
+  if(!gStudents.length){$('satt2-list').innerHTML='<div class="empty" style="padding:30px"><p>لا يوجد طلبة في هذا الفوج</p></div>';return;}
+  $('satt2-list').innerHTML=`<div style="padding:16px">${gStudents.map(s=>{
+    const ex2=todayAtt.find(a=>a.student_id===s.id);const st=ex2?.status||'';
+    const isAbsent=st==='غائب'||st==='بعذر';
+    return`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f1f5f9;${isAbsent?'background:#fff5f5;margin:0 -16px;padding:11px 16px;':''}" data-sid="${s.id}">
+      <div style="width:34px;height:34px;border-radius:50%;background:${isAbsent?'#dc2626':'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">${s.name[0]}</div>
+      <div style="flex:1;font-size:14px;font-weight:500">${s.name}</div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <button class="att-btn present ${st==='حاضر'?'on':''}" onclick="setSumAtt(this,'حاضر')" title="حاضر">✅</button>
+        <button class="att-btn absent ${st==='غائب'?'on':''}" onclick="setSumAtt(this,'غائب')" title="غائب">❌</button>
+        <button class="att-btn excused ${st==='بعذر'?'on':''}" onclick="setSumAtt(this,'بعذر')" title="بعذر">📝</button>
+        ${s.phone&&isAbsent?`<button onclick="openWAAbsenceModal('${s.id}','${dt}')" style="width:30px;height:30px;background:#25d366;border:none;border-radius:50%;cursor:pointer;color:#fff;font-size:12px" title="تنبيه واتساب"><i class="fab fa-whatsapp"></i></button>`:''}
+      </div>
+    </div>`;}).join('')}</div>`;
+}
+
+function setSumAtt(btn,status){btn.closest('[data-sid]').querySelectorAll('.att-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function setAllSumAtt(status){const cls={حاضر:'present',غائب:'absent',بعذر:'excused'}[status]||'present';document.querySelectorAll('#satt2-list [data-sid]').forEach(r=>{r.querySelectorAll('.att-btn').forEach(b=>b.classList.remove('on'));r.querySelector('.att-btn.'+cls)?.classList.add('on');});}
+
+async function saveSumAtt(){
+  const gid=$('satt2-group')?.value;const dt=$('satt2-date')?.value;
+  if(!gid||!dt){toast('اختر الفوج والتاريخ','warn');return;}
+  const rows=document.querySelectorAll('#satt2-list [data-sid]');const records=[];
+  rows.forEach(row=>{const sid=row.dataset.sid;const on=row.querySelector('.att-btn.on');if(on)records.push({student_id:sid,group_id:gid,date:dt,status:on.title,teacher_id:S.profile?.id});});
+  if(!records.length){toast('لم يتم تحديد حالة لأي طالب','warn');return;}
+  try{
+    const{error}=await db.from('attendance').upsert(records,{onConflict:'student_id,date'});
+    if(error)throw error;
+    records.forEach(r=>{const i=SUMMER.attendance.findIndex(a=>a.student_id===r.student_id&&a.date===r.date);if(i>=0)SUMMER.attendance[i]={...SUMMER.attendance[i],...r};else SUMMER.attendance.unshift(r);});
+    toast(`✅ تم حفظ الحضور (${records.length} طالب)`,'ok');
+    loadSumAttList();
+  }catch(e){toast('خطأ: '+e.message,'err')}
+}
+
+function sendSumAbsenceBulk(){
+  const dt=$('satt2-date')?.value;const gid=$('satt2-group')?.value;if(!dt||!gid)return;
+  const absent=SUMMER.attendance.filter(a=>a.date===dt&&a.group_id===gid&&(a.status==='غائب'||a.status==='بعذر'));
+  const wp=absent.filter(a=>SUMMER.students.find(s=>s.id===a.student_id)?.phone);
+  if(!wp.length){toast('لا أرقام للطلبة الغائبين','warn');return;}
+  wp.forEach((a,i)=>setTimeout(()=>{const s=SUMMER.students.find(x=>x.id===a.student_id);if(s)openWA(s.phone,buildAbsenceMsg(s.id,dt));},i*1200));
+  toast(`📲 جاري إرسال ${wp.length} رسالة...`,'ok');
+}
+
+// ─ الحفظ والتسميع ─
+function renderSumRecitations(){
+  const GC={'جيد جداً':'bx-b','جيد':'bx-b','حسن':'bx-y','ضعيف':'bx-o','لم يحفظ':'bx-r'};
+  document.getElementById('sum-tab-recitations').innerHTML=`
+  <div style="display:flex;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div><h2 style="font-size:18px;font-weight:700"><i class="fas fa-book-open" style="color:var(--accent);margin-left:6px"></i>تسميع الدورة الصيفية</h2></div>
+    <button class="btn btn-p" onclick="openSumRecModal()"><i class="fas fa-plus"></i> تسميع جديد</button>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>سجل التسميع (${SUMMER.recitations.length})</h3>
+      <select id="sumrec-gfilter" onchange="filterSumRecs()" style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px">
+        <option value="">كل الأفواج</option>
+        ${SUMMER.groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>الطالب</th><th>الفوج</th><th>النوع</th><th>من</th><th>إلى</th><th>الآيات</th><th>التقييم</th><th>النجوم</th><th>التاريخ</th></tr></thead>
+      <tbody id="sumrec-tbody">
+        ${SUMMER.recitations.slice(0,50).map(r=>{
+          const s=SUMMER.students.find(x=>x.id===r.student_id);
+          const g=s?SUMMER.groups.find(x=>x.id===s.group_id):null;
+          const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);
+          return`<tr>
+            <td><strong>${s?.name||'—'}</strong></td><td>${g?.name||'—'}</td>
+            <td><span class="bx ${r.type==='حفظ جديد'?'bx-g':'bx-b'}">${r.type}</span></td>
+            <td style="font-size:12px">${fs?.name||'—'} (${r.verse_from||1})</td>
+            <td style="font-size:12px">${ts?.name||'—'} (${r.verse_to||1})</td>
+            <td><strong>${r.verses_count||0}</strong></td>
+            <td>${r.grade?`<span class="bx ${GC[r.grade]||'bx-gray'}">${r.grade}</span>`:'—'}</td>
+            <td>${r.stars>0?'⭐'.repeat(Math.min(r.stars,3)):'—'}</td>
+            <td>${fmtDate(r.date)}</td>
+          </tr>`;}).join('')||'<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text3)">لا توجد سجلات</td></tr>'}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+
+function filterSumRecs(){
+  const gf=$('sumrec-gfilter')?.value;
+  const GC={'جيد جداً':'bx-b','جيد':'bx-b','حسن':'bx-y','ضعيف':'bx-o','لم يحفظ':'bx-r'};
+  let list=gf?SUMMER.recitations.filter(r=>SUMMER.students.find(s=>s.id===r.student_id)?.group_id===gf):SUMMER.recitations;
+  $('sumrec-tbody').innerHTML=list.slice(0,50).map(r=>{
+    const s=SUMMER.students.find(x=>x.id===r.student_id);
+    const g=s?SUMMER.groups.find(x=>x.id===s.group_id):null;
+    const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);
+    return`<tr>
+      <td><strong>${s?.name||'—'}</strong></td><td>${g?.name||'—'}</td>
+      <td><span class="bx ${r.type==='حفظ جديد'?'bx-g':'bx-b'}">${r.type}</span></td>
+      <td style="font-size:12px">${fs?.name||'—'} (${r.verse_from||1})</td>
+      <td style="font-size:12px">${ts?.name||'—'} (${r.verse_to||1})</td>
+      <td><strong>${r.verses_count||0}</strong></td>
+      <td>${r.grade?`<span class="bx ${GC[r.grade]||'bx-gray'}">${r.grade}</span>`:'—'}</td>
+      <td>${r.stars>0?'⭐'.repeat(Math.min(r.stars,3)):'—'}</td>
+      <td>${fmtDate(r.date)}</td>
+    </tr>`;}).join('')||'<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text3)">لا توجد سجلات</td></tr>';
+}
+
+function openSumRecModal(){
+  $('r-id').value='';$('r-grade').value='';$('r-stars').value='0';
+  $('r-v-from').value='1';$('r-v-to').value='10';$('r-calc').style.display='none';$('r-grade-info').style.display='none';
+  $('r-date').value=today();clearNotes();
+  document.querySelectorAll('.grade-btn').forEach(b=>{b.style.transform='scale(1)';b.style.boxShadow='none';});
+  $('r-group').innerHTML=SUMMER.groups.map(g=>`<option value="${g.id}">${g.name} ☀️</option>`).join('');
+  if(SUMMER.groups.length)$('r-group').value=SUMMER.groups[0].id;
+  const gid=$('r-group').value;
+  $('r-student').innerHTML='<option value="">— اختر الطالب —</option>'+
+    SUMMER.students.filter(s=>s.group_id===gid).map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  $('r-group').onchange=function(){
+    const g2=$('r-group').value;
+    $('r-student').innerHTML='<option value="">— اختر الطالب —</option>'+
+      SUMMER.students.filter(s=>s.group_id===g2).map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  };
+  if($('r-s-from').options.length===0)initSurahSelects();
+  $('r-s-from').selectedIndex=0;$('r-s-to').selectedIndex=0;
+  switchRecType('حفظ جديد');
+  $('r-id').dataset.summerRec='true';
+  openM('m-rec');
+}
+
+// ─ الإحصائيات ─
+function renderSumReports(){
+  const totalS=SUMMER.students.length;
+  const totalV=SUMMER.recitations.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
+  const avgAtt=SUMMER.attendance.length?Math.round(SUMMER.attendance.filter(a=>a.status==='حاضر').length/SUMMER.attendance.length*100):0;
+  const byGroup=SUMMER.groups.map(g=>{
+    const gs=SUMMER.students.filter(s=>s.group_id===g.id);
+    const gAtt=SUMMER.attendance.filter(a=>a.group_id===g.id);
+    const gRate=gAtt.length?Math.round(gAtt.filter(a=>a.status==='حاضر').length/gAtt.length*100):0;
+    const gV=SUMMER.recitations.filter(r=>r.type==='حفظ جديد'&&gs.some(s=>s.id===r.student_id)).reduce((a,r)=>a+(r.verses_count||0),0);
+    return{g,count:gs.length,rate:gRate,verses:gV};
+  });
+  const ranked=SUMMER.students.map(s=>({...s,stars:getSummerStars(s.id),v:getSummerTotalV(s.id),att:getSummerAttRate(s.id),g:SUMMER.groups.find(g=>g.id===s.group_id)})).sort((a,b)=>b.stars-a.stars);
+  document.getElementById('sum-tab-reports').innerHTML=`
+  <div class="stats-grid" style="margin-bottom:16px">
+    <div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-user-graduate"></i></div><div><div class="stat-h">${totalS}</div><div class="stat-p">إجمالي الطلبة</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-gold"><i class="fas fa-quran"></i></div><div><div class="stat-h">${totalV.toLocaleString()}</div><div class="stat-p">آيات محفوظة</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-percentage"></i></div><div><div class="stat-h">${avgAtt}%</div><div class="stat-p">متوسط الحضور</div></div></div>
+    <div class="stat-card"><div class="stat-ic ic-purple"><i class="fas fa-clipboard"></i></div><div><div class="stat-h">${SUMMER.recitations.length}</div><div class="stat-p">جلسات تسميع</div></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="card"><div class="card-head"><h3>الحضور حسب الفوج</h3></div><div class="card-body">
+      ${byGroup.map(({g,count,rate})=>`<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span><strong>${g.name}</strong> <span style="color:var(--text3);font-size:11px">(${count} طالب)</span></span>
+          <span style="font-weight:700;color:${rate>=80?'var(--accent)':rate>=60?'var(--gold)':'var(--danger)'}">${rate}%</span>
+        </div>
+        <div class="prog"><div class="prog-bar" style="width:${rate}%;background:${rate>=80?'#16a34a':rate>=60?'#d97706':'#dc2626'}"></div></div>
+      </div>`).join('')||'<p style="color:var(--text3);font-size:13px">لا توجد بيانات</p>'}
+    </div></div>
+    <div class="card"><div class="card-head"><h3>الحفظ حسب الفوج</h3></div><div class="card-body">
+      ${byGroup.map(({g,verses})=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9">
+        <span style="font-size:13px">${g.name}</span><span class="bx bx-g">${verses.toLocaleString()} آية</span>
+      </div>`).join('')||'<p style="color:var(--text3);font-size:13px">لا توجد بيانات</p>'}
+    </div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3><i class="fas fa-sort-amount-down" style="color:var(--primary-l);margin-left:6px"></i>الترتيب الكامل للطلبة</h3>
+      <button class="btn btn-p btn-sm" onclick="exportSummerPDF()"><i class="fas fa-file-pdf"></i> تصدير</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>الطالب</th><th>الفوج</th><th>الآيات</th><th>الحضور</th><th>النجوم</th></tr></thead>
+      <tbody>${ranked.map((s,i)=>{const medals={0:'🥇',1:'🥈',2:'🥉'};return`<tr>
+        <td>${medals[i]||i+1}</td><td><strong>${s.name}</strong></td><td>${s.g?.name||'—'}</td>
+        <td>${s.v.toLocaleString()}</td>
+        <td><div style="display:flex;align-items:center;gap:6px"><div class="prog" style="width:60px"><div class="prog-bar" style="width:${s.att}%"></div></div>${s.att}%</div></td>
+        <td style="color:#d97706;font-weight:700">${s.stars}⭐</td>
+      </tr>`;}).join('')||'<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3)">لا توجد بيانات</td></tr>'}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+
+// ─ لوحة الشرف ─
+function renderSumHonor(){
+  const ranked=SUMMER.students.map(s=>({...s,stars:getSummerStars(s.id),v:getSummerTotalV(s.id),att:getSummerAttRate(s.id),g:SUMMER.groups.find(g=>g.id===s.group_id)})).sort((a,b)=>b.stars-a.stars);
+  const pod=(s,r)=>{if(!s)return'';const M={1:'🥇',2:'🥈',3:'🥉'};const C={1:'linear-gradient(135deg,#fbbf24,#d97706)',2:'linear-gradient(135deg,#94a3b8,#64748b)',3:'linear-gradient(135deg,#cd7f32,#a16207)'};return`<div style="text-align:center;flex:1"><div style="font-size:28px;margin-bottom:6px">${M[r]}</div><div style="width:52px;height:52px;border-radius:50%;background:${C[r]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800;margin:0 auto 8px">${s.name[0]}</div><div style="font-weight:700;font-size:13px">${s.name}</div><div style="font-size:11px;opacity:.7">${s.g?.name||'—'}</div><div style="font-size:18px;font-weight:800;color:#fbbf24;margin-top:4px">${s.stars}⭐</div></div>`;};
+  document.getElementById('sum-tab-honor').innerHTML=`
+  <div style="background:linear-gradient(135deg,#78350f,#d97706);border-radius:16px;padding:30px;color:#fff;text-align:center;margin-bottom:20px">
+    <div style="font-size:26px;font-weight:800;margin-bottom:4px"><i class="fas fa-trophy" style="color:#fbbf24;margin-left:8px"></i>لوحة شرف الدورة الصيفية ☀️</div>
+    <div style="font-size:13px;opacity:.75">${SUMMER.config?.name||'الدورة الصيفية'}</div>
+    <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;align-items:flex-end">
+      ${ranked.length>=2?pod(ranked[1],2):''}${ranked.length>=1?pod(ranked[0],1):''}${ranked.length>=3?pod(ranked[2],3):''}
+    </div>
+  </div>
+  <div class="card"><div class="card-head"><h3>الترتيب الكامل</h3></div><div class="card-body">
+    ${ranked.map((s,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${i<3?'#fef9c3':'#f8fafc'};border-radius:10px;border:1px solid ${i<3?'#fde68a':'var(--border)'};margin-bottom:6px;cursor:pointer" onclick="openSumStudentDetail('${s.id}')">
+      <div style="width:22px;text-align:center;font-size:14px;font-weight:700;color:${i<3?'#d97706':'var(--text3)'}">${i+1}</div>
+      <div style="width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">${s.name[0]}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--text3)">${s.g?.name||'—'} · ${s.v.toLocaleString()} آية · ${s.att}% حضور</div></div>
+      <div style="font-size:16px;font-weight:800;color:#d97706">${s.stars}⭐</div>
+    </div>`).join('')||'<div class="empty"><i class="fas fa-star"></i><p>لا توجد بيانات بعد</p></div>'}
+  </div></div>`;
+}
+
+// ─ إعدادات الدورة ─
+async function openSummerConfig(){
+  $('sum-name').value=SUMMER.config?.name||'';$('sum-start').value=SUMMER.config?.start||'';
+  $('sum-end').value=SUMMER.config?.end||'';$('sum-desc').value=SUMMER.config?.desc||'';
+  openM('m-summer');
+}
+
+saveSummer=async function(){
+  const cfg={name:$('sum-name').value.trim(),start:$('sum-start').value,end:$('sum-end').value,desc:$('sum-desc').value};
+  if(!cfg.name||!cfg.start||!cfg.end){toast('أكمل البيانات','warn');return;}
+  try{
+    await db.from('settings').upsert({key:'summer_config',value:JSON.stringify(cfg)},{onConflict:'key'});
+    SUMMER.config=cfg;closeM('m-summer');
+    if(document.getElementById('sum-tab-dashboard')?.classList.contains('active'))renderSumDash();
+    toast('تم حفظ إعدادات الدورة الصيفية ☀️','ok');
+  }catch(e){toast('خطأ: '+e.message,'err')}
+};
+
+// ─ تحديث ─
+async function refreshSummerData(){
+  SUMMER.loaded=false;
+  const btn=document.querySelector('[onclick="refreshSummerData()"]');
+  if(btn){btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';btn.disabled=true;}
+  await loadSummerData(true);
+  renderSumTab(_curSumTab);
+  if(btn){btn.innerHTML='<i class="fas fa-sync"></i> تحديث البيانات';btn.disabled=false;}
+  toast('تم تحديث البيانات','ok');
+}
+
+// ─ تصدير PDF ─
+function exportSummerPDF(){
+  const cfg=SUMMER.config;
+  const ranked=SUMMER.students.map(s=>({...s,stars:getSummerStars(s.id),v:getSummerTotalV(s.id),att:getSummerAttRate(s.id),g:SUMMER.groups.find(g=>g.id===s.group_id)})).sort((a,b)=>b.stars-a.stars);
+  const rows=ranked.map(s=>`<tr><td>${s.name}</td><td>${s.g?.name||'—'}</td><td>${s.v.toLocaleString()}</td><td>${s.att}%</td><td style="font-weight:700;color:#d97706">${s.stars}⭐</td></tr>`).join('');
+  const totalV=ranked.reduce((a,s)=>a+s.v,0);
+  const avgAtt=ranked.length?Math.round(ranked.reduce((a,s)=>a+s.att,0)/ranked.length):0;
+  makePDF(cfg?.name||'الدورة الصيفية',`
+    ${cfg?`<p style="text-align:center;color:#78350f;font-size:13px;margin-bottom:12px">من ${fmtDate(cfg.start)} إلى ${fmtDate(cfg.end)}</p>`:''}
+    <div><span class="sb"><h3>${ranked.length}</h3><p>الطلبة</p></span><span class="sb"><h3>${totalV.toLocaleString()}</h3><p>الآيات</p></span><span class="sb"><h3>${avgAtt}%</h3><p>الحضور</p></span><span class="sb"><h3>${SUMMER.groups.length}</h3><p>الأفواج</p></span></div>
+    <table><thead><tr><th>الطالب</th><th>الفوج</th><th>الآيات</th><th>الحضور</th><th>النجوم</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+// ═══ Override saveGroup لدعم is_summer ═══
+{
+  const _origSG=saveGroup;
+  saveGroup=async function(){
+    const id=$('g-id').value;
+    const name=$('g-name').value.trim();
+    if(!name){toast('أدخل اسم الفوج','warn');return;}
+    const schedule=getSchedule();const days=schedule.map(s=>s.day);
+    if(!days.length){toast('اختر يوماً واحداً على الأقل','warn');return;}
+    const newTid=$('g-teacher').value||null;
+    const isSummer=$('g-id').dataset?.summerGroup==='true'||(id&&SUMMER.groups.some(g=>g.id===id));
+    const data={name,teacher_id:newTid,level:$('g-level').value,schedule,days,notes:$('g-notes').value,is_summer:!!isSummer};
+    try{
+      if(id){
+        const{error}=await db.from('groups').update(data).eq('id',id);if(error)throw error;
+        if(isSummer)SUMMER.groups=SUMMER.groups.map(g=>g.id===id?{...g,...data}:g);
+        else S.groups=S.groups.map(g=>g.id===id?{...g,...data}:g);
+      }else{
+        const{data:ng,error}=await db.from('groups').insert({...data}).select().single();if(error)throw error;
+        if(isSummer)SUMMER.groups.push(ng);else S.groups.push(ng);
+      }
+      delete $('g-id').dataset.summerGroup;
+      closeM('m-group');
+      if(isSummer)renderSumGroups();else renderGroups();
+      fillSelects();toast('تم حفظ الفوج','ok');
+    }catch(e){toast('خطأ: '+e.message,'err')}
+  };
+}
+
+// ═══ Override saveStudent لدعم is_summer ═══
+{
+  const _origSS=saveStudent;
+  saveStudent=async function(){
+    const id=$('s-id').value;const name=$('s-name').value.trim();
+    if(!name){toast('أدخل اسم الطالب','warn');return;}
+    const gid=$('s-group').value;if(!gid){toast('اختر الفوج','warn');return;}
+    const isSummer=$('s-id').dataset?.summerStudent==='true'||(id&&SUMMER.students.some(s=>s.id===id));
+    const selGroup=isSummer?SUMMER.groups.find(g=>g.id===gid):S.groups.find(g=>g.id===gid);
+    const teacherId=selGroup?.teacher_id||S.profile?.id||null;
+    const data={name,group_id:gid,phone:$('s-phone').value.trim(),parent_name:$('s-parent').value.trim(),
+      dob:$('s-dob').value||null,gender:$('s-gender').value,level:$('s-level').value,
+      join_date:$('s-join').value||null,photo_url:$('s-photo').value.trim()||null,
+      notes:$('s-notes').value,teacher_id:teacherId,is_summer:!!isSummer};
+    try{
+      if(id){const{error}=await db.from('students').update(data).eq('id',id);if(error)throw error;
+        if(isSummer)SUMMER.students=SUMMER.students.map(s=>s.id===id?{...s,...data}:s);
+        else S.students=S.students.map(s=>s.id===id?{...s,...data}:s);
+      }else{const{data:ns,error}=await db.from('students').insert(data).select().single();if(error)throw error;
+        if(isSummer)SUMMER.students.push(ns);else S.students.push(ns);}
+      delete $('s-id').dataset.summerStudent;
+      closeM('m-student');
+      if(isSummer)renderSumStudents();else renderStudents();
+      fillSelects();toast('تم حفظ الطالب','ok');
+    }catch(e){toast('خطأ: '+e.message,'err')}
+  };
+}
+
+// ═══ Override saveRec لدعم الدورة الصيفية ═══
+{
+  const _origSR=saveRec;
+  saveRec=async function(){
+    const isSummer=$('r-id').dataset?.summerRec==='true';
+    const sid=$('r-student').value;if(!sid){toast('اختر الطالب','warn');return;}
+    const grade=$('r-grade').value;if(!grade){toast('اختر تقييماً للحفظ','warn');return;}
+    const sf=parseInt($('r-s-from').value),vf=parseInt($('r-v-from').value)||1;
+    const st=parseInt($('r-s-to').value),vt=parseInt($('r-v-to').value)||1;
+    if(!sf||!st){toast('اختر نطاق الحفظ','warn');return;}
+    const dt=$('r-date').value;if(!dt){toast('أدخل التاريخ','warn');return;}
+    const v=calcV()||0;const starsRaw=parseInt($('r-stars').value)||0;
+    const type=document.querySelector('input[name="r-type"]:checked')?.value||'حفظ جديد';
+    const finalNote=getFinalNote();
+    const record={student_id:sid,type,surah_from:sf,verse_from:vf,surah_to:st,verse_to:vt,
+      verses_count:v,grade,stars:starsRaw,date:dt,notes:finalNote,teacher_id:S.profile?.id};
+    try{
+      const{data:rec,error}=await db.from('recitations').insert(record).select().single();if(error)throw error;
+      if(isSummer)SUMMER.recitations.unshift(rec);else S.recitations.unshift(rec);
+      if(starsRaw!==0){try{
+        const reason=starsRaw>0?type:'لم يحفظ — خصم تلقائي';
+        const{data:ms}=await db.from('student_stars').insert({student_id:sid,stars:starsRaw,reason,teacher_id:S.profile?.id,date:dt}).select().single();
+        if(ms){if(isSummer)SUMMER.stars.unshift(ms);else S.manualStars.unshift(ms);}
+      }catch{}}
+      delete $('r-id').dataset.summerRec;
+      $('r-group').onchange=loadRecStudents;
+      closeM('m-rec');clearHizbCache();
+      if(isSummer)renderSumRecitations();else loadRecs();
+      toast(`✅ تم حفظ التسميع — ${grade}`,'ok');
+    }catch(e){toast('خطأ: '+e.message,'err')}
+  };
+}
+
+// ═══ Override nav لدعم summer-program ═══
+{
+  const _origNavX=nav;
+  nav=function(page){
+    if(page==='summer-program'){
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+      buildSummerPage();
+      document.getElementById('page-summer-program')?.classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')?.includes('summer-program'))n.classList.add('active');});
+      $('breadcrumb-txt').textContent='الدورة الصيفية ☀️';
+      if(!SUMMER.loaded){
+        document.getElementById('sum-tab-dashboard').innerHTML='<div class="loading"><div class="spinner"></div><p>جاري تحميل البيانات...</p></div>';
+        loadSummerData().then(()=>renderSumDash());
+      }else{renderSumDash();}
+      closeSidebar();
+    }else{
+      if($('r-group'))$('r-group').onchange=loadRecStudents;
+      _origNavX(page);
+    }
+  };
+}
+
+// ═══ Override showApp لتهيئة النظام ═══
+{
+  const _origSAX=showApp;
+  showApp=function(){
+    _origSAX();
+    setTimeout(()=>{
+      buildSummerPage();
+      // تحديث رابط الـ Sidebar
+      document.querySelectorAll('.nav-item').forEach(n=>{
+        if(n.getAttribute('onclick')?.includes("nav('summer')")){
+          n.setAttribute('onclick',"nav('summer-program')");
+        }
+      });
+    },600);
+  };
+}
+
+console.log('✅ الدورة الصيفية المستقلة — اكتملت');
+
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  نظام إدارة البرامج المستقلة — النسخة النهائية              ║
+// ║  يشمل: الدورة الصيفية فقط (مع خيار الحذف الكامل)            ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// ═══ مودال تأكيد الحذف العام (قابل للاستخدام في أي مكان) ═══
+function confirmDelete({ title, body, onConfirm }) {
+  let modal = document.getElementById('m-confirm-delete');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'm-confirm-delete';
+    modal.className = 'overlay';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:420px">
+        <div class="mh" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">
+          <h3 style="color:#fff"><i class="fas fa-exclamation-triangle" style="margin-left:8px"></i><span id="cdel-title">تأكيد الحذف</span></h3>
+          <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-confirm-delete')">✕</button>
+        </div>
+        <div class="mbody" style="padding:28px;text-align:center">
+          <div style="font-size:48px;margin-bottom:12px">🗑️</div>
+          <p id="cdel-body" style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:8px"></p>
+          <div class="alert alert-d" style="text-align:right;margin-top:12px">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>هذا الإجراء <strong>لا يمكن التراجع عنه</strong>. سيتم حذف جميع البيانات المرتبطة نهائياً.</span>
+          </div>
+        </div>
+        <div class="mfoot" style="justify-content:center;gap:12px">
+          <button class="btn btn-o" style="min-width:120px" onclick="closeM('m-confirm-delete')">
+            <i class="fas fa-times"></i> إلغاء
+          </button>
+          <button class="btn btn-d" style="min-width:140px" id="cdel-confirm-btn">
+            <i class="fas fa-trash"></i> تأكيد الحذف
+          </button>
+        </div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+    document.body.appendChild(modal);
+  }
+  document.getElementById('cdel-title').textContent = title || 'تأكيد الحذف';
+  document.getElementById('cdel-body').textContent = body || 'هل أنت متأكد من الحذف؟';
+  document.getElementById('cdel-confirm-btn').onclick = () => {
+    closeM('m-confirm-delete');
+    onConfirm && onConfirm();
+  };
+  openM('m-confirm-delete');
+}
+
+// ═══ حذف الدورة الصيفية كاملاً ═══
+function deleteSummerProgram() {
+  confirmDelete({
+    title: 'حذف الدورة الصيفية',
+    body: `هل أنت متأكد من حذف الدورة الصيفية "${SUMMER.config?.name || 'الدورة الصيفية'}" بجميع بياناتها (الأفواج، الطلبة، الحضور، التسميع)؟`,
+    onConfirm: async () => {
+      const btn = document.querySelector('[onclick="deleteSummerProgram()"]');
+      if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحذف...'; btn.disabled = true; }
+      try {
+        // ١. حذف سجلات الحضور
+        if (SUMMER.students.length) {
+          const sids = SUMMER.students.map(s => s.id);
+          await db.from('attendance').delete().in('student_id', sids);
+          await db.from('recitations').delete().in('student_id', sids);
+          await db.from('student_stars').delete().in('student_id', sids);
+          // ٢. حذف الطلبة
+          await db.from('students').delete().eq('is_summer', true);
+        }
+        // ٣. حذف الأفواج
+        if (SUMMER.groups.length) {
+          await db.from('groups').delete().eq('is_summer', true);
+        }
+        // ٤. حذف إعدادات الدورة
+        await db.from('settings').delete().eq('key', 'summer_config');
+        // ٥. مسح الذاكرة
+        SUMMER.config = null;
+        SUMMER.groups = [];
+        SUMMER.students = [];
+        SUMMER.attendance = [];
+        SUMMER.recitations = [];
+        SUMMER.stars = [];
+        SUMMER.loaded = true;
+        toast('✅ تم حذف الدورة الصيفية وجميع بياناتها', 'ok');
+        // العودة للوحة التحكم
+        nav('dashboard');
+      } catch (e) {
+        toast('خطأ في الحذف: ' + e.message, 'err');
+        if (btn) { btn.innerHTML = '<i class="fas fa-trash"></i> حذف الدورة'; btn.disabled = false; }
+      }
+    }
+  });
+}
+
+// ═══ أرشفة الدورة الصيفية (إخفاء بدون حذف) ═══
+async function archiveSummerProgram() {
+  confirmDelete({
+    title: 'أرشفة الدورة الصيفية',
+    body: `سيتم أرشفة "${SUMMER.config?.name || 'الدورة الصيفية'}" — ستبقى البيانات محفوظة ويمكن استعادتها لاحقاً.`,
+    onConfirm: async () => {
+      try {
+        const cfg = { ...SUMMER.config, archived: true, archived_at: today() };
+        await db.from('settings').upsert({ key: 'summer_config', value: JSON.stringify(cfg) }, { onConflict: 'key' });
+        SUMMER.config = cfg;
+        toast('تم أرشفة الدورة الصيفية', 'ok');
+        renderSumDash();
+      } catch (e) { toast('خطأ: ' + e.message, 'err'); }
+    }
+  });
+}
+
+// ═══ حذف فوج من الدورة الصيفية مع تأكيد ═══
+async function deleteSumGroup(id) {
+  const g = SUMMER.groups.find(x => x.id === id);
+  const studentCount = SUMMER.students.filter(s => s.group_id === id).length;
+  confirmDelete({
+    title: `حذف الفوج: ${g?.name || ''}`,
+    body: `هل أنت متأكد من حذف الفوج "${g?.name}"؟${studentCount > 0 ? ` يحتوي على ${studentCount} طالب — سيبقون دون فوج.` : ''}`,
+    onConfirm: async () => {
+      try {
+        await db.from('groups').delete().eq('id', id);
+        SUMMER.groups = SUMMER.groups.filter(g => g.id !== id);
+        renderSumGroups();
+        toast('تم حذف الفوج', 'ok');
+      } catch (e) { toast('خطأ: ' + e.message, 'err'); }
+    }
+  });
+}
+
+// ═══ حذف طالب من الدورة الصيفية مع تأكيد ═══
+async function deleteSumStudent(id) {
+  const s = SUMMER.students.find(x => x.id === id);
+  confirmDelete({
+    title: `حذف الطالب: ${s?.name || ''}`,
+    body: `هل أنت متأكد من حذف الطالب "${s?.name}" من الدورة الصيفية؟ سيتم حذف جميع سجلاته (الحضور والتسميع).`,
+    onConfirm: async () => {
+      try {
+        await db.from('attendance').delete().eq('student_id', id);
+        await db.from('recitations').delete().eq('student_id', id);
+        await db.from('students').delete().eq('id', id);
+        SUMMER.students = SUMMER.students.filter(s => s.id !== id);
+        SUMMER.attendance = SUMMER.attendance.filter(a => a.student_id !== id);
+        SUMMER.recitations = SUMMER.recitations.filter(r => r.student_id !== id);
+        renderSumStudents();
+        toast('تم حذف الطالب', 'ok');
+      } catch (e) { toast('خطأ: ' + e.message, 'err'); }
+    }
+  });
+}
+
+// ═══ تحديث إعدادات الدورة — إضافة أزرار الحذف والأرشفة ═══
+{
+  const _origOpenSummerConfig = openSummerConfig;
+  openSummerConfig = function () {
+    _origOpenSummerConfig();
+    // إضافة أزرار إدارة الدورة بعد فتح المودال
+    setTimeout(() => {
+      const mfoot = document.querySelector('#m-summer .mfoot');
+      if (!mfoot || mfoot.querySelector('#sum-delete-btn')) return;
+      // زر الأرشفة
+      const archBtn = document.createElement('button');
+      archBtn.className = 'btn btn-g btn-sm';
+      archBtn.style.cssText = 'color:#d97706;border-color:#fde68a;background:#fffbf0';
+      archBtn.innerHTML = '<i class="fas fa-archive"></i> أرشفة';
+      archBtn.onclick = () => { closeM('m-summer'); archiveSummerProgram(); };
+      // زر الحذف
+      const delBtn = document.createElement('button');
+      delBtn.id = 'sum-delete-btn';
+      delBtn.className = 'btn btn-d btn-sm';
+      delBtn.innerHTML = '<i class="fas fa-trash"></i> حذف الدورة';
+      delBtn.onclick = () => { closeM('m-summer'); deleteSummerProgram(); };
+      mfoot.insertBefore(archBtn, mfoot.firstChild);
+      mfoot.insertBefore(delBtn, mfoot.firstChild);
+    }, 100);
+  };
+}
+
+// ═══ تحديث لوحة التحكم لإظهار شارة الأرشفة ═══
+{
+  const _origRenderSumDash = renderSumDash;
+  renderSumDash = function () {
+    _origRenderSumDash();
+    // إضافة شارة الأرشفة إن كانت الدورة مؤرشفة
+    if (SUMMER.config?.archived) {
+      const banner = document.querySelector('#sum-tab-dashboard .card:first-child .card-body');
+      if (banner) {
+        const archBadge = document.createElement('div');
+        archBadge.className = 'alert alert-w';
+        archBadge.style.marginTop = '10px';
+        archBadge.innerHTML = `<i class="fas fa-archive"></i> هذه الدورة <strong>مؤرشفة</strong> منذ ${fmtDate(SUMMER.config.archived_at)} — البيانات محفوظة ويمكن إعادة تفعيلها من الإعدادات.`;
+        banner.appendChild(archBadge);
+      }
+    }
+  };
+}
+
+// ═══ تنظيف القائمة الجانبية: إزالة روابط برامج غير مفعّلة ═══
+function cleanupSidebarPrograms() {
+  // نتأكد أن القائمة الجانبية تحتوي فقط على البرامج الفعلية
+  // الدورة الصيفية هي البرنامج الوحيد المفعّل حالياً
+  // لا نحذف أي عناصر موجودة — فقط نتأكد من صحة الروابط
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const onclick = n.getAttribute('onclick') || '';
+    // إصلاح رابط الدورة الصيفية إن لم يكن صحيحاً
+    if (onclick.includes("nav('summer')") && !onclick.includes('program')) {
+      n.setAttribute('onclick', "nav('summer-program')");
+    }
+  });
+}
+
+// ═══ تحديث showApp لتشغيل التنظيف ═══
+{
+  const _origShowAppClean = showApp;
+  showApp = function () {
+    _origShowAppClean();
+    setTimeout(cleanupSidebarPrograms, 1000);
+  };
+}
+
+// ═══ نظام النسخ الاحتياطي التلقائي ═══
+const BACKUP_KEY = 'wafaq_backup_meta';
+
+function autoBackupMeta() {
+  // حفظ metadata للنسخة الاحتياطية في localStorage (بدون بيانات Supabase الكاملة)
+  try {
+    const meta = {
+      ts: new Date().toISOString(),
+      groups: S.groups.length,
+      students: S.students.length,
+      summerGroups: SUMMER.groups.length,
+      summerStudents: SUMMER.students.length,
+      user: S.profile?.email || '',
+    };
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(meta));
+  } catch {}
+}
+
+// تشغيل النسخ الاحتياطي كل 5 دقائق
+setInterval(autoBackupMeta, 5 * 60 * 1000);
+
+console.log('✅ نظام إدارة البرامج المستقلة — نسخة نظيفة ومحسّنة');
+
 </script>
 </body>
 </html>
