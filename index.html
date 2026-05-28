@@ -550,8 +550,14 @@ textarea{resize:vertical;min-height:80px}
   body *{visibility:hidden}
   .cert-paper,
   .cert-paper *{visibility:visible}
-  .cert-paper{position:fixed;inset:0;width:100%;height:100%;max-width:none;border-radius:0;box-shadow:none}
+  .cert-paper{
+    position:fixed;inset:0;width:100%;height:100%;max-width:none;border-radius:0;box-shadow:none;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+  }
 }
+/* إجبار ألوان الخلفية على الظهور في الطباعة */
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
 </style>
 </head>
 <body>
@@ -3264,9 +3270,291 @@ async function saveSummer(){
 }
 
 // ===================== PDF EXPORT =====================
-function makePDF(title,html){
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;padding:30px;color:#1e2d42;font-size:13px}.ph{text-align:center;border-bottom:3px solid #1565c0;padding-bottom:20px;margin-bottom:24px}.ph img{width:60px;height:60px;border-radius:50%;border:2px solid #1565c0}.ph h1{font-size:18px;color:#0a3d7a;margin:8px 0 4px}.ph p{font-size:12px;color:#5a7a9a}.pd{font-size:11px;color:#718096;margin-bottom:16px}table{width:100%;border-collapse:collapse;margin:16px 0}th{background:#0a3d7a;color:#fff;padding:8px 12px;font-size:12px;text-align:right}td{padding:7px 12px;border-bottom:1px solid #e0eaf8;font-size:12px}tr:nth-child(even) td{background:#f7faff}.sb{display:inline-block;padding:10px 18px;margin:5px;border-radius:8px;border:1px solid #c5d8fb;background:#f0f6ff;text-align:center}.sb h3{font-size:20px;color:#0a3d7a;margin:0}.sb p{font-size:11px;color:#5a7a9a;margin:2px 0 0}@media print{.np{display:none}}</style></head><body><div class="ph"><img src="https://i.imgur.com/cNX0eZ4.jpeg"><h1>${title}</h1><p>دار القرآن الكريم — جمعية الوفاق | الوفاق الكبير، بنسركاو</p></div><div class="pd">تاريخ التقرير: ${new Date().toLocaleDateString('ar-MA',{day:'2-digit',month:'long',year:'numeric'})}</div>${html}<div class="np" style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:10px 28px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button></div></body></html>`);
+// ═══════════════════════════════════════════════════════════════
+// makePDF — نظام تصدير PDF بالألوان الكاملة
+// يدعم: الخلفيات الملونة، الجداول، البطاقات، الشعارات، الخطوط العربية
+// ═══════════════════════════════════════════════════════════════
+function makePDF(title, html, options = {}) {
+  const w = window.open('', '_blank');
+  if (!w) { toast('يرجى السماح للنوافذ المنبثقة لتصدير PDF', 'warn'); return; }
+
+  const dateStr = new Date().toLocaleDateString('ar-MA', { day: '2-digit', month: 'long', year: 'numeric' });
+  const logoFallback = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='28' fill='%231565c0'/%3E%3Ctext x='30' y='38' text-anchor='middle' font-size='24' fill='white' font-family='serif'%3E%D9%88%3C/text%3E%3C/svg%3E`;
+
+  w.document.write(`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   إجبار المتصفح على طباعة الألوان كاملةً
+   ══════════════════════════════════════════ */
+*{
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+  box-sizing: border-box;
+  margin: 0; padding: 0;
+}
+
+/* ══ متغيرات الألوان الأساسية ══ */
+:root {
+  --primary: #1565c0;
+  --primary-d: #0d2e6e;
+  --primary-l: #2563a8;
+  --accent: #16a34a;
+  --gold: #d97706;
+  --danger: #dc2626;
+  --border: #d1dae6;
+  --bg: #f0f4f8;
+  --text: #1e2d42;
+  --text2: #4a5568;
+  --text3: #718096;
+}
+
+/* ══ إعدادات الصفحة ══ */
+@page {
+  size: A4;
+  margin: 14mm 12mm;
+}
+
+html, body {
+  font-family: 'Tajawal', 'Amiri', Arial, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: #fff;
+  direction: rtl;
+}
+
+/* ══ رأس التقرير ══ */
+.pdf-header {
+  background: linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 60%, #1976d2 100%) !important;
+  color: #fff !important;
+  padding: 20px 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  page-break-inside: avoid;
+}
+.pdf-header img {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.4);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255,255,255,.15);
+}
+.pdf-header-text { flex: 1; }
+.pdf-header h1 {
+  font-size: 18px; font-weight: 800;
+  color: #fff !important; margin-bottom: 4px;
+}
+.pdf-header .org { font-size: 12px; color: rgba(255,255,255,.8) !important; }
+.pdf-header .date-badge {
+  background: rgba(255,255,255,.15) !important;
+  border: 1px solid rgba(255,255,255,.25) !important;
+  color: #fff !important;
+  padding: 5px 14px;
+  border-radius: 20px; font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ══ بطاقات الإحصائيات ══ */
+.pdf-stats { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.sb {
+  flex: 1; min-width: 90px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: #f0f6ff !important;
+  page-break-inside: avoid;
+}
+.sb h3 {
+  font-size: 22px; font-weight: 800;
+  color: var(--primary) !important;
+  margin-bottom: 4px; line-height: 1;
+}
+.sb p { font-size: 11px; color: var(--text3) !important; }
+.sb.green  { background: #f0fdf4 !important; border-color: #86efac !important; }
+.sb.green h3 { color: var(--accent) !important; }
+.sb.gold   { background: #fef9c3 !important; border-color: #fde047 !important; }
+.sb.gold h3 { color: var(--gold) !important; }
+.sb.red    { background: #fee2e2 !important; border-color: #fca5a5 !important; }
+.sb.red h3 { color: var(--danger) !important; }
+
+/* ══ الجداول ══ */
+.pdf-section {
+  background: #fff !important;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  page-break-inside: avoid;
+}
+.pdf-section-title {
+  background: linear-gradient(135deg, var(--primary-d), var(--primary)) !important;
+  color: #fff !important;
+  padding: 10px 16px;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+}
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12.5px;
+}
+thead tr {
+  background: linear-gradient(135deg, #0d2e6e, #1565c0) !important;
+}
+th {
+  background: transparent !important;
+  color: #fff !important;
+  padding: 9px 13px;
+  font-size: 12px; font-weight: 700;
+  text-align: right;
+  border-bottom: 2px solid rgba(255,255,255,.2);
+}
+td {
+  padding: 9px 13px;
+  border-bottom: 1px solid #e8f0fb;
+  color: var(--text) !important;
+  vertical-align: middle;
+}
+tr:nth-child(even) td { background: #f0f6ff !important; }
+tr:last-child td { border-bottom: none; }
+
+/* ══ شارات الحالة (badges) ══ */
+.bx {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.bx-g { background: #dcfce7 !important; color: #166534 !important; }
+.bx-r { background: #fee2e2 !important; color: #991b1b !important; }
+.bx-y { background: #fef9c3 !important; color: #713f12 !important; }
+.bx-b { background: #dbeafe !important; color: #1e40af !important; }
+.bx-o { background: #ffedd5 !important; color: #9a3412 !important; }
+.bx-p { background: #ede9fe !important; color: #5b21b6 !important; }
+.bx-gray { background: #f1f5f9 !important; color: #475569 !important; }
+.bx-gold { background: #fef3c7 !important; color: #92400e !important; }
+
+/* ══ أشرطة التقدم ══ */
+.prog {
+  height: 7px; background: #e2e8f0 !important;
+  border-radius: 4px; overflow: hidden; width: 70px;
+  display: inline-block; vertical-align: middle;
+}
+.prog-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-l)) !important;
+  border-radius: 4px;
+}
+.prog-bar.grn {
+  background: linear-gradient(90deg, var(--accent), #22c55e) !important;
+}
+
+/* ══ أقسام الترتيب / لوحة الشرف ══ */
+.rank-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px; margin-bottom: 6px;
+  border: 1px solid var(--border) !important;
+  page-break-inside: avoid;
+}
+.rank-row.gold-row { background: #fef9c3 !important; border-color: #fde68a !important; }
+.rank-av {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--primary) !important;
+  color: #fff !important;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+
+/* ══ فاصل القسم ══ */
+.pdf-divider {
+  border: none; border-top: 2px solid var(--border);
+  margin: 16px 0;
+}
+
+/* ══ تذييل الصفحة ══ */
+.pdf-footer {
+  text-align: center; font-size: 10px;
+  color: var(--text3) !important;
+  margin-top: 20px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ══ زر الطباعة — يختفي عند الطباعة ══ */
+.np { page-break-inside: avoid; }
+@media print {
+  .np { display: none !important; }
+  html, body { background: #fff !important; }
+  .pdf-header {
+    background: linear-gradient(135deg, #0d2e6e 0%, #1565c0 60%, #1976d2 100%) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  thead tr {
+    background: linear-gradient(135deg, #0d2e6e, #1565c0) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  tr:nth-child(even) td {
+    background: #f0f6ff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ رأس التقرير ══ -->
+<div class="pdf-header">
+  <img src="https://i.imgur.com/cNX0eZ4.jpeg"
+       onerror="this.src='${logoFallback}'"
+       alt="شعار">
+  <div class="pdf-header-text">
+    <h1>${title}</h1>
+    <div class="org">دار القرآن الكريم — جمعية الوفاق | الوفاق الكبير، بنسركاو</div>
+  </div>
+  <div class="date-badge">📅 ${dateStr}</div>
+</div>
+
+<!-- ══ المحتوى ══ -->
+<div id="pdf-body">
+${html}
+</div>
+
+<!-- ══ تذييل ══ -->
+<div class="pdf-footer">
+  جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية — دار القرآن الكريم — الوفاق الكبير، بنسركاو، المغرب
+</div>
+
+<!-- ══ زر الطباعة ══ -->
+<div class="np" style="text-align:center;margin-top:24px;padding:16px">
+  <button onclick="window.print()"
+    style="-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:12px 32px;background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(21,101,192,.35)">
+    🖨️ طباعة بالألوان / حفظ PDF
+  </button>
+  <div style="margin-top:10px;font-size:11px;color:#718096;font-family:'Tajawal',sans-serif">
+    تلميح: عند الطباعة اختر "رسومات الخلفية" أو "Background graphics" للحصول على الألوان الكاملة
+  </div>
+</div>
+
+<script>
+// تفعيل الطباعة التلقائية بعد تحميل الخطوط
+document.fonts && document.fonts.ready
+  ? document.fonts.ready.then(() => setTimeout(() => {}, 800))
+  : setTimeout(() => {}, 800);
+<\/script>
+</body>
+</html>`);
   w.document.close();
 }
 function exportGeneralPDF(){
@@ -3277,28 +3565,119 @@ function exportGeneralPDF(){
   const myAtt=S.attendance.filter(a=>myGroupIds.has(a.group_id));
   const tv=myRecs.filter(r=>r.type==='حفظ جديد').reduce((a,r)=>a+(r.verses_count||0),0);
   const aa=myAtt.length?Math.round(myAtt.filter(a=>a.status==='حاضر').length/myAtt.length*100):0;
-  const rows=myG.map(g=>{const gs=myS.filter(s=>s.group_id===g.id);const gv=myRecs.filter(r=>r.type==='حفظ جديد'&&gs.some(s=>s.id===r.student_id)).reduce((a,r)=>a+(r.verses_count||0),0);const ga=myAtt.filter(a=>a.group_id===g.id);const gr=ga.length?Math.round(ga.filter(a=>a.status==='حاضر').length/ga.length*100):0;return`<tr><td>${g.name}</td><td>${gs.length}</td><td>${gv.toLocaleString()}</td><td>${gr}%</td></tr>`}).join('');
-  makePDF('التقرير الإجمالي العام',`<div><span class="sb"><h3>${myS.length}</h3><p>الطلبة</p></span><span class="sb"><h3>${myG.length}</h3><p>الحلقات</p></span><span class="sb"><h3>${tv.toLocaleString()}</h3><p>الآيات</p></span><span class="sb"><h3>${aa}%</h3><p>الحضور</p></span></div><table><thead><tr><th>الحلقة</th><th>الطلبة</th><th>الآيات</th><th>الحضور</th></tr></thead><tbody>${rows}</tbody></table>`);
+  const rows=myG.map(g=>{
+    const gs=myS.filter(s=>s.group_id===g.id);
+    const gv=myRecs.filter(r=>r.type==='حفظ جديد'&&gs.some(s=>s.id===r.student_id)).reduce((a,r)=>a+(r.verses_count||0),0);
+    const ga=myAtt.filter(a=>a.group_id===g.id);
+    const gr=ga.length?Math.round(ga.filter(a=>a.status==='حاضر').length/ga.length*100):0;
+    const color=gr>=80?'#16a34a':gr>=60?'#d97706':'#dc2626';
+    return`<tr>
+      <td><strong>${g.name}</strong></td>
+      <td style="text-align:center">${gs.length}</td>
+      <td style="text-align:center;font-weight:700;color:#1565c0">${gv.toLocaleString()}</td>
+      <td style="text-align:center;font-weight:700;color:${color}">${gr}%</td>
+    </tr>`;
+  }).join('');
+  makePDF('التقرير الإجمالي العام', `
+    <div class="pdf-stats">
+      <div class="sb"><h3>${myS.length}</h3><p>إجمالي الطلبة</p></div>
+      <div class="sb"><h3>${myG.length}</h3><p>الحلقات</p></div>
+      <div class="sb green"><h3>${tv.toLocaleString()}</h3><p>آيات محفوظة</p></div>
+      <div class="sb ${aa>=80?'green':aa>=60?'gold':'red'}"><h3>${aa}%</h3><p>متوسط الحضور</p></div>
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title">📊 تفاصيل الحلقات</div>
+      <table>
+        <thead><tr><th>الحلقة</th><th>الطلبة</th><th>الآيات</th><th>الحضور</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`);
 }
+
 function sendRepWA(){
   const sid=$('rep-s-sel').value;
   if(!sid){toast('اختر طالباً أولاً','warn');return}
   openWAReportModal(sid);
 }
+
 function exportStudentPDF(){
   const sid=$('rep-s-sel').value;if(!sid){toast('اختر طالباً','warn');return}
   const s=S.students.find(x=>x.id===sid);if(!s)return;
   const g=S.groups.find(x=>x.id===s.group_id);
   const v=getTotalV(sid),att=getAttRate(sid),stars=getStars(sid);
+  const q=getQuality(sid);
+  const attColor=att>=80?'#16a34a':att>=60?'#d97706':'#dc2626';
   const recs=S.recitations.filter(r=>r.student_id===sid);
-  const rows=recs.slice(0,20).map(r=>{const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);return`<tr><td>${r.type}</td><td>${fs?.name||'—'} (${r.verse_from})</td><td>${ts?.name||'—'} (${r.verse_to})</td><td>${r.verses_count}</td><td>${r.grade||'—'}</td><td>${fmtDate(r.date)}</td></tr>`}).join('');
-  makePDF(`تقرير الطالب: ${s.name}`,`<table><tr><td><b>الاسم</b></td><td>${s.name}</td><td><b>الحلقة</b></td><td>${g?.name||'—'}</td></tr><tr><td><b>المستوى</b></td><td>${s.level||'—'}</td><td><b>ولي الأمر</b></td><td>${s.parent_name||'—'}</td></tr></table><div style="margin:12px 0"><span class="sb"><h3>${v}</h3><p>آيات</p></span><span class="sb"><h3>${att}%</h3><p>الحضور</p></span><span class="sb"><h3>${stars}</h3><p>نجوم</p></span></div><table><thead><tr><th>النوع</th><th>من</th><th>إلى</th><th>الآيات</th><th>التقييم</th><th>التاريخ</th></tr></thead><tbody>${rows}</tbody></table>`);
+  const GC={'جيد جداً':'#0891b2','جيد':'#2563eb','حسن':'#d97706','ضعيف':'#ea580c','لم يحفظ':'#dc2626'};
+  const rows=recs.slice(0,20).map(r=>{
+    const fs=SURAHS.find(x=>x.n===r.surah_from),ts=SURAHS.find(x=>x.n===r.surah_to);
+    const gc=GC[r.grade]||'#4a5568';
+    return`<tr>
+      <td><span style="background:${r.type==='حفظ جديد'?'#dcfce7':'#dbeafe'};color:${r.type==='حفظ جديد'?'#166534':'#1e40af'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">${r.type}</span></td>
+      <td>${fs?.name||'—'} (${r.verse_from})</td>
+      <td>${ts?.name||'—'} (${r.verse_to})</td>
+      <td style="text-align:center;font-weight:700">${r.verses_count}</td>
+      <td style="font-weight:700;color:${gc}">${r.grade||'—'}</td>
+      <td>${fmtDate(r.date)}</td>
+    </tr>`;}).join('');
+  makePDF(`تقرير الطالب: ${s.name}`, `
+    <!-- بيانات الطالب -->
+    <div style="background:linear-gradient(135deg,#0d2e6e,#1565c0);border-radius:12px;padding:18px 22px;color:#fff;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0">${s.name[0]}</div>
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:800;color:#fff">${s.name}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:3px">${g?.name||'—'} • ${s.level||'—'} • ولي الأمر: ${s.parent_name||'—'}</div>
+      </div>
+      <div style="text-align:center"><div style="font-size:28px;font-weight:800;color:#fbbf24">${stars}⭐</div><div style="font-size:11px;color:rgba(255,255,255,.7)">نجوم</div></div>
+    </div>
+    <!-- إحصائيات -->
+    <div class="pdf-stats">
+      <div class="sb green"><h3>${v.toLocaleString()}</h3><p>آيات محفوظة</p></div>
+      <div class="sb ${att>=80?'green':att>=60?'gold':'red'}"><h3>${att}%</h3><p>نسبة الحضور</p></div>
+      <div class="sb gold"><h3>${stars}</h3><p>النجوم</p></div>
+      <div class="sb"><h3>${recs.length}</h3><p>جلسات التسميع</p></div>
+      ${q!==null?`<div class="sb ${q>=80?'green':q>=60?'gold':'red'}"><h3>${q}%</h3><p>جودة الحفظ</p></div>`:''}
+    </div>
+    <!-- جدول التسميع -->
+    <div class="pdf-section">
+      <div class="pdf-section-title">📖 سجل التسميع (آخر 20 جلسة)</div>
+      <table>
+        <thead><tr><th>النوع</th><th>من</th><th>إلى</th><th>الآيات</th><th>التقييم</th><th>التاريخ</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:20px;color:#718096">لا توجد سجلات</td></tr>'}</tbody>
+      </table>
+    </div>`);
 }
+
 function exportGroupPDF(){
   const gid=$('rep-g-sel').value;if(!gid){toast('اختر حلقة','warn');return}
   const g=S.groups.find(x=>x.id===gid);const gs=S.students.filter(s=>s.group_id===gid);
-  const rows=gs.map(s=>{const v=getTotalV(s.id),att=getAttRate(s.id),stars=getStars(s.id);return`<tr><td>${s.name}</td><td>${s.level||'—'}</td><td>${v}</td><td>${fmtHizb(calcHizb(s.id))}</td><td>${att}%</td><td>${stars}</td></tr>`}).join('');
-  makePDF(`تقرير حلقة: ${g?.name}`,`<div><span class="sb"><h3>${gs.length}</h3><p>الطلبة</p></span></div><table><thead><tr><th>الطالب</th><th>المستوى</th><th>الآيات</th><th>الأحزاب</th><th>الحضور</th><th>النجوم</th></tr></thead><tbody>${rows}</tbody></table>`);
+  const totalV=gs.reduce((a,s)=>a+getTotalV(s.id),0);
+  const avgAtt=gs.length?Math.round(gs.reduce((a,s)=>a+getAttRate(s.id),0)/gs.length):0;
+  const rows=gs.map(s=>{
+    const v=getTotalV(s.id),att=getAttRate(s.id),stars=getStars(s.id);
+    const attColor=att>=80?'#16a34a':att>=60?'#d97706':'#dc2626';
+    return`<tr>
+      <td><strong>${s.name}</strong></td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">${s.level||'—'}</span></td>
+      <td style="text-align:center;font-weight:700;color:#1565c0">${v.toLocaleString()}</td>
+      <td style="text-align:center;font-weight:700;color:#16a34a">${fmtHizb(calcHizb(s.id))}</td>
+      <td style="text-align:center;font-weight:700;color:${attColor}">${att}%</td>
+      <td style="text-align:center;color:#d97706;font-weight:700">${stars}⭐</td>
+    </tr>`;}).join('');
+  makePDF(`تقرير حلقة: ${g?.name}`, `
+    <div class="pdf-stats">
+      <div class="sb"><h3>${gs.length}</h3><p>الطلبة</p></div>
+      <div class="sb green"><h3>${totalV.toLocaleString()}</h3><p>آيات محفوظة</p></div>
+      <div class="sb ${avgAtt>=80?'green':avgAtt>=60?'gold':'red'}"><h3>${avgAtt}%</h3><p>متوسط الحضور</p></div>
+      <div class="sb"><h3>${teacherName(g?.teacher_id)}</h3><p>الأستاذ</p></div>
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title">👥 قائمة الطلبة</div>
+      <table>
+        <thead><tr><th>الطالب</th><th>المستوى</th><th>الآيات</th><th>الأحزاب</th><th>الحضور</th><th>النجوم</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:20px;color:#718096">لا يوجد طلبة</td></tr>'}</tbody>
+      </table>
+    </div>`);
 }
 
 // ===================== EXAMS =====================
@@ -3787,29 +4166,45 @@ function exportExamPDF(eid){
   const r = EXAMS_DB.find(x=>x.id===eid);
   if(!r){ toast('لم يتم إيجاد نتيجة الامتحان','warn'); return; }
   const color = r.pct>=80?'#16a34a':r.pct>=60?'#d97706':'#dc2626';
+  const bg    = r.pct>=80?'#f0fdf4':r.pct>=60?'#fef9c3':'#fee2e2';
+  const brd   = r.pct>=80?'#86efac':r.pct>=60?'#fde68a':'#fca5a5';
   const rows = (r.details||[]).map((q,i)=>`<tr>
-    <td>${i+1}</td>
+    <td style="text-align:center;font-weight:700">${i+1}</td>
     <td>${q.label||q.surahName}</td>
-    <td style="text-align:center">${q.itqan||0}/${r.max_per_q}</td>
-    <td style="text-align:center">${q.adaa||0}/${r.max_per_q}</td>
-    <td style="text-align:center;font-weight:700">${((q.itqan||0)+(q.adaa||0))/2}</td>
+    <td style="text-align:center;font-weight:700;color:#16a34a">${q.itqan||0}/${r.max_per_q}</td>
+    <td style="text-align:center;font-weight:700;color:#2563eb">${q.adaa||0}/${r.max_per_q}</td>
+    <td style="text-align:center;font-weight:800;color:${color}">${((q.itqan||0)+(q.adaa||0))/2}</td>
   </tr>`).join('');
   makePDF(`نتيجة امتحان: ${r.student_name}`, `
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;text-align:center">
-      <div class="sb"><h3 style="color:${color}">${r.avg}</h3><p>المعدل النهائي / ${r.max_per_q}</p></div>
-      <div class="sb"><h3 style="color:${color}">${r.pct}%</h3><p>النسبة المئوية</p></div>
-      <div class="sb"><h3>${r.avg_itqan}</h3><p>متوسط الإتقان</p></div>
-      <div class="sb"><h3>${r.avg_adaa}</h3><p>متوسط الأداء</p></div>
-      <div class="sb"><h3>${r.questions_count}</h3><p>عدد الأسئلة</p></div>
+    <!-- بطاقة المعدل الرئيسية -->
+    <div style="background:${bg};border:2px solid ${brd};border-radius:14px;padding:20px;margin-bottom:16px;text-align:center">
+      <div style="font-size:42px;font-weight:900;color:${color}">${r.avg}</div>
+      <div style="font-size:15px;color:#4a5568;margin-top:4px">المعدل النهائي من ${r.max_per_q}</div>
+      <div style="font-size:18px;font-weight:700;color:${color};margin-top:6px">${r.pct}% — ${r.pct>=60?'ناجح ✅':'يحتاج مراجعة ⚠️'}</div>
     </div>
-    <table style="margin-bottom:8px">
-      <tr><td><b>الطالب</b></td><td>${r.student_name}</td><td><b>الحلقة</b></td><td>${r.group_name||'—'}</td></tr>
-      <tr><td><b>التاريخ</b></td><td>${fmtDate(r.date)}</td><td><b>الحالة</b></td><td>${r.pct>=60?'ناجح ✅':'يحتاج مراجعة ⚠️'}</td></tr>
-    </table>
-    <table>
-      <thead><tr><th>#</th><th>النطاق</th><th>الإتقان</th><th>الأداء</th><th>المعدل</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <!-- بطاقات التفاصيل -->
+    <div class="pdf-stats">
+      <div class="sb green"><h3>${r.avg_itqan}</h3><p>متوسط الإتقان /${r.max_per_q}</p></div>
+      <div class="sb" style="background:#eff6ff!important;border-color:#93c5fd!important"><h3 style="color:#2563eb!important">${r.avg_adaa}</h3><p>متوسط الأداء /${r.max_per_q}</p></div>
+      <div class="sb"><h3>${r.questions_count}</h3><p>عدد الأسئلة</p></div>
+      <div class="sb gold"><h3 style="color:#d97706!important">${fmtDate(r.date)}</h3><p>التاريخ</p></div>
+    </div>
+    <!-- بيانات الطالب -->
+    <div class="pdf-section" style="margin-bottom:14px">
+      <div class="pdf-section-title"><i>👤</i> بيانات الطالب</div>
+      <table>
+        <tr><td style="font-weight:700;width:120px">الاسم</td><td><strong>${r.student_name}</strong></td><td style="font-weight:700;width:120px">الحلقة</td><td>${r.group_name||'—'}</td></tr>
+        <tr><td style="font-weight:700">التاريخ</td><td>${fmtDate(r.date)}</td><td style="font-weight:700">الأستاذ</td><td>${teacherName(S.groups.find(g=>g.id===r.group_id)?.teacher_id)}</td></tr>
+      </table>
+    </div>
+    <!-- جدول الأسئلة -->
+    <div class="pdf-section">
+      <div class="pdf-section-title"><i>📋</i> تفاصيل الأسئلة</div>
+      <table>
+        <thead><tr><th>#</th><th>النطاق القرآني</th><th>الإتقان /${r.max_per_q}</th><th>الأداء /${r.max_per_q}</th><th>المعدل</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
   `);
 }
 
@@ -4363,7 +4758,24 @@ function buildCertHTML({student,type,occasion,dateFormatted,notes,group,teacher,
 function printCert(){
   const certEl=$('cert-output');
   if(!certEl){toast('أنشئ الشهادة أولاً','warn');return}
-  window.print();
+  const w=window.open('','_blank');
+  if(!w){toast('يرجى السماح بالنوافذ المنبثقة','warn');return}
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;margin:0;padding:0;box-sizing:border-box}
+    @page{size:A4 landscape;margin:8mm}
+    body{font-family:'Tajawal','Amiri',sans-serif;background:#fff;display:flex;justify-content:center;align-items:flex-start;padding:16px}
+    .cert-paper{width:100%;max-width:900px;background:#fff;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.12);overflow:hidden;aspect-ratio:1.414}
+    @media print{.no-print{display:none!important}.cert-paper{box-shadow:none;border-radius:0;max-width:none;width:100%;height:100%}}
+  </style></head><body>
+  <div class="cert-paper">${certEl.innerHTML}</div>
+  <div class="no-print" style="text-align:center;margin-top:20px;width:100%;font-family:'Tajawal',sans-serif">
+    <button onclick="window.print()" style="padding:12px 32px;background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif">🖨️ طباعة الشهادة بالألوان</button>
+    <div style="margin-top:8px;font-size:11px;color:#718096">فعّل "رسومات الخلفية / Background graphics" للحصول على الألوان الكاملة</div>
+  </div>
+  </body></html>`);
+  w.document.close();
 }
 
 function saveCertToArchive(sid,type,occasion,date){
@@ -4786,22 +5198,36 @@ function exportAbsencePDF(){
     if(a.status==='بعذر') studentAbs[a.student_id].excused++;
   });
   const ranked = Object.values(studentAbs).filter(x=>x.count>0).sort((a,b)=>b.count-a.count);
+  const critCount = ranked.filter(x=>x.count>=threshold).length;
   const rows = ranked.map(x=>{
     const s=x.student; const g=S.groups.find(gg=>gg.id===s.group_id);
     const isCrit=x.count>=threshold;
-    return`<tr style="${isCrit?'background:#fef2f2;':x.count>=threshold*.6?'background:#fffbf0;':''}">
-      <td>${s.name}</td><td>${g?.name||'—'}</td><td>${teacherName(g?.teacher_id)}</td>
-      <td style="text-align:center;font-weight:700;color:${isCrit?'#dc2626':'inherit'}">${x.count}</td>
-      <td style="text-align:center">${x.excused}</td>
-      <td style="text-align:center">${isCrit?'⚠️ حرج':x.count>=threshold*.6?'تحذير':'—'}</td>
+    const isWarn=x.count>=threshold*.6&&!isCrit;
+    const bg=isCrit?'#fef2f2':isWarn?'#fef9c3':'';
+    const color=isCrit?'#dc2626':isWarn?'#d97706':'#16a34a';
+    return`<tr style="${bg?`background:${bg}!important`:''}">
+      <td><strong>${s.name}</strong></td>
+      <td>${g?.name||'—'}</td>
+      <td>${teacherName(g?.teacher_id)}</td>
+      <td style="text-align:center;font-weight:800;color:${color}">${x.count}</td>
+      <td style="text-align:center;color:#2563eb;font-weight:700">${x.excused}</td>
+      <td style="text-align:center;font-weight:700;color:${color}">${isCrit?'⚠️ حرج':isWarn?'تحذير':'—'}</td>
     </tr>`;
   }).join('');
-  makePDF('تقرير إحصائيات الغياب',
-    `<div><span class="sb"><h3 style="color:#dc2626">${absences.length}</h3><p>إجمالي الغيابات</p></span>
-     <span class="sb"><h3 style="color:#dc2626">${ranked.filter(x=>x.count>=threshold).length}</h3><p>حالات حرجة</p></span>
-     <span class="sb"><h3>${ranked.length}</h3><p>طلبة لديهم غياب</p></span></div>
-    <table><thead><tr><th>الطالب</th><th>الحلقة</th><th>الأستاذ</th><th>الغياب</th><th>بعذر</th><th>الوضع</th></tr></thead><tbody>${rows}</tbody></table>`
-  );
+  makePDF('تقرير إحصائيات الغياب', `
+    <div class="pdf-stats">
+      <div class="sb red"><h3>${absences.length}</h3><p>إجمالي الغيابات</p></div>
+      <div class="sb red"><h3>${critCount}</h3><p>حالات حرجة (≥${threshold})</p></div>
+      <div class="sb gold"><h3>${ranked.length}</h3><p>طلبة لديهم غياب</p></div>
+      <div class="sb"><h3>${myS.length}</h3><p>إجمالي الطلبة</p></div>
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title">🔴 ترتيب الطلبة حسب الغياب</div>
+      <table>
+        <thead><tr><th>الطالب</th><th>الحلقة</th><th>الأستاذ</th><th>الغياب</th><th>بعذر</th><th>الوضع</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:20px;color:#718096">لا يوجد غياب</td></tr>'}</tbody>
+      </table>
+    </div>`);
 }
 
 // ===================== EXAM EDIT (تعديل وحذف الامتحانات) =====================
@@ -5228,8 +5654,33 @@ function exportHizbLogPDF(){
   let list = S._hizbLog.filter(h=> myS.some(s=>s.id===h.student_id));
   if(gf) list = list.filter(h=>h.group_id===gf);
   if(sf) list = list.filter(h=>h.student_id===sf);
-  const rows = list.map(h=>`<tr><td>${h.student_name}</td><td>${h.group_name}</td><td style="text-align:center;font-weight:700">الحزب ${h.hizb_number}</td><td>${teacherName(h.teacher_id)}</td><td>${fmtDate(h.date)}</td></tr>`).join('');
-  makePDF('سجل إتمام الأحزاب', `<div><span class="sb"><h3 style="color:#16a34a">${list.length}</h3><p>حزب مُتمّ</p></span></div><table><thead><tr><th>الطالب</th><th>الحلقة</th><th>الحزب</th><th>الأستاذ</th><th>التاريخ</th></tr></thead><tbody>${rows}</tbody></table>`);
+  // تجميع حسب الطالب
+  const byStudent = {};
+  list.forEach(h=>{
+    if(!byStudent[h.student_id]) byStudent[h.student_id]={name:h.student_name,group:h.group_name,records:[]};
+    byStudent[h.student_id].records.push(h);
+  });
+  const rows = list.map((h,i)=>`<tr>
+    <td><strong>${h.student_name}</strong></td>
+    <td>${h.group_name}</td>
+    <td style="text-align:center">
+      <span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:12px;font-weight:700;font-size:12px">الحزب ${h.hizb_number}</span>
+    </td>
+    <td>${teacherName(h.teacher_id)}</td>
+    <td>${fmtDate(h.date)}</td>
+  </tr>`).join('');
+  makePDF('سجل إتمام الأحزاب', `
+    <div class="pdf-stats">
+      <div class="sb green"><h3>${list.length}</h3><p>أحزاب مُتمَّة</p></div>
+      <div class="sb"><h3>${Object.keys(byStudent).length}</h3><p>طلبة أتمّوا أحزاباً</p></div>
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title">📚 سجل الأحزاب المحفوظة</div>
+      <table>
+        <thead><tr><th>الطالب</th><th>الحلقة</th><th>الحزب</th><th>الأستاذ</th><th>التاريخ</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="5" style="text-align:center;padding:20px;color:#718096">لا يوجد سجل</td></tr>'}</tbody>
+      </table>
+    </div>`);
 }
 
 /** دالة calcHizb المُحدَّثة: تجمع الحسابي + اليدوي */
@@ -6340,20 +6791,50 @@ function exportPeriodPDF(){
   const myG=myGroups(),myS=myStudents();
   const periods=groupsByPeriod(myG);
   const dateFrom=$('period-from')?.value||'';const dateTo=$('period-to')?.value||'';
-  let rows='';
+  let periodCards='<div class="pdf-stats">';
+  let allRows='';
   Object.entries(periods).forEach(([name,groups])=>{
     const stats=calcPeriodStats(groups,S.attendance,myS,dateFrom,dateTo);
     const c=PERIOD_COLORS[name]||PERIOD_COLORS['غير محدد'];
-    rows+=`<tr style="background:#f0f6ff"><td><strong>${c.icon} ${name}</strong></td><td>${groups.length}</td><td>${stats.groupStudents.length}</td><td style="color:#16a34a;font-weight:700">${stats.present}</td><td style="color:#dc2626;font-weight:700">${stats.absent}</td><td style="font-weight:800;color:${stats.rate>=80?'#16a34a':stats.rate>=60?'#d97706':'#dc2626'}">${stats.rate}%</td></tr>`;
+    const rateColor=stats.rate>=80?'#16a34a':stats.rate>=60?'#d97706':'#dc2626';
+    periodCards+=`<div class="sb" style="background:${c.light}!important;border-color:${c.border}!important">
+      <h3 style="color:${c.dark}!important">${c.icon} ${stats.rate}%</h3>
+      <p>فترة ${name} (${groups.length} حلقة)</p>
+    </div>`;
+    allRows+=`<tr style="background:${c.light}!important">
+      <td><strong>${c.icon} فترة ${name}</strong></td>
+      <td style="text-align:center">${groups.length}</td>
+      <td style="text-align:center">${stats.groupStudents.length}</td>
+      <td style="text-align:center;font-weight:700;color:#16a34a">${stats.present}</td>
+      <td style="text-align:center;font-weight:700;color:#dc2626">${stats.absent}</td>
+      <td style="text-align:center;font-weight:800;color:${rateColor}">${stats.rate}%</td>
+    </tr>`;
     groups.forEach(g=>{
       const gAtt=S.attendance.filter(a=>a.group_id===g.id);
       const gP=gAtt.filter(a=>a.status==='حاضر').length;
       const gA=gAtt.filter(a=>a.status==='غائب').length;
       const gR=gAtt.length?Math.round(gP/gAtt.length*100):0;
-      rows+=`<tr><td style="padding-right:24px">${g.name}</td><td>—</td><td>${S.students.filter(s=>s.group_id===g.id).length}</td><td>${gP}</td><td>${gA}</td><td>${gR}%</td></tr>`;
+      const gc=gR>=80?'#16a34a':gR>=60?'#d97706':'#dc2626';
+      allRows+=`<tr>
+        <td style="padding-right:20px">${g.name}</td>
+        <td style="text-align:center">—</td>
+        <td style="text-align:center">${S.students.filter(s=>s.group_id===g.id).length}</td>
+        <td style="text-align:center;color:#16a34a;font-weight:700">${gP}</td>
+        <td style="text-align:center;color:#dc2626;font-weight:700">${gA}</td>
+        <td style="text-align:center;font-weight:700;color:${gc}">${gR}%</td>
+      </tr>`;
     });
   });
-  makePDF('إحصائيات الحضور حسب الفترة الزمنية',`<table><thead><tr><th>الفترة / الحلقة</th><th>الحلقات</th><th>الطلبة</th><th>حضور</th><th>غياب</th><th>النسبة</th></tr></thead><tbody>${rows}</tbody></table>`);
+  periodCards+='</div>';
+  makePDF('إحصائيات الحضور حسب الفترة الزمنية', `
+    ${periodCards}
+    <div class="pdf-section">
+      <div class="pdf-section-title">🕐 تفاصيل جميع الفترات والحلقات</div>
+      <table>
+        <thead><tr><th>الفترة / الحلقة</th><th>الحلقات</th><th>الطلبة</th><th>حضور</th><th>غياب</th><th>النسبة</th></tr></thead>
+        <tbody>${allRows}</tbody>
+      </table>
+    </div>`);
 }
 
 // ═══ Override لوحة التحكم بنسخة تفاعلية محسّنة ═══
@@ -6957,6 +7438,9 @@ function clampResultNote(inp, max) {
   else if (v > max)       inp.value = max;
 }
 
+// نسخة متزامنة تُستدعى من oninput (بدون await)
+function updateResultCalcSync(){ updateResultCalc(); }
+
 async function updateResultCalc() {
   const subjects = await loadSubjects();
   const notes = {};
@@ -7290,30 +7774,38 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
 </div>`;
 }
 
-// ═══ طباعة النتيجة ═══
+// ═══ CSS مشترك لجميع نوافذ الطباعة الملونة ═══
+function _getPrintColorCSS() {
+  return `
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;box-sizing:border-box;margin:0;padding:0}
+    @page{size:A4;margin:12mm 10mm}
+    html,body{font-family:'Tajawal','Amiri',Arial,sans-serif;background:#fff;direction:rtl;font-size:13px}
+    @media print{.no-print,.np{display:none!important}}
+  `;
+}
+
+// ═══ طباعة نتيجة الدورة (نافذة مستقلة بألوان كاملة) ═══
 function printResultDirect() {
   const content = document.getElementById('cert-printable');
-  if (!content) return;
+  if (!content) { toast('لا توجد نتيجة للطباعة','warn'); return; }
   const w = window.open('', '_blank');
+  if (!w) { toast('يرجى السماح بالنوافذ المنبثقة','warn'); return; }
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-      *{margin:0;padding:0;box-sizing:border-box}
-      body{font-family:'Tajawal',sans-serif;background:#fff;padding:20px;direction:rtl}
-      @page{size:A4;margin:15mm}
-      @media print{body{padding:0}.no-print{display:none!important}}
-    </style></head><body>${content.outerHTML}
-    <div class="no-print" style="text-align:center;margin-top:20px">
-      <button onclick="window.print()" style="padding:10px 30px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;font-family:Tajawal,sans-serif">🖨️ طباعة / حفظ PDF</button>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>${_getPrintColorCSS()}</style>
+    </head><body>
+    ${content.outerHTML}
+    <div class="no-print" style="text-align:center;margin-top:20px;padding:16px;font-family:'Tajawal',sans-serif">
+      <button onclick="window.print()" style="padding:12px 32px;background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;box-shadow:0 4px 14px rgba(21,101,192,.35)">🖨️ طباعة بالألوان / حفظ PDF</button>
+      <div style="margin-top:8px;font-size:11px;color:#718096">فعّل "رسومات الخلفية / Background graphics" في إعدادات الطباعة</div>
     </div>
-    <script>setTimeout(()=>window.print(),600)<\/script>
     </body></html>`);
   w.document.close();
 }
 
 async function printResult(rid) {
   const record = (await loadResults()).find(r => r.id === rid);
-  if (!record) return;
+  if (!record) { toast('لم يتم إيجاد النتيجة','warn'); return; }
   const subjects = await loadSubjects();
   const notes  = record.notes || {};
   const { rows, totalWeighted, totalCoef, avg, appre } = computeResult(notes, subjects);
@@ -7322,12 +7814,17 @@ async function printResult(rid) {
   const teacher = group   ? S.teachers.find(x => x.id === group.teacher_id) : null;
   const certHTML = buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef, student, group, teacher);
   const w = window.open('', '_blank');
+  if (!w) { toast('يرجى السماح بالنوافذ المنبثقة','warn'); return; }
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Tajawal',sans-serif;background:#fff;direction:rtl}@page{size:A4;margin:12mm}.np{display:none}</style></head>
-    <body>${certHTML}
-    <div class="np" style="text-align:center;padding:16px"><button onclick="window.print()" style="padding:10px 28px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer">🖨️ طباعة</button></div>
-    <script>setTimeout(()=>{document.querySelector('.np').style.display='block'},100)<\/script></body></html>`);
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>${_getPrintColorCSS()}</style>
+    </head><body>
+    ${certHTML}
+    <div class="no-print" style="text-align:center;padding:16px;font-family:'Tajawal',sans-serif">
+      <button onclick="window.print()" style="padding:12px 32px;background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer">🖨️ طباعة بالألوان</button>
+      <div style="margin-top:8px;font-size:11px;color:#718096">فعّل "رسومات الخلفية / Background graphics"</div>
+    </div>
+    </body></html>`);
   w.document.close();
 }
 
@@ -8113,14 +8610,35 @@ async function refreshSummerData(){
 // ─ تصدير PDF ─
 function exportSummerPDF(){
   const cfg=SUMMER.config;
-  const ranked=SUMMER.students.map(s=>({...s,stars:getSummerStars(s.id),v:getSummerTotalV(s.id),att:getSummerAttRate(s.id),g:SUMMER.groups.find(g=>g.id===s.group_id)})).sort((a,b)=>b.stars-a.stars);
-  const rows=ranked.map(s=>`<tr><td>${s.name}</td><td>${s.g?.name||'—'}</td><td>${s.v.toLocaleString()}</td><td>${s.att}%</td><td style="font-weight:700;color:#d97706">${s.stars}⭐</td></tr>`).join('');
+  const ranked=SUMMER.students.map(s=>({
+    ...s,
+    stars:getSummerStars(s.id),
+    v:getSummerTotalV(s.id),
+    att:getSummerAttRate(s.id),
+    g:SUMMER.groups.find(g=>g.id===s.group_id)
+  })).sort((a,b)=>b.stars-a.stars);
   const totalV=ranked.reduce((a,s)=>a+s.v,0);
   const avgAtt=ranked.length?Math.round(ranked.reduce((a,s)=>a+s.att,0)/ranked.length):0;
+  const rows=ranked.map((s,i)=>{
+    const attColor=s.att>=80?'#16a34a':s.att>=60?'#d97706':'#dc2626';
+    const medals={0:'🥇',1:'🥈',2:'🥉'};
+    return`<tr${i<3?` style="background:#fef9c3!important"`:''}><td>${medals[i]||i+1}</td><td><strong>${s.name}</strong></td><td>${s.g?.name||'—'}</td><td style="text-align:center;font-weight:700;color:#1565c0">${s.v.toLocaleString()}</td><td style="text-align:center;font-weight:700;color:${attColor}">${s.att}%</td><td style="text-align:center;color:#d97706;font-weight:700">${s.stars}⭐</td></tr>`;
+  }).join('');
   makePDF(cfg?.name||'الدورة الصيفية',`
-    ${cfg?`<p style="text-align:center;color:#78350f;font-size:13px;margin-bottom:12px">من ${fmtDate(cfg.start)} إلى ${fmtDate(cfg.end)}</p>`:''}
-    <div><span class="sb"><h3>${ranked.length}</h3><p>الطلبة</p></span><span class="sb"><h3>${totalV.toLocaleString()}</h3><p>الآيات</p></span><span class="sb"><h3>${avgAtt}%</h3><p>الحضور</p></span><span class="sb"><h3>${SUMMER.groups.length}</h3><p>الأفواج</p></span></div>
-    <table><thead><tr><th>الطالب</th><th>الفوج</th><th>الآيات</th><th>الحضور</th><th>النجوم</th></tr></thead><tbody>${rows}</tbody></table>`);
+    ${cfg?`<div style="background:linear-gradient(135deg,#78350f,#d97706);border-radius:12px;padding:14px 20px;color:#fff;margin-bottom:16px;text-align:center"><div style="font-size:20px;font-weight:700">☀️ ${cfg.name}</div><div style="font-size:12px;opacity:.8;margin-top:4px">من ${fmtDate(cfg.start)} إلى ${fmtDate(cfg.end)}</div></div>`:''}
+    <div class="pdf-stats">
+      <div class="sb"><h3>${ranked.length}</h3><p>إجمالي الطلبة</p></div>
+      <div class="sb green"><h3>${totalV.toLocaleString()}</h3><p>آيات محفوظة</p></div>
+      <div class="sb ${avgAtt>=80?'green':avgAtt>=60?'gold':'red'}"><h3>${avgAtt}%</h3><p>متوسط الحضور</p></div>
+      <div class="sb"><h3>${SUMMER.groups.length}</h3><p>الأفواج</p></div>
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title">🏆 ترتيب الطلبة</div>
+      <table>
+        <thead><tr><th>#</th><th>الطالب</th><th>الفوج</th><th>الآيات</th><th>الحضور</th><th>النجوم</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:20px;color:#718096">لا يوجد طلبة</td></tr>'}</tbody>
+      </table>
+    </div>`);
 }
 
 // ═══ Override saveGroup لدعم is_summer ═══
