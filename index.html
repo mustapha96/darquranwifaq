@@ -577,7 +577,7 @@ textarea{resize:vertical;min-height:80px}
       <button class="lp-nl" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">خدماتنا</button>
       <button class="lp-nl" onclick="document.getElementById('platform').scrollIntoView({behavior:'smooth'})">المنصة</button>
       <button class="lp-nl" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">تواصل</button>
-      <button class="lp-enter" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> دخول المنصة</button>
+      <div style="display:flex;gap:8px;align-items:center"><button class="lp-enter" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3)" onclick="showRegister()"><i class="fas fa-user-plus"></i> طلب انضمام</button><button class="lp-enter" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> دخول المنصة</button></div>
     </div>
   </nav>
 
@@ -732,6 +732,92 @@ textarea{resize:vertical;min-height:80px}
 <!-- MOBILE OVERLAY -->
 <div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
 
+<!-- ===================== صفحة طلب الانضمام ===================== -->
+<div id="register-page" style="min-height:100vh;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2447 0%,#1a3c6e 50%,#2563a8 100%);position:relative;overflow:hidden">
+  <button class="login-back" onclick="showLanding()"><i class="fas fa-arrow-right"></i> العودة</button>
+  <div class="login-card" style="width:480px;max-width:95vw">
+    <div class="login-logo">
+      <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار">
+      <h1>طلب الانضمام</h1>
+      <p>دار القرآن الكريم — الوفاق الكبير</p>
+    </div>
+    <!-- خطوة 1: البيانات الأساسية -->
+    <div id="reg-step1">
+      <div class="fgrid" style="gap:12px">
+        <div class="lf" style="grid-column:1/-1">
+          <label>الاسم الكامل *</label>
+          <input type="text" id="reg-name" placeholder="الاسم الكامل كما في الوثائق الرسمية">
+        </div>
+        <div class="lf">
+          <label>رقم الهاتف *</label>
+          <input type="tel" id="reg-phone" placeholder="06XXXXXXXX" dir="ltr">
+        </div>
+        <div class="lf">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="reg-email" placeholder="اختياري">
+        </div>
+        <div class="lf" style="grid-column:1/-1">
+          <label>الجنس *</label>
+          <div style="display:flex;gap:10px;margin-top:6px">
+            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:#fff;transition:all .2s" id="reg-male-lbl">
+              <input type="radio" name="reg-gender" value="ذكر" id="reg-male" onclick="onRegGender('ذكر')" style="display:none">
+              <span style="font-size:20px">👨</span>
+              <div><div style="font-weight:700;font-size:13px">ذكر</div><div style="font-size:11px;color:var(--text3)">رجال وشباب</div></div>
+            </label>
+            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:#fff;transition:all .2s" id="reg-female-lbl">
+              <input type="radio" name="reg-gender" value="أنثى" id="reg-female" onclick="onRegGender('أنثى')" style="display:none">
+              <span style="font-size:20px">👩</span>
+              <div><div style="font-weight:700;font-size:13px">أنثى</div><div style="font-size:11px;color:var(--text3)">نساء وفتيات</div></div>
+            </label>
+          </div>
+        </div>
+        <div class="lf" style="grid-column:1/-1">
+          <label>نوع الحساب *</label>
+          <select id="reg-role" style="padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13.5px;width:100%;margin-top:4px">
+            <option value="">— اختر نوع الحساب —</option>
+            <option value="parent">ولي أمر</option>
+            <option value="teacher">أستاذ / أستاذة</option>
+            <option value="supervisor">مشرف / مشرفة</option>
+          </select>
+        </div>
+        <div class="lf" id="reg-section-wrap" style="grid-column:1/-1;display:none">
+          <label id="reg-section-label">القسم</label>
+          <select id="reg-section" style="padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13.5px;width:100%;margin-top:4px">
+            <option value="men">قسم الرجال</option>
+            <option value="women">قسم النساء</option>
+          </select>
+        </div>
+        <div class="lf" style="grid-column:1/-1">
+          <label>ملاحظة إضافية (اختياري)</label>
+          <textarea id="reg-note" rows="2" placeholder="أي معلومة تساعد الإدارة في مراجعة طلبك..." style="resize:none;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13px;width:100%"></textarea>
+        </div>
+      </div>
+      <button class="login-btn" style="margin-top:16px" onclick="submitJoinRequest()">
+        <i class="fas fa-paper-plane"></i> إرسال طلب الانضمام
+      </button>
+      <div class="login-err" id="reg-err"></div>
+      <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--text3)">
+        لديك حساب؟ <button onclick="showLogin()" style="background:none;border:none;color:var(--primary-l);font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;font-weight:700">دخول المنصة</button>
+      </div>
+    </div>
+    <!-- خطوة 2: تأكيد الإرسال -->
+    <div id="reg-step2" style="display:none;text-align:center;padding:20px 0">
+      <div style="font-size:56px;margin-bottom:16px">✅</div>
+      <h2 style="color:var(--primary);font-size:18px;margin-bottom:8px">تم إرسال طلبك بنجاح!</h2>
+      <p style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:20px">
+        تم استلام طلب انضمامك وسيتم مراجعته من قبل الإدارة.<br>
+        ستُبلَّغ بالموافقة أو الرفض عبر رقم هاتفك.
+      </p>
+      <div style="background:#f0f6ff;border:1px solid #dbeafe;border-radius:10px;padding:14px;margin-bottom:16px;text-align:right">
+        <div id="reg-confirm-details" style="font-size:13px;line-height:2"></div>
+      </div>
+      <button class="login-btn" onclick="showLanding()">
+        <i class="fas fa-home"></i> العودة للرئيسية
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== APP ===================== -->
 <div id="app">
   <!-- SIDEBAR -->
@@ -859,13 +945,34 @@ textarea{resize:vertical;min-height:80px}
 
       <!-- USERS -->
       <div class="page" id="page-users">
-        <div class="ph"><div><h1>إدارة المستخدمين</h1><p>الصلاحيات والأدوار</p></div></div>
-        <div class="card" style="margin-bottom:16px"><div class="card-body"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
-          <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fbbf24;text-align:center"><i class="fas fa-crown" style="font-size:28px;color:#d97706;margin-bottom:8px;display:block"></i><h4 style="color:#92400e">مدير النظام</h4><p style="font-size:12px;color:#78350f;margin-top:4px">تحكم كامل في جميع الوظائف</p></div>
-          <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:1px solid #93c5fd;text-align:center"><i class="fas fa-user-shield" style="font-size:28px;color:#1d4ed8;margin-bottom:8px;display:block"></i><h4 style="color:#1e3a8a">المشرف</h4><p style="font-size:12px;color:#1e40af;margin-top:4px">إدارة الحلقات والأساتذة</p></div>
-          <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;text-align:center"><i class="fas fa-chalkboard-teacher" style="font-size:28px;color:#15803d;margin-bottom:8px;display:block"></i><h4 style="color:#14532d">الأستاذ</h4><p style="font-size:12px;color:#166534;margin-top:4px">إدارة طلبته وتسجيل الحضور</p></div>
-        </div></div></div>
-        <div class="card" id="users-content"></div>
+        <div class="ph">
+          <div><h1>إدارة المستخدمين</h1><p>الصلاحيات والأدوار وطلبات الانضمام</p></div>
+          <div id="join-requests-badge" style="display:none">
+            <span class="bx bx-r" style="font-size:13px;padding:6px 14px;animation:pulse-badge .8s ease-in-out infinite alternate">
+              <i class="fas fa-bell"></i> <span id="join-req-count">0</span> طلب انضمام جديد
+            </span>
+          </div>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('users','accounts',this)"><i class="fas fa-users-cog"></i> الحسابات</div>
+          <div class="tab" onclick="switchTab('users','requests',this)" id="users-requests-tab">
+            <i class="fas fa-user-clock"></i> طلبات الانضمام
+            <span id="req-tab-badge" style="display:none;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-right:4px">0</span>
+          </div>
+        </div>
+        <div class="tab-pane active" id="users-accounts">
+          <div class="card" style="margin-bottom:16px"><div class="card-body"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+            <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fbbf24;text-align:center"><i class="fas fa-crown" style="font-size:28px;color:#d97706;margin-bottom:8px;display:block"></i><h4 style="color:#92400e">مدير النظام</h4><p style="font-size:12px;color:#78350f;margin-top:4px">تحكم كامل في جميع الوظائف</p></div>
+            <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:1px solid #93c5fd;text-align:center"><i class="fas fa-user-shield" style="font-size:28px;color:#1d4ed8;margin-bottom:8px;display:block"></i><h4 style="color:#1e3a8a">المشرف</h4><p style="font-size:12px;color:#1e40af;margin-top:4px">إدارة الحلقات والأساتذة</p></div>
+            <div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;text-align:center"><i class="fas fa-chalkboard-teacher" style="font-size:28px;color:#15803d;margin-bottom:8px;display:block"></i><h4 style="color:#14532d">الأستاذ</h4><p style="font-size:12px;color:#166534;margin-top:4px">إدارة طلبته وتسجيل الحضور</p></div>
+          </div></div></div>
+          <div class="card" id="users-content"></div>
+        </div>
+        <div class="tab-pane" id="users-requests">
+          <div id="join-requests-content">
+            <div class="loading"><div class="spinner"></div><p>جاري تحميل الطلبات...</p></div>
+          </div>
+        </div>
       </div>
 
       <!-- STUDENTS -->
@@ -9011,6 +9118,597 @@ function autoBackupMeta() {
 setInterval(autoBackupMeta, 5 * 60 * 1000);
 
 console.log('✅ نظام إدارة البرامج المستقلة — نسخة نظيفة ومحسّنة');
+
+
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  نظام التسجيل + الجنس + التأنيث + طلبات الانضمام               ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
+// ═══════════════════════════════════════
+// ١. نظام التسجيل وطلبات الانضمام
+// ═══════════════════════════════════════
+
+function showRegister(){
+  $('landing').style.display='none';
+  $('login-page').style.display='none';
+  const rp=$('register-page');
+  rp.style.display='flex';
+  rp.style.alignItems='center';
+  rp.style.justifyContent='center';
+  $('reg-step1').style.display='block';
+  $('reg-step2').style.display='none';
+  $('reg-err').style.display='none';
+  $('reg-err').textContent='';
+  // مسح الحقول
+  ['reg-name','reg-phone','reg-email','reg-note'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  $('reg-role').value='';
+  $('reg-section-wrap').style.display='none';
+  document.querySelectorAll('input[name="reg-gender"]').forEach(r=>r.checked=false);
+  ['reg-male-lbl','reg-female-lbl'].forEach(id=>{
+    const el=$(id);if(el){el.style.borderColor='var(--border)';el.style.background='#fff';}
+  });
+}
+
+function onRegGender(g){
+  $('reg-male-lbl').style.borderColor = g==='ذكر'?'#1565c0':'var(--border)';
+  $('reg-male-lbl').style.background  = g==='ذكر'?'#e8f0fe':'#fff';
+  $('reg-female-lbl').style.borderColor= g==='أنثى'?'#be185d':'var(--border)';
+  $('reg-female-lbl').style.background = g==='أنثى'?'#fce7f3':'#fff';
+  // ضبط القسم تلقائياً
+  const sw=$('reg-section-wrap');
+  if(sw){
+    sw.style.display='block';
+    $('reg-section').value = g==='ذكر'?'men':'women';
+    $('reg-section-label').textContent = g==='ذكر'?'القسم':'القسم';
+  }
+}
+
+async function submitJoinRequest(){
+  const name=$('reg-name').value.trim();
+  const phone=$('reg-phone').value.trim();
+  const gender=document.querySelector('input[name="reg-gender"]:checked')?.value;
+  const role=$('reg-role').value;
+  const email=$('reg-email').value.trim();
+  const note=$('reg-note').value.trim();
+  const section=$('reg-section').value||'men';
+  const errEl=$('reg-err');
+  errEl.style.display='none';
+  if(!name){errEl.textContent='يرجى إدخال الاسم الكامل';errEl.style.display='block';return}
+  if(!phone){errEl.textContent='يرجى إدخال رقم الهاتف';errEl.style.display='block';return}
+  if(!gender){errEl.textContent='يرجى تحديد الجنس';errEl.style.display='block';return}
+  if(!role){errEl.textContent='يرجى اختيار نوع الحساب';errEl.style.display='block';return}
+  const btn=event.target;btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+  try{
+    const roleLabels={parent:'ولي أمر',teacher:'أستاذ',supervisor:'مشرف'};
+    const req={
+      id:Date.now().toString(),
+      name, phone, email:email||null, gender, role,
+      section,
+      role_label:roleLabels[role]||(gender==='أنثى'?'أستاذة':role),
+      note:note||null,
+      status:'pending',
+      created_at:new Date().toISOString()
+    };
+    // حفظ الطلب في settings table كـ join_request_*
+    await db.from('settings').insert({key:'join_req_'+req.id,value:JSON.stringify(req)});
+    // عرض تأكيد الإرسال
+    $('reg-step1').style.display='none';
+    $('reg-step2').style.display='block';
+    $('reg-confirm-details').innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div>👤 <strong>الاسم:</strong> ${name}</div>
+        <div>📱 <strong>الهاتف:</strong> ${phone}</div>
+        <div>${gender==='ذكر'?'👨':'👩'} <strong>الجنس:</strong> ${gender}</div>
+        <div>🔑 <strong>نوع الحساب:</strong> ${req.role_label}</div>
+      </div>`;
+  }catch(e){
+    errEl.textContent='خطأ في إرسال الطلب: '+e.message;
+    errEl.style.display='block';
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال طلب الانضمام';
+  }
+}
+
+// ═══ تحميل وعرض طلبات الانضمام ═══
+let _joinRequests=[];
+async function loadJoinRequests(){
+  try{
+    const{data}=await db.from('settings').select('*').like('key','join_req_%').order('created_at',{ascending:false});
+    if(data?.length){
+      _joinRequests=data.map(r=>{try{return JSON.parse(r.value)}catch{return null}}).filter(Boolean);
+    }else _joinRequests=[];
+    const pending=_joinRequests.filter(r=>r.status==='pending').length;
+    // تحديث الشارة
+    const badge=$('join-requests-badge');
+    const tabBadge=$('req-tab-badge');
+    const countEl=$('join-req-count');
+    if(badge){badge.style.display=pending>0?'block':'none';}
+    if(tabBadge){tabBadge.style.display=pending>0?'inline':'none';tabBadge.textContent=pending;}
+    if(countEl)countEl.textContent=pending;
+  }catch(e){console.error('loadJoinRequests:',e.message)}
+}
+
+function renderJoinRequests(){
+  const container=$('join-requests-content');
+  if(!container)return;
+  const pending=_joinRequests.filter(r=>r.status==='pending');
+  const processed=_joinRequests.filter(r=>r.status!=='pending');
+  if(!_joinRequests.length){
+    container.innerHTML=`<div class="empty card" style="padding:60px"><i class="fas fa-user-clock"></i><p>لا توجد طلبات انضمام بعد</p></div>`;
+    return;
+  }
+  container.innerHTML=`
+    ${pending.length?`
+    <div style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px"><i class="fas fa-bell" style="margin-left:6px"></i>طلبات في الانتظار (${pending.length})</div>
+      ${pending.map(r=>buildReqCard(r)).join('')}
+    </div>`:''}
+    ${processed.length?`
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--text3);margin-bottom:10px"><i class="fas fa-history" style="margin-left:6px"></i>الطلبات السابقة (${processed.length})</div>
+      ${processed.slice(0,10).map(r=>buildReqCard(r,true)).join('')}
+    </div>`:''}`;
+}
+
+function buildReqCard(r,small=false){
+  const isPending=r.status==='pending';
+  const gIcon=r.gender==='ذكر'?'👨':'👩';
+  const sColor=r.status==='approved'?'var(--accent)':r.status==='rejected'?'var(--danger)':'var(--gold)';
+  const sLabel=r.status==='approved'?'✅ تمت الموافقة':r.status==='rejected'?'❌ مرفوض':'⏳ في الانتظار';
+  const sectionLabel=r.section==='women'?'قسم النساء':'قسم الرجال';
+  return`<div class="card" style="margin-bottom:12px;${isPending?'border-right:3px solid var(--gold);':''}">
+    <div class="card-body" style="padding:16px">
+      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div style="width:46px;height:46px;border-radius:50%;background:${r.gender==='أنثى'?'#fce7f3':'#dbeafe'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${gIcon}</div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:700;font-size:15px">${r.name}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">
+            <span><i class="fas fa-phone" style="margin-left:4px"></i>${r.phone}</span>
+            <span><i class="fas fa-tag" style="margin-left:4px"></i>${r.role_label}</span>
+            <span><i class="fas fa-building" style="margin-left:4px"></i>${sectionLabel}</span>
+            <span><i class="fas fa-clock" style="margin-left:4px"></i>${fmtDate(r.created_at)}</span>
+          </div>
+          ${r.note?`<div style="margin-top:6px;font-size:12px;color:var(--text2);background:var(--bg);padding:6px 10px;border-radius:6px"><i class="fas fa-comment-alt" style="margin-left:4px;color:var(--text3)"></i>${r.note}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <span style="font-size:12px;font-weight:700;color:${sColor}">${sLabel}</span>
+          ${isPending?`
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-s btn-sm" onclick="approveJoinRequest('${r.id}')"><i class="fas fa-check"></i> موافقة</button>
+            <button class="btn btn-d btn-sm" onclick="rejectJoinRequest('${r.id}')"><i class="fas fa-times"></i> رفض</button>
+          </div>
+          ${r.phone?`<button class="wa-btn" style="font-size:11px;padding:4px 10px" onclick="contactRequestWA('${r.id}')"><i class="fab fa-whatsapp"></i> تواصل</button>`:''}
+          `:''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function approveJoinRequest(id){
+  const r=_joinRequests.find(x=>x.id===id);
+  if(!r)return;
+  const roleMap={parent:'parent',teacher:'teacher',supervisor:'supervisor'};
+  const supaRole=roleMap[r.role]||'teacher';
+  // نعرض مودال إنشاء الحساب
+  showCreateAccountModal(r);
+}
+
+function showCreateAccountModal(req){
+  let modal=$('m-create-account');
+  if(!modal){
+    modal=document.createElement('div');modal.id='m-create-account';modal.className='overlay';
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML=`
+    <div class="modal" style="max-width:480px">
+      <div class="mh" style="background:linear-gradient(135deg,#0f4c2e,#16a34a)">
+        <h3 style="color:#fff"><i class="fas fa-user-check" style="margin-left:8px"></i>إنشاء حساب جديد</h3>
+        <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-create-account')">✕</button>
+      </div>
+      <div class="mbody" style="padding:20px">
+        <div class="alert alert-s" style="margin-bottom:16px">
+          <i class="fas fa-info-circle"></i>
+          <div>سيتم إنشاء حساب Supabase Auth للمستخدم <strong>${req.name}</strong> وإضافته للنظام.</div>
+        </div>
+        <div class="fgrid" style="gap:12px">
+          <div class="fg"><label>البريد الإلكتروني *</label><input type="email" id="ca-email" value="${req.email||''}" placeholder="example@wafaq.com"></div>
+          <div class="fg"><label>كلمة المرور المؤقتة *</label><input type="text" id="ca-pass" value="Wafaq@${new Date().getFullYear()}" placeholder="كلمة المرور"></div>
+          <div class="fg"><label>الاسم الكامل</label><input type="text" id="ca-name" value="${req.name}"></div>
+          <div class="fg"><label>الدور</label><select id="ca-role">
+            <option value="parent" ${req.role==='parent'?'selected':''}>ولي أمر</option>
+            <option value="teacher" ${req.role==='teacher'?'selected':''}>أستاذ</option>
+            <option value="supervisor" ${req.role==='supervisor'?'selected':''}>مشرف</option>
+          </select></div>
+        </div>
+        <div class="alert alert-w" style="margin-top:12px">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div style="font-size:12px">سيحتاج المستخدم لتفعيل بريده الإلكتروني. أرسل له البيانات عبر واتساب إن لزم.</div>
+        </div>
+        <div class="login-err" id="ca-err" style="margin-top:10px"></div>
+      </div>
+      <div class="mfoot">
+        <button class="btn btn-o" onclick="closeM('m-create-account')">إلغاء</button>
+        <button class="btn" style="background:#25d366;color:#fff" onclick="sendAccountWA('${req.id}')"><i class="fab fa-whatsapp"></i> إرسال عبر واتساب</button>
+        <button class="btn btn-s" onclick="createAccountAndApprove('${req.id}')"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
+      </div>
+    </div>`;
+  openM('m-create-account');
+}
+
+async function createAccountAndApprove(reqId){
+  const req=_joinRequests.find(x=>x.id===reqId);
+  if(!req)return;
+  const email=$('ca-email').value.trim();
+  const pass=$('ca-pass').value.trim();
+  const name=$('ca-name').value.trim();
+  const role=$('ca-role').value;
+  const errEl=$('ca-err');errEl.style.display='none';
+  if(!email||!pass){errEl.textContent='البريد الإلكتروني وكلمة المرور مطلوبان';errEl.style.display='block';return}
+  const btn=document.querySelector('#m-create-account .btn-s');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...';
+  try{
+    // إنشاء حساب عبر Supabase Admin API (service role مطلوب — نستخدم signUp كـ fallback)
+    // ملاحظة: signUp يُرسل إيميل تأكيد للمستخدم تلقائياً
+    const{data:authData,error:authErr}=await db.auth.signUp({email,password:pass,options:{data:{name,role,gender:req.gender,section:req.section}}});
+    if(authErr)throw authErr;
+    // إضافة البروفايل
+    if(authData?.user){
+      await db.from('profiles').upsert({id:authData.user.id,name,role,email,gender:req.gender,section:req.section},{onConflict:'id'});
+      S.teachers.push({id:authData.user.id,name,role,email,gender:req.gender});
+    }
+    // تحديث حالة الطلب
+    await updateJoinRequestStatus(reqId,'approved');
+    closeM('m-create-account');
+    toast(`✅ تم إنشاء حساب ${name} — كلمة المرور المؤقتة: ${pass}`,'ok');
+    renderJoinRequests();renderUsers();
+  }catch(e){
+    errEl.textContent='خطأ: '+e.message;errEl.style.display='block';
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> إنشاء الحساب';
+  }
+}
+
+function sendAccountWA(reqId){
+  const req=_joinRequests.find(x=>x.id===reqId);
+  if(!req||!req.phone)return;
+  const email=$('ca-email')?.value||'';
+  const pass=$('ca-pass')?.value||'';
+  const msg=`السلام عليكم ${req.name} 🌹\n\nتمت الموافقة على طلب انضمامك لمنصة دار القرآن الكريم — الوفاق.\n\n🔐 بيانات الدخول:\n📧 البريد: ${email}\n🔑 كلمة المرور: ${pass}\n\nيمكنك الدخول من هنا: ${window.location.href}\n\nجزاكم الله خيراً 🌟`;
+  openWA(req.phone,msg);
+}
+
+function contactRequestWA(reqId){
+  const req=_joinRequests.find(x=>x.id===reqId);
+  if(!req||!req.phone)return;
+  const msg=`السلام عليكم ${req.name} 🌹\n\nتلقينا طلب انضمامكم لمنصة دار القرآن الكريم — الوفاق.\n\nسيتم مراجعة طلبكم في أقرب وقت وإبلاغكم بالنتيجة إن شاء الله.\n\nجزاكم الله خيراً 🌹`;
+  openWA(req.phone,msg);
+}
+
+async function rejectJoinRequest(id){
+  confirmDelete({
+    title:'رفض طلب الانضمام',
+    body:`هل تريد رفض طلب "${_joinRequests.find(x=>x.id===id)?.name||''}"؟`,
+    onConfirm:async()=>{
+      await updateJoinRequestStatus(id,'rejected');
+      toast('تم رفض الطلب','ok');
+      renderJoinRequests();
+    }
+  });
+}
+
+async function updateJoinRequestStatus(id,status){
+  const r=_joinRequests.find(x=>x.id===id);
+  if(!r)return;
+  r.status=status;r.updated_at=new Date().toISOString();
+  await db.from('settings').update({value:JSON.stringify(r)}).eq('key','join_req_'+id);
+  loadJoinRequests();
+}
+
+// تحديث renderUsers لتحميل الطلبات — مدمج في override موحّد أدناه
+
+// ═══════════════════════════════════════════════════════════════
+// ٢. نظام التمييز بين الرجال والنساء + تغيير الثيم + التأنيث
+// ═══════════════════════════════════════════════════════════════
+
+// ══ الثيم النسائي ══
+const FEMALE_THEME = `
+:root {
+  --primary: #9d174d !important;
+  --primary-l: #be185d !important;
+  --primary-d: #701a3b !important;
+  --accent: #059669 !important;
+  --accent-l: #10b981 !important;
+}
+.sidebar { background: #701a3b !important; }
+.sb-role { background: #be185d !important; }
+.nav-item.active { border-right-color: #f9a8d4 !important; }
+.btn-p { background: #be185d !important; }
+.btn-p:hover { background: #9d174d !important; }
+.header { border-bottom-color: #fce7f3 !important; }
+.stat-card:hover { border-color: #f9a8d4 !important; }
+.lp-enter { background: linear-gradient(135deg,#be185d,#db2777) !important; }
+.prog-bar { background: linear-gradient(90deg,#be185d,#ec4899) !important; }
+`;
+
+let _femaleStyleEl=null;
+let _currentGender='';
+
+function applyGenderTheme(gender){
+  if(_currentGender===gender)return;
+  _currentGender=gender;
+  if(gender==='أنثى'){
+    if(!_femaleStyleEl){
+      _femaleStyleEl=document.createElement('style');
+      _femaleStyleEl.id='female-theme';
+      _femaleStyleEl.textContent=FEMALE_THEME;
+      document.head.appendChild(_femaleStyleEl);
+    }else _femaleStyleEl.disabled=false;
+    document.body.dataset.gender='female';
+    applyFeminineText();
+  }else{
+    if(_femaleStyleEl)_femaleStyleEl.disabled=true;
+    document.body.removeAttribute('data-gender');
+    restoreMasculineText();
+  }
+}
+
+// ══ جدول التأنيث الشامل ══
+const FEMININE_MAP=[
+  ['المدير مصطفى أبو حذيفة','المديرة مصطفى أبو حذيفة'],
+  ['مدير النظام','مديرة النظام'],
+  ['المشرف المسؤول','المشرفة المسؤولة'],
+  ['المشرف','المشرفة'],
+  ['الأستاذ','الأستاذة'],
+  ['الطالب','الطالبة'],
+  ['الطلبة','الطالبات'],
+  ['عدد الطلبة','عدد الطالبات'],
+  ['إجمالي الطلبة','إجمالي الطالبات'],
+  ['أفضل الطلبة','أفضل الطالبات'],
+  ['ملف الطالب','ملف الطالبة'],
+  ['إضافة طالب','إضافة طالبة'],
+  ['إدارة الطلبة','إدارة الطالبات'],
+  ['قائمة الطلبة','قائمة الطالبات'],
+  ['طالب جديد','طالبة جديدة'],
+  ['الحلقات','الحلقات'],
+  ['الحلقة','الحلقة'],
+  ['مرحباً، ','مرحباً، '],
+  ['📚 أستاذ','📚 أستاذة'],
+  ['🛡️ مشرف','🛡️ مشرفة'],
+  ['الأساتذة','الأستاذات'],
+  ['أساتذة','أستاذات'],
+  ['أستاذ','أستاذة'],
+  ['مشرف','مشرفة'],
+  ['مشرفون','مشرفات'],
+  ['حاضرون','حاضرات'],
+  ['غائبون','غائبات'],
+  ['ذكر','أنثى'],
+];
+let _origTexts=new Map();
+
+function applyFeminineText(){
+  // نطبّق التأنيث فقط على عناصر محددة وليس الكل (لتفادي تلف البيانات)
+  const targets=['sb-role','hd-role','dash-title','breadcrumb-txt'];
+  targets.forEach(id=>{
+    const el=$(id);if(!el)return;
+    if(!_origTexts.has(id))_origTexts.set(id,el.textContent);
+    let t=el.textContent;
+    FEMININE_MAP.forEach(([m,f])=>{t=t.replaceAll(m,f);});
+    el.textContent=t;
+  });
+  // تحديث النصوص الثابتة في sidebar
+  const roleEl=$('sb-role');
+  if(roleEl){
+    const r=S.profile?.role;
+    const labels={admin:'👑 مديرة النظام',supervisor:'🛡️ مشرفة',teacher:'📚 أستاذة'};
+    roleEl.textContent=labels[r]||'📚 أستاذة';
+  }
+}
+
+function restoreMasculineText(){
+  _origTexts.forEach((orig,id)=>{const el=$(id);if(el)el.textContent=orig;});
+  _origTexts.clear();
+  const r=S.profile?.role;
+  const roleEl=$('sb-role');
+  if(roleEl){
+    const labels={admin:'👑 مدير النظام',supervisor:'🛡️ مشرف',teacher:'📚 أستاذ'};
+    roleEl.textContent=labels[r]||'📚 أستاذ';
+  }
+}
+
+// ══ تطبيق الثيم عند تسجيل الدخول ══
+// ══ Override showApp موحّد — جنس + badge المشرف ══
+{
+  const _origShowAppAll = showApp;
+  showApp = function() {
+    _origShowAppAll();
+    // تطبيق الثيم حسب الجنس المحفوظ
+    setTimeout(() => {
+      const gender = S.profile?.gender;
+      if (gender) applyGenderTheme(gender);
+    }, 500);
+    // إضافة شارة القسم للمشرف
+    setTimeout(buildSupervisorSectionBadge, 800);
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ٣. لوحة تحكم المدير — عرض عام + تبديل الأقسام
+// ═══════════════════════════════════════════════════════════════
+
+let _adminSection='all'; // 'all' | 'men' | 'women'
+
+function buildAdminSectionSwitcher(){
+  const r=S.profile?.role;
+  if(r!=='admin')return;
+  const ph=document.querySelector('#page-dashboard .ph');
+  if(!ph||ph.querySelector('#section-switcher'))return;
+  const sw=document.createElement('div');
+  sw.id='section-switcher';
+  sw.style.cssText='display:flex;gap:6px;align-items:center;background:#f0f4f8;border:1px solid var(--border);border-radius:10px;padding:4px';
+  sw.innerHTML=`
+    <button id="sw-all" onclick="switchAdminSection('all')" style="padding:6px 14px;border-radius:7px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;background:var(--primary);color:#fff">🌐 الكل</button>
+    <button id="sw-men" onclick="switchAdminSection('men')" style="padding:6px 14px;border-radius:7px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;background:transparent;color:var(--text2)">👨 الرجال</button>
+    <button id="sw-women" onclick="switchAdminSection('women')" style="padding:6px 14px;border-radius:7px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;background:transparent;color:var(--text2)">👩 النساء</button>`;
+  ph.insertBefore(sw,ph.querySelector('.ph > div+div')||ph.lastChild);
+}
+
+function switchAdminSection(section){
+  _adminSection=section;
+  // تحديث مظهر الأزرار
+  ['all','men','women'].forEach(s=>{
+    const btn=$('sw-'+s);if(!btn)return;
+    const isActive=s===section;
+    btn.style.background=isActive?'var(--primary)':'transparent';
+    btn.style.color=isActive?'#fff':'var(--text2)';
+  });
+  // إعادة رسم لوحة التحكم بالتصفية الجديدة
+  renderDash();
+  // إشعار
+  const labels={all:'عرض جميع الأقسام',men:'قسم الرجال فقط',women:'قسم النساء فقط'};
+  const icons={all:'🌐',men:'👨',women:'👩'};
+  toast(`${icons[section]} ${labels[section]}`,'ok');
+}
+
+// ══ تصفية الطلبة والمجموعات حسب القسم للمدير ══
+const _origMyGroupsAdmin=myGroups;
+myGroups=function(){
+  const base=_origMyGroupsAdmin();
+  if(_adminSection==='all'||S.profile?.role!=='admin')return base;
+  return base.filter(g=>g.section===_adminSection||(g.section===undefined&&_adminSection==='men'));
+};
+
+const _origMyStudentsAdmin=myStudents;
+myStudents=function(){
+  const base=_origMyStudentsAdmin();
+  if(_adminSection==='all'||S.profile?.role!=='admin')return base;
+  return base.filter(s=>{
+    const g=S.groups.find(x=>x.id===s.group_id);
+    const sec=g?.section||(s.gender==='أنثى'?'women':'men');
+    return sec===_adminSection;
+  });
+};
+
+// ══ إضافة السويتشر عند فتح لوحة التحكم ══
+const _origRenderDashAdmin=renderDash;
+renderDash=function(){
+  _origRenderDashAdmin();
+  if(S.profile?.role==='admin'){
+    setTimeout(buildAdminSectionSwitcher,100);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ٤. تصفية الأستاذ/المشرف حسب الجنس عند إنشاء الحلقة
+// ═══════════════════════════════════════════════════════════════
+
+const _origOpenGroupModalGender=openSumGroupModal||function(){};
+// عند فتح مودال الحلقة — تصفية الأساتذة حسب جنس المستخدم الحالي
+const _origOpenGroupModalMain=openGroupModal;
+openGroupModal=function(id){
+  _origOpenGroupModalMain(id);
+  setTimeout(()=>{
+    const gSelect=$('g-teacher');
+    if(!gSelect)return;
+    const myGender=S.profile?.gender;
+    if(!myGender)return;
+    // تصفية الأساتذة بنفس الجنس أو غير محدد
+    gSelect.innerHTML='<option value="">— اختر —</option>'+
+      S.teachers.filter(t=>t.role!=='admin'&&(!t.gender||t.gender===myGender))
+      .map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  },100);
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ٥. حفظ الجنس في بروفايل المستخدم وتحديث profiles table
+// ═══════════════════════════════════════════════════════════════
+
+async function updateProfileGender(gender){
+  if(!S.profile||!S.user)return;
+  try{
+    await db.from('profiles').update({gender}).eq('id',S.user.id);
+    S.profile.gender=gender;
+    applyGenderTheme(gender);
+    toast(gender==='أنثى'?'تم تطبيق واجهة القسم النسائي 👩':'تم تطبيق واجهة القسم الرجالي 👨','ok');
+  }catch(e){toast('خطأ في حفظ الإعداد: '+e.message,'err')}
+}
+
+// ══ إضافة حقل الجنس في الإعدادات ══
+const _origRenderDashSettings=nav;
+// تحديث صفحة الإعدادات لإضافة خيار الجنس والقسم
+function addGenderToSettings(){
+  const settingsCard=document.querySelector('#page-settings .card .card-body');
+  if(!settingsCard||document.getElementById('gender-setting'))return;
+  const div=document.createElement('div');
+  div.id='gender-setting';
+  div.style.cssText='margin-top:20px;padding-top:16px;border-top:1px solid var(--border)';
+  div.innerHTML=`
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">
+      <i class="fas fa-palette" style="color:var(--primary);margin-left:6px"></i>مظهر الواجهة والقسم
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button onclick="applyGenderTheme('ذكر');updateProfileGender('ذكر')" class="btn btn-o" style="flex:1;min-width:140px;padding:12px;flex-direction:column;height:auto;gap:6px">
+        <span style="font-size:24px">👨</span>
+        <span>قسم الرجال</span>
+        <span style="font-size:11px;color:var(--text3)">واجهة زرقاء رسمية</span>
+      </button>
+      <button onclick="applyGenderTheme('أنثى');updateProfileGender('أنثى')" class="btn btn-o" style="flex:1;min-width:140px;padding:12px;flex-direction:column;height:auto;gap:6px;border-color:#be185d;color:#be185d">
+        <span style="font-size:24px">👩</span>
+        <span>قسم النساء</span>
+        <span style="font-size:11px;color:#be185d">واجهة وردية هادئة</span>
+      </button>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--text3)">
+      <i class="fas fa-info-circle" style="margin-left:4px"></i>
+      يمكن تغيير الواجهة في أي وقت — لا تؤثر على البيانات
+    </div>`;
+  settingsCard.appendChild(div);
+}
+
+// ══ Override nav موحّد — يعالج users + settings ══
+{
+  const _origNavUnified = nav;
+  nav = function(page) {
+    _origNavUnified(page);
+    if (page === 'users') {
+      loadJoinRequests().then(renderJoinRequests);
+    }
+    if (page === 'settings') {
+      setTimeout(addGenderToSettings, 200);
+    }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ٦. تهيئة نهائية — تطبيق الجنس المحفوظ
+// ═══════════════════════════════════════════════════════════════
+// ══ Override loadData — تطبيق الجنس بعد تحميل البيانات ══
+{
+  const _origLoadDataForGender = loadData;
+  loadData = async function() {
+    await _origLoadDataForGender();
+    const g = S.profile?.gender;
+    if (g) setTimeout(() => applyGenderTheme(g), 300);
+  };
+}
+
+// ═══ زر إضافة سريع في Sidebar للمشرف ═══
+function buildSupervisorSectionBadge(){
+  const r=S.profile?.role;const g=S.profile?.gender;
+  if(r!=='supervisor')return;
+  const sbl=document.querySelector('.sb-user');
+  if(!sbl||sbl.querySelector('#sup-section-badge'))return;
+  const badge=document.createElement('span');
+  badge.id='sup-section-badge';
+  badge.style.cssText='font-size:10px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);padding:2px 8px;border-radius:10px;margin-top:2px;display:inline-block';
+  badge.textContent=g==='أنثى'?'👩 قسم النساء':'👨 قسم الرجال';
+  const roleEl=$('sb-role');if(roleEl)roleEl.parentNode.insertBefore(badge,roleEl.nextSibling);
+}
+
+// buildSupervisorSectionBadge تُستدعى من showApp الموحّد أعلاه
+
+console.log('✅ نظام التسجيل + الجنس + التأنيث + طلبات الانضمام — مكتمل');
 
 </script>
 </body>
