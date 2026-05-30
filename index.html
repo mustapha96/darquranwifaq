@@ -577,7 +577,25 @@ textarea{resize:vertical;min-height:80px}
       <button class="lp-nl" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">خدماتنا</button>
       <button class="lp-nl" onclick="document.getElementById('platform').scrollIntoView({behavior:'smooth'})">المنصة</button>
       <button class="lp-nl" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">تواصل</button>
-      <div style="display:flex;gap:8px;align-items:center"><button class="lp-enter" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3)" onclick="showRegister()"><i class="fas fa-user-plus"></i> طلب انضمام</button><button class="lp-enter" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> دخول المنصة</button></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="lp-enter" onclick="showRegister()" style="
+          background:linear-gradient(135deg,#16a34a,#22c55e);
+          color:#fff;
+          border:none;
+          box-shadow:0 4px 14px rgba(22,163,74,.4);
+          font-weight:700;
+          transition:all .25s;
+        " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(22,163,74,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(22,163,74,.4)'">
+          <i class="fas fa-user-plus"></i> طلب الانضمام
+        </button>
+        <button class="lp-enter" onclick="showLogin()" style="
+          background:linear-gradient(135deg,#1565c0,#1976d2);
+          box-shadow:0 4px 14px rgba(21,101,192,.4);
+          transition:all .25s;
+        " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(21,101,192,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(21,101,192,.4)'">
+          <i class="fas fa-sign-in-alt"></i> دخول المنصة
+        </button>
+      </div>
     </div>
   </nav>
 
@@ -802,17 +820,21 @@ textarea{resize:vertical;min-height:80px}
     </div>
     <!-- خطوة 2: تأكيد الإرسال -->
     <div id="reg-step2" style="display:none;text-align:center;padding:20px 0">
-      <div style="font-size:56px;margin-bottom:16px">✅</div>
-      <h2 style="color:var(--primary);font-size:18px;margin-bottom:8px">تم إرسال طلبك بنجاح!</h2>
-      <p style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:20px">
-        تم استلام طلب انضمامك وسيتم مراجعته من قبل الإدارة.<br>
-        ستُبلَّغ بالموافقة أو الرفض عبر رقم هاتفك.
+      <div style="font-size:56px;margin-bottom:16px">u2705</div>
+      <h2 style="color:#16a34a;font-size:18px;margin-bottom:8px">u062au0645 u0625u0631u0633u0627u0644 u0637u0644u0628u0643 u0628u0646u062cu0627u062d!</h2>
+      <p style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:16px">
+        u062au0645 u0627u0633u062au0644u0627u0645 u0637u0644u0628 u0627u0646u0636u0645u0627u0645u0643 u0648u0633u064au062au0645 u0645u0631u0627u062cu0639u062au0647 u0645u0646 u0642u0628u0644 u0627u0644u0625u062fu0627u0631u0629.u003cbru003e
+        <strong>u0633u062au064fu0628u0644u064eu063a u0628u0627u0644u0645u0648u0627u0641u0642u0629 u0623u0648 u0627u0644u0631u0641u0636 u0639u0628u0631 u0631u0642u0645 u0647u0627u062au0641u0643.</strong>
       </p>
-      <div style="background:#f0f6ff;border:1px solid #dbeafe;border-radius:10px;padding:14px;margin-bottom:16px;text-align:right">
-        <div id="reg-confirm-details" style="font-size:13px;line-height:2"></div>
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:14px;margin-bottom:12px;text-align:right">
+        <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px">u0645u0644u062eu0635 u0627u0644u0637u0644u0628</div>
+        <div id="reg-confirm-details" style="font-size:13px;line-height:2;color:var(--text)"></div>
       </div>
-      <button class="login-btn" onclick="showLanding()">
-        <i class="fas fa-home"></i> العودة للرئيسية
+      <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-bottom:16px;text-align:right">
+        <div style="font-size:12px;color:#1e40af;line-height:1.8">u0627u0644u0625u062fu0627u0631u0629 u0633u062au0631u0627u062cu0639 u0637u0644u0628u0643 u0648u0633u062au062au0648u0627u0635u0644 u0645u0639u0643 u0642u0631u064au0628u0627u064b u0625u0646 u0634u0627u0621 u0627u0644u0644u0647.</div>
+      </div>
+      <button class="login-btn" onclick="showLanding()" style="background:linear-gradient(135deg,#1565c0,#1976d2)">
+        <i class="fas fa-home"></i> u0627u0644u0639u0648u062fu0629 u0644u0644u0631u0626u064au0633u064au0629
       </button>
     </div>
   </div>
@@ -3192,6 +3214,10 @@ function switchTab(prefix,pane,tab){
   document.querySelectorAll(`#page-${prefix} .tab-pane`).forEach(p=>p.classList.remove('active'));
   tab.classList.add('active');
   $(`${prefix}-${pane}`)?.classList.add('active');
+  // تحميل الطلبات عند الضغط على تبويب "طلبات الانضمام"
+  if(prefix==='users' && pane==='requests'){
+    loadJoinRequests().then(()=>renderJoinRequests());
+  }
 }
 function renderReports(){
   // نستخدم myGroups() و myStudents() لضمان تصفية بيانات الأستاذ فقط
@@ -9170,43 +9196,58 @@ async function submitJoinRequest(){
   const role=$('reg-role').value;
   const email=$('reg-email').value.trim();
   const note=$('reg-note').value.trim();
-  const section=$('reg-section').value||'men';
+  const section=$('reg-section')?.value||'men';
   const errEl=$('reg-err');
-  errEl.style.display='none';
+  errEl.style.display='none';errEl.textContent='';
+
+  // تحقق من البيانات
   if(!name){errEl.textContent='يرجى إدخال الاسم الكامل';errEl.style.display='block';return}
-  if(!phone){errEl.textContent='يرجى إدخال رقم الهاتف';errEl.style.display='block';return}
+  if(!phone||phone.length<9){errEl.textContent='يرجى إدخال رقم هاتف صحيح';errEl.style.display='block';return}
   if(!gender){errEl.textContent='يرجى تحديد الجنس';errEl.style.display='block';return}
   if(!role){errEl.textContent='يرجى اختيار نوع الحساب';errEl.style.display='block';return}
-  const btn=event.target;btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+
+  const submitBtn=document.querySelector('#reg-step1 .login-btn');
+  if(submitBtn){submitBtn.disabled=true;submitBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';}
+
   try{
-    const roleLabels={parent:'ولي أمر',teacher:'أستاذ',supervisor:'مشرف'};
+    const roleLabels={parent:'ولي أمر',teacher:gender==='أنثى'?'أستاذة':'أستاذ',supervisor:gender==='أنثى'?'مشرفة':'مشرف'};
+    const reqId=Date.now().toString();
     const req={
-      id:Date.now().toString(),
-      name, phone, email:email||null, gender, role,
-      section,
-      role_label:roleLabels[role]||(gender==='أنثى'?'أستاذة':role),
+      id:reqId,
+      name,phone,
+      email:email||null,
+      gender,role,
+      section:section||( gender==='أنثى'?'women':'men'),
+      role_label:roleLabels[role]||role,
       note:note||null,
       status:'pending',
       created_at:new Date().toISOString()
     };
-    // حفظ الطلب في settings table كـ join_request_*
-    await db.from('settings').insert({key:'join_req_'+req.id,value:JSON.stringify(req)});
-    // عرض تأكيد الإرسال
+
+    // استخدام upsert لتجنب تضارب المفاتيح
+    const{error}=await db.from('settings').upsert(
+      {key:'join_req_'+reqId, value:JSON.stringify(req)},
+      {onConflict:'key'}
+    );
+    if(error)throw error;
+
+    // عرض شاشة التأكيد
     $('reg-step1').style.display='none';
     $('reg-step2').style.display='block';
     $('reg-confirm-details').innerHTML=`
-      <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;flex-direction:column;gap:8px;text-align:right">
         <div>👤 <strong>الاسم:</strong> ${name}</div>
         <div>📱 <strong>الهاتف:</strong> ${phone}</div>
         <div>${gender==='ذكر'?'👨':'👩'} <strong>الجنس:</strong> ${gender}</div>
         <div>🔑 <strong>نوع الحساب:</strong> ${req.role_label}</div>
+        <div>📌 <strong>القسم:</strong> ${section==='women'?'قسم النساء':'قسم الرجال'}</div>
       </div>`;
   }catch(e){
-    errEl.textContent='خطأ في إرسال الطلب: '+e.message;
+    errEl.textContent='خطأ في إرسال الطلب — تحقق من الاتصال بالإنترنت: '+e.message;
     errEl.style.display='block';
+    console.error('submitJoinRequest error:', e);
   }finally{
-    btn.disabled=false;
-    btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال طلب الانضمام';
+    if(submitBtn){submitBtn.disabled=false;submitBtn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال طلب الانضمام';}
   }
 }
 
@@ -9214,40 +9255,97 @@ async function submitJoinRequest(){
 let _joinRequests=[];
 async function loadJoinRequests(){
   try{
-    const{data}=await db.from('settings').select('*').like('key','join_req_%').order('created_at',{ascending:false});
+    // جلب جميع طلبات الانضمام — بدون order('created_at') لأن settings قد لا يدعمها
+    const{data, error}=await db.from('settings')
+      .select('*')
+      .like('key','join_req_%');
+
+    if(error){console.error('loadJoinRequests DB error:', error);return;}
+
     if(data?.length){
-      _joinRequests=data.map(r=>{try{return JSON.parse(r.value)}catch{return null}}).filter(Boolean);
-    }else _joinRequests=[];
+      _joinRequests=data
+        .map(r=>{try{return JSON.parse(r.value)}catch{return null}})
+        .filter(Boolean)
+        .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)); // ترتيب في الذاكرة
+    }else{
+      _joinRequests=[];
+    }
+
     const pending=_joinRequests.filter(r=>r.status==='pending').length;
-    // تحديث الشارة
+
+    // تحديث الشارة في الـ sidebar
     const badge=$('join-requests-badge');
     const tabBadge=$('req-tab-badge');
     const countEl=$('join-req-count');
-    if(badge){badge.style.display=pending>0?'block':'none';}
+    if(badge)badge.style.display=pending>0?'block':'none';
     if(tabBadge){tabBadge.style.display=pending>0?'inline':'none';tabBadge.textContent=pending;}
     if(countEl)countEl.textContent=pending;
-  }catch(e){console.error('loadJoinRequests:',e.message)}
+
+    console.log(`loadJoinRequests: found ${_joinRequests.length} total, ${pending} pending`);
+    return _joinRequests;
+  }catch(e){
+    console.error('loadJoinRequests exception:', e.message);
+    return [];
+  }
 }
 
 function renderJoinRequests(){
   const container=$('join-requests-content');
   if(!container)return;
+
   const pending=_joinRequests.filter(r=>r.status==='pending');
   const processed=_joinRequests.filter(r=>r.status!=='pending');
+
   if(!_joinRequests.length){
-    container.innerHTML=`<div class="empty card" style="padding:60px"><i class="fas fa-user-clock"></i><p>لا توجد طلبات انضمام بعد</p></div>`;
+    container.innerHTML=`
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-body">
+          <div class="alert alert-i">
+            <i class="fas fa-info-circle"></i>
+            <div>
+              <strong>لا توجد طلبات انضمام حتى الآن.</strong><br>
+              <span style="font-size:12px;margin-top:4px;display:block">
+                تأكد أن جدول <code>settings</code> في Supabase يقبل الإدراج للمستخدمين غير المسجلين.<br>
+                اذهب إلى: <strong>Supabase → Authentication → Policies</strong> وأضف Policy للسماح بـ INSERT بدون مصادقة على جدول settings.
+              </span>
+            </div>
+          </div>
+          <div style="background:#f8fafc;border-radius:10px;padding:14px;border:1px solid var(--border);margin-top:12px">
+            <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px">⚙️ SQL مطلوب في Supabase — نفّذه مرة واحدة:</div>
+            <pre style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;direction:ltr;text-align:left">-- السماح للزوار بإرسال طلبات الانضمام
+CREATE POLICY "allow_join_requests"
+ON public.settings
+FOR INSERT
+TO anon
+WITH CHECK (key LIKE 'join_req_%');
+
+-- السماح للمصادقين بقراءة الطلبات
+CREATE POLICY "allow_read_join_requests"
+ON public.settings
+FOR SELECT
+TO authenticated
+USING (true);</pre>
+          </div>
+        </div>
+      </div>`;
     return;
   }
+
   container.innerHTML=`
     ${pending.length?`
     <div style="margin-bottom:16px">
-      <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px"><i class="fas fa-bell" style="margin-left:6px"></i>طلبات في الانتظار (${pending.length})</div>
+      <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        <i class="fas fa-bell" style="animation:pulse-badge .8s ease-in-out infinite alternate"></i>
+        طلبات في الانتظار — ${pending.length} طلب
+      </div>
       ${pending.map(r=>buildReqCard(r)).join('')}
     </div>`:''}
     ${processed.length?`
     <div>
-      <div style="font-size:13px;font-weight:700;color:var(--text3);margin-bottom:10px"><i class="fas fa-history" style="margin-left:6px"></i>الطلبات السابقة (${processed.length})</div>
-      ${processed.slice(0,10).map(r=>buildReqCard(r,true)).join('')}
+      <div style="font-size:13px;font-weight:700;color:var(--text3);margin-bottom:10px">
+        <i class="fas fa-history" style="margin-left:6px"></i>الطلبات السابقة (${processed.length})
+      </div>
+      ${processed.slice(0,20).map(r=>buildReqCard(r,true)).join('')}
     </div>`:''}`;
 }
 
@@ -9672,12 +9770,47 @@ function addGenderToSettings(){
   nav = function(page) {
     _origNavUnified(page);
     if (page === 'users') {
-      loadJoinRequests().then(renderJoinRequests);
+      loadJoinRequests().then(() => {
+        // عرض التبويب المناسب
+        const activeTab = document.querySelector('#page-users .tab.active');
+        if (activeTab?.textContent?.includes('طلبات')) {
+          renderJoinRequests();
+        }
+      });
     }
     if (page === 'settings') {
       setTimeout(addGenderToSettings, 200);
     }
   };
+}
+
+// ══ إشعار فوري عند تسجيل الدخول ══
+async function checkPendingRequestsOnLogin(){
+  if(S.profile?.role !== 'admin' && S.profile?.role !== 'supervisor') return;
+  await loadJoinRequests();
+  const pending = _joinRequests.filter(r => r.status === 'pending').length;
+  if(pending > 0){
+    // إشعار بسيط في الـ header
+    setTimeout(()=>{
+      toast(`🔔 يوجد ${pending} طلب انضمام جديد في الانتظار — تحقق من قسم المستخدمين`, 'warn');
+    }, 2000);
+  }
+}
+
+// ══ فحص دوري كل 3 دقائق للطلبات الجديدة (للمسؤولين فقط) ══
+function startJoinRequestsPolling(){
+  if(S.profile?.role !== 'admin' && S.profile?.role !== 'supervisor') return;
+  // تتبع العدد السابق لتجنب التنبيه المتكرر
+  let _lastPendingCount = _joinRequests.filter(r=>r.status==='pending').length;
+  setInterval(async()=>{
+    await loadJoinRequests();
+    const newCount = _joinRequests.filter(r=>r.status==='pending').length;
+    if(newCount > _lastPendingCount){
+      const diff = newCount - _lastPendingCount;
+      toast(`🔔 وصل ${diff} طلب انضمام جديد!`, 'warn');
+      _lastPendingCount = newCount;
+    }
+  }, 3 * 60 * 1000); // كل 3 دقائق
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -9706,7 +9839,22 @@ function buildSupervisorSectionBadge(){
   const roleEl=$('sb-role');if(roleEl)roleEl.parentNode.insertBefore(badge,roleEl.nextSibling);
 }
 
-// buildSupervisorSectionBadge تُستدعى من showApp الموحّد أعلاه
+// ══ Override showApp موحّد — جنس + badge المشرف + فحص الطلبات ══
+{
+  const _origShowAppAll = showApp;
+  showApp = function() {
+    _origShowAppAll();
+    setTimeout(() => {
+      const gender = S.profile?.gender;
+      if (gender) applyGenderTheme(gender);
+    }, 500);
+    setTimeout(buildSupervisorSectionBadge, 800);
+    // فحص الطلبات المعلقة عند تسجيل الدخول
+    setTimeout(checkPendingRequestsOnLogin, 2500);
+    // بدء الفحص الدوري
+    setTimeout(startJoinRequestsPolling, 5000);
+  };
+}
 
 console.log('✅ نظام التسجيل + الجنس + التأنيث + طلبات الانضمام — مكتمل');
 
