@@ -9212,24 +9212,23 @@ async function submitJoinRequest(){
   try{
     const roleLabels={parent:'ولي أمر',teacher:gender==='أنثى'?'أستاذة':'أستاذ',supervisor:gender==='أنثى'?'مشرفة':'مشرف'};
     const reqId=Date.now().toString();
-    const req={
-      id:reqId,
-      name,phone,
-      email:email||null,
-      gender,role,
-      section:section||( gender==='أنثى'?'women':'men'),
-      role_label:roleLabels[role]||role,
-      note:note||null,
-      status:'pending',
-      created_at:new Date().toISOString()
-    };
 
-    // استخدام upsert لتجنب تضارب المفاتيح
-    const{error}=await db.from('settings').upsert(
-      {key:'join_req_'+reqId, value:JSON.stringify(req)},
-      {onConflict:'key'}
-    );
-    if(error)throw error;
+    // الحفظ مباشرة في جدول join_requests المستقل (يقبل الزوار بدون مصادقة)
+    const{error}=await db.from('join_requests').insert({
+      id: reqId,
+      name,
+      phone,
+      email: email||null,
+      gender,
+      role,
+      role_label: roleLabels[role]||role,
+      section: section||(gender==='أنثى'?'women':'men'),
+      note: note||null,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    });
+
+    if(error) throw error;
 
     // عرض شاشة التأكيد
     $('reg-step1').style.display='none';
@@ -9239,11 +9238,11 @@ async function submitJoinRequest(){
         <div>👤 <strong>الاسم:</strong> ${name}</div>
         <div>📱 <strong>الهاتف:</strong> ${phone}</div>
         <div>${gender==='ذكر'?'👨':'👩'} <strong>الجنس:</strong> ${gender}</div>
-        <div>🔑 <strong>نوع الحساب:</strong> ${req.role_label}</div>
+        <div>🔑 <strong>نوع الحساب:</strong> ${roleLabels[role]||role}</div>
         <div>📌 <strong>القسم:</strong> ${section==='women'?'قسم النساء':'قسم الرجال'}</div>
       </div>`;
   }catch(e){
-    errEl.textContent='خطأ في إرسال الطلب — تحقق من الاتصال بالإنترنت: '+e.message;
+    errEl.textContent='خطأ في إرسال الطلب: '+e.message;
     errEl.style.display='block';
     console.error('submitJoinRequest error:', e);
   }finally{
@@ -9255,25 +9254,16 @@ async function submitJoinRequest(){
 let _joinRequests=[];
 async function loadJoinRequests(){
   try{
-    // جلب جميع طلبات الانضمام — بدون order('created_at') لأن settings قد لا يدعمها
-    const{data, error}=await db.from('settings')
+    const{data, error}=await db
+      .from('join_requests')
       .select('*')
-      .like('key','join_req_%');
+      .order('created_at',{ascending:false});
 
-    if(error){console.error('loadJoinRequests DB error:', error);return;}
+    if(error){console.error('loadJoinRequests DB error:', error);return [];}
 
-    if(data?.length){
-      _joinRequests=data
-        .map(r=>{try{return JSON.parse(r.value)}catch{return null}})
-        .filter(Boolean)
-        .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)); // ترتيب في الذاكرة
-    }else{
-      _joinRequests=[];
-    }
-
+    _joinRequests=data||[];
     const pending=_joinRequests.filter(r=>r.status==='pending').length;
 
-    // تحديث الشارة في الـ sidebar
     const badge=$('join-requests-badge');
     const tabBadge=$('req-tab-badge');
     const countEl=$('join-req-count');
@@ -9298,35 +9288,10 @@ function renderJoinRequests(){
 
   if(!_joinRequests.length){
     container.innerHTML=`
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-body">
-          <div class="alert alert-i">
-            <i class="fas fa-info-circle"></i>
-            <div>
-              <strong>لا توجد طلبات انضمام حتى الآن.</strong><br>
-              <span style="font-size:12px;margin-top:4px;display:block">
-                تأكد أن جدول <code>settings</code> في Supabase يقبل الإدراج للمستخدمين غير المسجلين.<br>
-                اذهب إلى: <strong>Supabase → Authentication → Policies</strong> وأضف Policy للسماح بـ INSERT بدون مصادقة على جدول settings.
-              </span>
-            </div>
-          </div>
-          <div style="background:#f8fafc;border-radius:10px;padding:14px;border:1px solid var(--border);margin-top:12px">
-            <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px">⚙️ SQL مطلوب في Supabase — نفّذه مرة واحدة:</div>
-            <pre style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;direction:ltr;text-align:left">-- السماح للزوار بإرسال طلبات الانضمام
-CREATE POLICY "allow_join_requests"
-ON public.settings
-FOR INSERT
-TO anon
-WITH CHECK (key LIKE 'join_req_%');
-
--- السماح للمصادقين بقراءة الطلبات
-CREATE POLICY "allow_read_join_requests"
-ON public.settings
-FOR SELECT
-TO authenticated
-USING (true);</pre>
-          </div>
-        </div>
+      <div class="empty card" style="padding:60px">
+        <i class="fas fa-user-clock"></i>
+        <p>لا توجد طلبات انضمام حتى الآن</p>
+        <div style="margin-top:12px;font-size:12px;color:var(--text3)">ستظهر الطلبات هنا فور إرسالها من صفحة "طلب الانضمام"</div>
       </div>`;
     return;
   }
@@ -9497,10 +9462,13 @@ async function rejectJoinRequest(id){
 }
 
 async function updateJoinRequestStatus(id,status){
+  const{error}=await db
+    .from('join_requests')
+    .update({status, updated_at:new Date().toISOString()})
+    .eq('id',id);
+  if(error){toast('خطأ في تحديث الطلب: '+error.message,'err');return;}
   const r=_joinRequests.find(x=>x.id===id);
-  if(!r)return;
-  r.status=status;r.updated_at=new Date().toISOString();
-  await db.from('settings').update({value:JSON.stringify(r)}).eq('key','join_req_'+id);
+  if(r){r.status=status;r.updated_at=new Date().toISOString();}
   loadJoinRequests();
 }
 
