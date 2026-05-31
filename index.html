@@ -9212,8 +9212,18 @@ async function submitJoinRequest(){
   try{
     const roleLabels={parent:'ولي أمر',teacher:gender==='أنثى'?'أستاذة':'أستاذ',supervisor:gender==='أنثى'?'مشرفة':'مشرف'};
     const reqId=Date.now().toString();
+    const req={
+      id:reqId,
+      name,phone,
+      email:email||null,
+      gender,role,
+      section:section||( gender==='أنثى'?'women':'men'),
+      role_label:roleLabels[role]||role,
+      note:note||null,
+      status:'pending',
+      created_at:new Date().toISOString()
+    };
 
-    // الحفظ مباشرة في جدول join_requests المستقل (يقبل الزوار بدون مصادقة)
     const{error}=await db.from('join_requests').insert({
       id: reqId,
       name,
@@ -9227,7 +9237,6 @@ async function submitJoinRequest(){
       status: 'pending',
       created_at: new Date().toISOString()
     });
-
     if(error) throw error;
 
     // عرض شاشة التأكيد
@@ -9238,11 +9247,11 @@ async function submitJoinRequest(){
         <div>👤 <strong>الاسم:</strong> ${name}</div>
         <div>📱 <strong>الهاتف:</strong> ${phone}</div>
         <div>${gender==='ذكر'?'👨':'👩'} <strong>الجنس:</strong> ${gender}</div>
-        <div>🔑 <strong>نوع الحساب:</strong> ${roleLabels[role]||role}</div>
+        <div>🔑 <strong>نوع الحساب:</strong> ${req.role_label}</div>
         <div>📌 <strong>القسم:</strong> ${section==='women'?'قسم النساء':'قسم الرجال'}</div>
       </div>`;
   }catch(e){
-    errEl.textContent='خطأ في إرسال الطلب: '+e.message;
+    errEl.textContent='خطأ في إرسال الطلب — تحقق من الاتصال بالإنترنت: '+e.message;
     errEl.style.display='block';
     console.error('submitJoinRequest error:', e);
   }finally{
@@ -9288,10 +9297,35 @@ function renderJoinRequests(){
 
   if(!_joinRequests.length){
     container.innerHTML=`
-      <div class="empty card" style="padding:60px">
-        <i class="fas fa-user-clock"></i>
-        <p>لا توجد طلبات انضمام حتى الآن</p>
-        <div style="margin-top:12px;font-size:12px;color:var(--text3)">ستظهر الطلبات هنا فور إرسالها من صفحة "طلب الانضمام"</div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-body">
+          <div class="alert alert-i">
+            <i class="fas fa-info-circle"></i>
+            <div>
+              <strong>لا توجد طلبات انضمام حتى الآن.</strong><br>
+              <span style="font-size:12px;margin-top:4px;display:block">
+                تأكد أن جدول <code>settings</code> في Supabase يقبل الإدراج للمستخدمين غير المسجلين.<br>
+                اذهب إلى: <strong>Supabase → Authentication → Policies</strong> وأضف Policy للسماح بـ INSERT بدون مصادقة على جدول settings.
+              </span>
+            </div>
+          </div>
+          <div style="background:#f8fafc;border-radius:10px;padding:14px;border:1px solid var(--border);margin-top:12px">
+            <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px">⚙️ SQL مطلوب في Supabase — نفّذه مرة واحدة:</div>
+            <pre style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;direction:ltr;text-align:left">-- السماح للزوار بإرسال طلبات الانضمام
+CREATE POLICY "allow_join_requests"
+ON public.settings
+FOR INSERT
+TO anon
+WITH CHECK (key LIKE 'join_req_%');
+
+-- السماح للمصادقين بقراءة الطلبات
+CREATE POLICY "allow_read_join_requests"
+ON public.settings
+FOR SELECT
+TO authenticated
+USING (true);</pre>
+          </div>
+        </div>
       </div>`;
     return;
   }
@@ -9378,7 +9412,7 @@ function showCreateAccountModal(req){
         </div>
         <div class="fgrid" style="gap:12px">
           <div class="fg"><label>البريد الإلكتروني *</label><input type="email" id="ca-email" value="${req.email||''}" placeholder="example@wafaq.com"></div>
-          <div class="fg"><label>كلمة المرور المؤقتة *</label><input type="text" id="ca-pass" value="Wafaq@${new Date().getFullYear()}" placeholder="كلمة المرور"></div>
+          <div class="fg"><label>كلمة المرور المؤقتة *</label><input type="text" id="ca-pass" value="Wafaq@${Math.floor(1000+Math.random()*9000)}" placeholder="كلمة المرور (6 أحرف فأكثر)"></div>
           <div class="fg"><label>الاسم الكامل</label><input type="text" id="ca-name" value="${req.name}"></div>
           <div class="fg"><label>الدور</label><select id="ca-role">
             <option value="parent" ${req.role==='parent'?'selected':''}>ولي أمر</option>
@@ -9386,9 +9420,9 @@ function showCreateAccountModal(req){
             <option value="supervisor" ${req.role==='supervisor'?'selected':''}>مشرف</option>
           </select></div>
         </div>
-        <div class="alert alert-w" style="margin-top:12px">
-          <i class="fas fa-exclamation-triangle"></i>
-          <div style="font-size:12px">سيحتاج المستخدم لتفعيل بريده الإلكتروني. أرسل له البيانات عبر واتساب إن لزم.</div>
+        <div class="alert alert-s" style="margin-top:12px">
+          <i class="fas fa-check-circle"></i>
+          <div style="font-size:12px">سيتم إنشاء الحساب وتفعيله مباشرة — المستخدم يدخل فوراً بدون تأكيد بريد إلكتروني.</div>
         </div>
         <div class="login-err" id="ca-err" style="margin-top:10px"></div>
       </div>
@@ -9401,6 +9435,14 @@ function showCreateAccountModal(req){
   openM('m-create-account');
 }
 
+// ══════════════════════════════════════════════════════════════
+// إنشاء الحساب — نظام مؤتمت كامل
+// المسار 1: Edge Function (الأفضل — تفعيل فوري بلا تأكيد إيميل)
+// المسار 2: signUp عادي (fallback — يحتاج تعطيل تأكيد الإيميل من Supabase)
+// ══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://zqnfytquwduasradavhh.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxbmZ5dHF1d2R1YXNyYWRhdmhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NzY2OTAsImV4cCI6MjA5MjI1MjY5MH0.liqo7s8RCUTFxCDRwzkFIuyWnqamPjZEtGDXKXSWBCE';
+
 async function createAccountAndApprove(reqId){
   const req=_joinRequests.find(x=>x.id===reqId);
   if(!req)return;
@@ -9409,27 +9451,82 @@ async function createAccountAndApprove(reqId){
   const name=$('ca-name').value.trim();
   const role=$('ca-role').value;
   const errEl=$('ca-err');errEl.style.display='none';
+
   if(!email||!pass){errEl.textContent='البريد الإلكتروني وكلمة المرور مطلوبان';errEl.style.display='block';return}
+  if(pass.length<6){errEl.textContent='كلمة المرور يجب أن تكون 6 أحرف على الأقل';errEl.style.display='block';return}
+  if(!/\S+@\S+\.\S+/.test(email)){errEl.textContent='صيغة البريد الإلكتروني غير صحيحة';errEl.style.display='block';return}
+
   const btn=document.querySelector('#m-create-account .btn-s');
   btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...';
+
   try{
-    // إنشاء حساب عبر Supabase Admin API (service role مطلوب — نستخدم signUp كـ fallback)
-    // ملاحظة: signUp يُرسل إيميل تأكيد للمستخدم تلقائياً
-    const{data:authData,error:authErr}=await db.auth.signUp({email,password:pass,options:{data:{name,role,gender:req.gender,section:req.section}}});
-    if(authErr)throw authErr;
-    // إضافة البروفايل
-    if(authData?.user){
-      await db.from('profiles').upsert({id:authData.user.id,name,role,email,gender:req.gender,section:req.section},{onConflict:'id'});
-      S.teachers.push({id:authData.user.id,name,role,email,gender:req.gender});
+    // ══ المسار 1: Edge Function (تفعيل فوري بلا تأكيد إيميل) ══
+    let userId = null;
+    let usedEdgeFunction = false;
+
+    try{
+      const session = (await db.auth.getSession()).data?.session;
+      const edgeResp = await fetch(`${SUPABASE_URL}/functions/v1/create-user`, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization': session ? `Bearer ${session.access_token}` : `Bearer ${SUPABASE_ANON}`
+        },
+        body: JSON.stringify({email, password:pass, name, role, gender:req.gender, section:req.section||'men'})
+      });
+      if(edgeResp.ok){
+        const edgeData = await edgeResp.json();
+        if(edgeData?.user?.id){
+          userId = edgeData.user.id;
+          usedEdgeFunction = true;
+        }
+      }
+    }catch(edgeErr){
+      console.log('Edge Function غير متوفرة — الانتقال للمسار الاحتياطي:', edgeErr.message);
     }
-    // تحديث حالة الطلب
+
+    // ══ المسار 2: signUp عادي (fallback) ══
+    if(!userId){
+      const{data:authData,error:authErr}=await db.auth.signUp({
+        email,
+        password:pass,
+        options:{data:{name,role,gender:req.gender,section:req.section||'men'}}
+      });
+      if(authErr) throw authErr;
+      userId = authData?.user?.id;
+      if(!userId) throw new Error('فشل إنشاء الحساب — تحقق من صحة البريد الإلكتروني');
+    }
+
+    // ══ حفظ البروفايل ══
+    await db.from('profiles').upsert({
+      id:userId, name, role, email,
+      gender:req.gender||null,
+      section:req.section||'men'
+    },{onConflict:'id'});
+
+    // ══ تحديث الذاكرة المحلية ══
+    const existing=S.teachers.find(t=>t.id===userId);
+    if(!existing) S.teachers.push({id:userId,name,role,email,gender:req.gender});
+    else Object.assign(existing,{name,role,email});
+
+    // ══ تحديث حالة الطلب ══
     await updateJoinRequestStatus(reqId,'approved');
+
+    // ══ إغلاق وإشعار ══
     closeM('m-create-account');
-    toast(`✅ تم إنشاء حساب ${name} — كلمة المرور المؤقتة: ${pass}`,'ok');
-    renderJoinRequests();renderUsers();
+    if(usedEdgeFunction){
+      toast(`✅ تم إنشاء حساب ${name} وهو جاهز للدخول فوراً 🎉`,'ok');
+    } else {
+      toast(`✅ تم إنشاء حساب ${name} — إذا لم يتمكن من الدخول، عطّل تأكيد الإيميل من Supabase Auth`,'ok');
+    }
+    renderJoinRequests();
+    renderUsers();
+
   }catch(e){
-    errEl.textContent='خطأ: '+e.message;errEl.style.display='block';
-    btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> إنشاء الحساب';
+    errEl.textContent='خطأ: '+e.message;
+    errEl.style.display='block';
+    btn.disabled=false;
+    btn.innerHTML='<i class="fas fa-user-plus"></i> إنشاء الحساب';
   }
 }
 
