@@ -566,7 +566,7 @@ textarea{resize:vertical;min-height:80px}
 <div id="landing">
   <nav class="lp-nav">
     <div class="lp-logo">
-      <img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png" alt="شعار">
+      <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار">
       <div>
         <h2>دار القرآن الكريم — الوفاق</h2>
         <p>جمعية الوفاق للأنشطة التربوية والثقافية</p>
@@ -621,7 +621,7 @@ textarea{resize:vertical;min-height:80px}
       </div>
       <div class="lp-card">
         <div class="lp-card-top">
-          <img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png" alt="شعار">
+          <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار">
           <h3>منصة دار القرآن</h3>
           <p>بنسركاو — المغرب</p>
         </div>
@@ -640,7 +640,7 @@ textarea{resize:vertical;min-height:80px}
       <div class="lp-head"><div class="lp-tag">من نحن</div><h2 class="lp-title">جمعية الوفاق للأنشطة التربوية والثقافية</h2><p class="lp-sub">مؤسسة تربوية تجمع بين العلم والعمل في خدمة القرآن الكريم والمجتمع</p></div>
       <div class="about-grid">
         <div class="about-visual">
-          <img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png" alt="شعار">
+          <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار">
           <h3>جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية</h3>
           <p>هوية وآفاق — بنسركاو، المغرب</p>
           <div class="about-float"><i class="fas fa-map-marker-alt"></i><div><strong>الوفاق الكبير</strong><small>بنسركاو — المغرب</small></div></div>
@@ -736,7 +736,7 @@ textarea{resize:vertical;min-height:80px}
   <button class="login-back" onclick="showLanding()"><i class="fas fa-arrow-right"></i> العودة</button>
   <div class="login-card">
     <div class="login-logo">
-      <img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png" alt="شعار">
+      <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار">
       <h1>دار القرآن الكريم</h1>
       <p>الوفاق الكبير — بنسركاو</p>
     </div>
@@ -755,7 +755,7 @@ textarea{resize:vertical;min-height:80px}
   <button class="login-back" onclick="showLanding()"><i class="fas fa-arrow-right"></i> العودة</button>
   <div class="login-card" style="width:480px;max-width:95vw">
     <div class="login-logo">
-      <img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png" alt="شعار">
+      <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار">
       <h1>طلب الانضمام</h1>
       <p>دار القرآن الكريم — الوفاق الكبير</p>
     </div>
@@ -845,7 +845,7 @@ textarea{resize:vertical;min-height:80px}
   <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
     <div class="sb-logo">
-      <img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png" alt="شعار">
+      <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار">
       <div><h2>دار القرآن الكريم</h2><p>الوفاق الكبير</p></div>
     </div>
     <div class="sb-user">
@@ -1818,7 +1818,7 @@ let EXAMS_DB = []; // سجل محلي للامتحانات - يُحمَّل من
 // شعار SVG بديل عند فشل تحميل الصورة
 const LOGO_FALLBACK = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%231565c0'/%3E%3Ctext x='40' y='52' text-anchor='middle' font-size='36' fill='white' font-family='serif'%3E%D9%88%3C/text%3E%3C/svg%3E`;
 document.addEventListener('DOMContentLoaded', ()=>{
-  document.querySelectorAll('img[src*="image2url"]').forEach(img=>{
+  document.querySelectorAll('img[src*="imgur"]').forEach(img=>{
     img.onerror = function(){ this.src = LOGO_FALLBACK; this.onerror=null; };
   });
 });
@@ -2717,37 +2717,343 @@ function renderTeachers(){
 }
 
 // ===================== USERS =====================
-function renderUsers(){
-  // دالة مساعدة: تُعيد الاسم الصحيح للمستخدم (تُصلح الإيميلات القديمة)
-  const EMAIL_NAMES = {
-    'admin@wafaq.com':'المدير مصطفى أبو حذيفة','admin@wafiq.com':'المدير مصطفى أبو حذيفة',
-    'mohamed@wafaq.com':'الأستاذ محمد تور','mohamed@wafiq.com':'الأستاذ محمد تور',
-    'samir@wafaq.com':'الأستاذ سمير أندجار',
-    'abdelghafour@wafaq.com':'الأستاذ عبد الغفور حسبي',
-    'hassan@wafaq.com':'الأستاذ حسن تحسا',
-    'younsse@wafaq.com':'الأستاذ يونس أبو إسحاق',
-  };
-  function getDisplayName(t){
-    const n = (t.name||'').trim();
-    if(n.includes('@')) return EMAIL_NAMES[n.toLowerCase()]||n;
-    // إضافة اللقب إن لم يكن موجوداً
-    const hasTitle = n.startsWith('الأستاذ')||n.startsWith('المدير')||n.startsWith('المشرف');
-    if(hasTitle) return n;
-    const prefix = t.role==='admin'?'المدير ':t.role==='supervisor'?'المشرف ':'الأستاذ ';
-    return prefix + n;
-  }
-  const content=$('users-content');
-  content.innerHTML=`<div class="card"><div class="card-head"><h3>قائمة المستخدمين</h3></div><div class="tbl-wrap"><table><thead><tr><th>الاسم الكامل</th><th>الدور الحالي</th><th>تغيير الصلاحية</th></tr></thead><tbody>${S.teachers.map(t=>{
-    const rLabel=t.role==='admin'?'👑 مدير النظام':t.role==='supervisor'?'🛡️ مشرف':'📚 أستاذ';
-    const dn = getDisplayName(t);
-    const ini = dn.replace(/^(الأستاذ|المدير|المشرف)\s*/,'').trim()[0]||'م';
-    return`<tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:${t.role==='admin'?'linear-gradient(135deg,#d97706,#f59e0b)':t.role==='supervisor'?'linear-gradient(135deg,#0891b2,#06b6d4)':'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">${ini}</div><div><div style="font-weight:700;font-size:13px">${dn}</div><div style="font-size:11px;color:var(--text3)">${t.email||''}</div></div></div></td><td>${rLabel}</td><td>${t.role!=='admin'?`<select onchange="changeRole('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px"><option value="teacher" ${t.role==='teacher'?'selected':''}>أستاذ</option><option value="supervisor" ${t.role==='supervisor'?'selected':''}>مشرف</option></select>`:'<span style="color:var(--text3);font-size:12px">مدير النظام</span>'}</td></tr>`;
-  }).join('')}</tbody></table></div></div>`;
+// ══ مساعد: الاسم الصحيح للمستخدم ══
+const EMAIL_NAMES_MAP = {
+  'admin@wafaq.com':'المدير مصطفى أبو حذيفة','admin@wafiq.com':'المدير مصطفى أبو حذيفة',
+  'mohamed@wafaq.com':'الأستاذ محمد تور','samir@wafaq.com':'الأستاذ سمير أندجار',
+  'abdelghafour@wafaq.com':'الأستاذ عبد الغفور حسبي',
+  'hassan@wafaq.com':'الأستاذ حسن تحسا','younsse@wafaq.com':'الأستاذ يونس أبو إسحاق',
+};
+function getUserDisplayName(t){
+  const n=(t.name||'').trim();
+  if(n.includes('@')) return EMAIL_NAMES_MAP[n.toLowerCase()]||n;
+  if(n.startsWith('الأستاذ')||n.startsWith('المدير')||n.startsWith('المشرف')) return n;
+  const prefix=t.role==='admin'?'المدير ':t.role==='supervisor'?'المشرف ':'الأستاذ ';
+  return prefix+n;
 }
+function getUserDataCount(uid){
+  return {
+    groups:   S.groups.filter(g=>g.teacher_id===uid).length,
+    students: S.students.filter(s=>s.teacher_id===uid).length,
+    recs:     S.recitations.filter(r=>r.teacher_id===uid).length,
+    att:      S.attendance.filter(a=>a.teacher_id===uid).length,
+  };
+}
+
+function renderUsers(){
+  const isAdmin = S.profile?.role==='admin';
+  const isSup   = S.profile?.role==='supervisor';
+  const el      = $('users-content');
+  if(!el) return;
+
+  window._userFilterStatus = window._userFilterStatus||'all';
+  window._userFilterRole   = window._userFilterRole  ||'all';
+  const fSt = window._userFilterStatus;
+  const fRo = window._userFilterRole;
+
+  // تصفية القائمة
+  let list = S.teachers.filter(function(t){
+    if(fRo!=='all' && t.role!==fRo) return false;
+    if(fSt==='active'   && t.status==='disabled') return false;
+    if(fSt==='disabled' && t.status!=='disabled') return false;
+    if(fSt==='archived' && t.status!=='archived') return false;
+    return true;
+  });
+  if(isSup && !isAdmin){
+    const myGids=new Set(S.groups.filter(g=>g.teacher_id===S.profile.id).map(g=>g.id));
+    list=list.filter(t=>t.role==='teacher'&&S.groups.some(g=>g.teacher_id===t.id&&myGids.has(g.id)));
+  }
+
+  // ── بناء HTML ──
+  var html = '';
+
+  // إحصائيات (للمدير فقط)
+  if(isAdmin){
+    var admins  = S.teachers.filter(t=>t.role==='admin').length;
+    var sups    = S.teachers.filter(t=>t.role==='supervisor').length;
+    var tchs    = S.teachers.filter(t=>t.role==='teacher').length;
+    var dis     = S.teachers.filter(t=>t.status==='disabled').length;
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px">';
+    html += '<div style="padding:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:10px;border:1px solid #fbbf24;text-align:center"><div style="font-size:22px;font-weight:800;color:#92400e">'+admins+'</div><div style="font-size:11px;color:#78350f">👑 مدراء</div></div>';
+    html += '<div style="padding:12px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:10px;border:1px solid #93c5fd;text-align:center"><div style="font-size:22px;font-weight:800;color:#1e40af">'+sups+'</div><div style="font-size:11px;color:#1e3a8a">🛡️ مشرفون</div></div>';
+    html += '<div style="padding:12px;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-radius:10px;border:1px solid #86efac;text-align:center"><div style="font-size:22px;font-weight:800;color:#166534">'+tchs+'</div><div style="font-size:11px;color:#14532d">📚 أساتذة</div></div>';
+    html += '<div style="padding:12px;background:linear-gradient(135deg,#fee2e2,#fecaca);border-radius:10px;border:1px solid #fca5a5;text-align:center"><div style="font-size:22px;font-weight:800;color:#991b1b">'+dis+'</div><div style="font-size:11px;color:#7f1d1d">🔒 معطّل</div></div>';
+    html += '</div>';
+  }
+
+  // فلاتر
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">';
+  html += '<select onchange="window._userFilterRole=this.value;renderUsers()" style="padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:Tajawal,sans-serif;font-size:12px">';
+  html += '<option value="all"'       +(fRo==='all'       ?' selected':'')+'>كل الأدوار</option>';
+  html += '<option value="supervisor"'+(fRo==='supervisor'?' selected':'')+'>مشرفون</option>';
+  html += '<option value="teacher"'   +(fRo==='teacher'   ?' selected':'')+'>أساتذة</option>';
+  html += '<option value="parent"'    +(fRo==='parent'    ?' selected':'')+'>أولياء أمور</option>';
+  html += '</select>';
+  html += '<select onchange="window._userFilterStatus=this.value;renderUsers()" style="padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:Tajawal,sans-serif;font-size:12px">';
+  html += '<option value="all"'      +(fSt==='all'     ?' selected':'')+'>كل الحسابات</option>';
+  html += '<option value="active"'   +(fSt==='active'  ?' selected':'')+'>نشط فقط</option>';
+  html += '<option value="disabled"' +(fSt==='disabled'?' selected':'')+'>معطّل فقط</option>';
+  html += '<option value="archived"' +(fSt==='archived'?' selected':'')+'>مؤرشف فقط</option>';
+  html += '</select>';
+  html += '<span style="font-size:12px;color:var(--text3)">'+list.length+' مستخدم</span>';
+  html += '</div>';
+
+  // جدول
+  html += '<div class="card"><div class="tbl-wrap"><table>';
+  html += '<thead><tr><th>المستخدم</th><th>الدور</th><th>الحالة</th><th>الحلقات</th>';
+  if(isAdmin) html += '<th>تغيير الصلاحية</th>';
+  html += '<th>الإجراءات</th></tr></thead><tbody>';
+
+  list.forEach(function(t){
+    var dn         = getUserDisplayName(t);
+    var ini        = dn.replace(/^(الأستاذ|المدير|المشرف)\s*/,'').trim()[0]||'م';
+    var isDisabled = t.status==='disabled';
+    var isArchived = t.status==='archived';
+    var gCount     = S.groups.filter(function(g){return g.teacher_id===t.id;}).length;
+    var canManage  = (isAdmin && t.role!=='admin') || (isSup && t.role==='teacher' && t.id!==S.profile?.id);
+    var rLabel     = t.role==='admin'?'👑 مدير':t.role==='supervisor'?'🛡️ مشرف':t.role==='parent'?'👨‍👧 ولي أمر':'📚 أستاذ';
+    var avatarBg   = t.role==='admin'?'linear-gradient(135deg,#d97706,#f59e0b)':t.role==='supervisor'?'linear-gradient(135deg,#0891b2,#06b6d4)':isDisabled?'#94a3b8':'var(--primary)';
+    var statusBadge= isDisabled?'<span class="bx bx-r" style="font-size:10px">🔒 معطّل</span>':isArchived?'<span class="bx bx-gray" style="font-size:10px">📦 مؤرشف</span>':'<span class="bx bx-g" style="font-size:10px">✅ نشط</span>';
+    var rowStyle   = isDisabled||isArchived?'opacity:.6':'';
+
+    html += '<tr style="'+rowStyle+'">';
+    // عمود المستخدم
+    html += '<td><div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:36px;height:36px;border-radius:50%;background:'+avatarBg+';display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0'+(isDisabled?';filter:grayscale(1)':'')+'">';
+    html += ini+'</div>';
+    html += '<div><div style="font-weight:700;font-size:13px">'+dn+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3)">'+(t.email||'—')+'</div></div>';
+    html += '</div></td>';
+    // دور + حالة + حلقات
+    html += '<td>'+rLabel+'</td>';
+    html += '<td>'+statusBadge+'</td>';
+    html += '<td>'+(gCount>0?'<span class="bx bx-b" style="font-size:10px">'+gCount+' حلقة</span>':'<span style="color:var(--text3);font-size:11px">—</span>')+'</td>';
+    // تغيير الصلاحية (مدير فقط)
+    if(isAdmin){
+      if(t.role!=='admin'){
+        html += '<td><select onchange="changeRole(\''+t.id+'\',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:Tajawal,sans-serif;font-size:12px">';
+        html += '<option value="teacher"'   +(t.role==='teacher'   ?' selected':'')+'>أستاذ</option>';
+        html += '<option value="supervisor"'+(t.role==='supervisor'?' selected':'')+'>مشرف</option>';
+        html += '<option value="parent"'    +(t.role==='parent'    ?' selected':'')+'>ولي أمر</option>';
+        html += '</select></td>';
+      } else {
+        html += '<td><span style="color:var(--text3);font-size:12px">مدير النظام</span></td>';
+      }
+    }
+    // الإجراءات
+    html += '<td><div style="display:flex;gap:4px;flex-wrap:wrap">';
+    if(canManage){
+      if(!isDisabled && !isArchived){
+        html += '<button class="btn btn-sm" style="background:#fef9c3;color:#92400e;border:1px solid #fde68a" onclick="disableUser(\''+t.id+'\',\''+dn.replace(/'/g,"\\'")+'\')"><i class="fas fa-ban"></i></button>';
+        html += '<button class="btn btn-sm" style="background:#f0f4f8;color:#475569;border:1px solid var(--border)" onclick="archiveUser(\''+t.id+'\',\''+dn.replace(/'/g,"\\'")+'\')"><i class="fas fa-archive"></i></button>';
+        html += '<button class="btn btn-sm btn-d" onclick="confirmDeleteUser(\''+t.id+'\',\''+dn.replace(/'/g,"\\'")+'\')"><i class="fas fa-trash"></i></button>';
+      } else if(isDisabled){
+        html += '<button class="btn btn-sm btn-s" onclick="enableUser(\''+t.id+'\',\''+dn.replace(/'/g,"\\'")+'\')"><i class="fas fa-check-circle"></i> تفعيل</button>';
+        html += '<button class="btn btn-sm btn-d" onclick="confirmDeleteUser(\''+t.id+'\',\''+dn.replace(/'/g,"\\'")+'\')"><i class="fas fa-trash"></i></button>';
+      } else if(isArchived){
+        html += '<button class="btn btn-sm btn-s" onclick="enableUser(\''+t.id+'\',\''+dn.replace(/'/g,"\\'")+'\')"><i class="fas fa-undo"></i> استعادة</button>';
+        html += '<button class="btn btn-sm btn-d" onclick="confirmDeleteUser(\''+t.id+'\',\''+dn.replace(/'/g,"\\'")+'\')"><i class="fas fa-trash"></i></button>';
+      }
+    } else if(t.role==='admin'){
+      html += '<span style="font-size:11px;color:var(--text3)">محمي</span>';
+    }
+    html += '</div></td></tr>';
+  });
+
+  if(!list.length){
+    html += '<tr><td colspan="'+(isAdmin?6:5)+'" style="text-align:center;padding:40px;color:var(--text3)">لا يوجد مستخدمون</td></tr>';
+  }
+  html += '</tbody></table></div></div>';
+  el.innerHTML = html;
+}
+
+// ══ تعطيل الحساب ══
+async function disableUser(uid, name){
+  if(!confirm('تعطيل حساب: '+name+'\n\nلن يتمكن من الدخول لكن بياناته وسجلاته تبقى محفوظة.')) return;
+  const{error}=await db.from('profiles').update({status:'disabled'}).eq('id',uid);
+  if(error){toast('خطأ: '+error.message,'err');return;}
+  S.teachers=S.teachers.map(t=>t.id===uid?Object.assign({},t,{status:'disabled'}):t);
+  renderUsers();
+  toast('تم تعطيل حساب '+name,'ok');
+}
+
+// ══ إعادة تفعيل ══
+async function enableUser(uid, name){
+  const{error}=await db.from('profiles').update({status:'active'}).eq('id',uid);
+  if(error){toast('خطأ: '+error.message,'err');return;}
+  S.teachers=S.teachers.map(t=>t.id===uid?Object.assign({},t,{status:'active'}):t);
+  renderUsers();
+  toast('✅ تم تفعيل حساب '+name,'ok');
+}
+
+// ══ أرشفة ══
+async function archiveUser(uid, name){
+  if(!confirm('أرشفة حساب: '+name+'\n\nسيُنقل للأرشيف ويبقى غير نشط لكن سجلاته محفوظة.')) return;
+  const{error}=await db.from('profiles').update({status:'archived'}).eq('id',uid);
+  if(error){toast('خطأ: '+error.message,'err');return;}
+  S.teachers=S.teachers.map(t=>t.id===uid?Object.assign({},t,{status:'archived'}):t);
+  renderUsers();
+  toast('تم أرشفة حساب '+name,'ok');
+}
+
+// ══ تأكيد الحذف ══
+function confirmDeleteUser(uid, name){
+  var dc  = getUserDataCount(uid);
+  var g   = S.groups.filter(function(x){return x.teacher_id===uid;}).length;
+  var has = dc.students>0||dc.recs>0||g>0;
+  var msg = 'حذف نهائي: '+name+'\n\n';
+  if(has){
+    msg += 'تحذير: هذا الحساب لديه بيانات مرتبطة:\n';
+    msg += '  - '+g+' حلقة\n  - '+dc.students+' طالب\n  - '+dc.recs+' جلسة تسميع\n\n';
+    msg += 'السجلات التاريخية ستبقى محفوظة لكن الحساب سيُحذف.\n';
+    msg += 'يُنصح بالأرشفة بدلاً من الحذف.\n\n';
+  }
+  msg += 'هل أنت متأكد من الحذف النهائي؟';
+  if(confirm(msg)) executeDeleteUser(uid, name);
+}
+
+// ══ تنفيذ الحذف ══
+async function executeDeleteUser(uid, name){
+  try{
+    await db.from('groups').update({teacher_id:null}).eq('teacher_id',uid);
+    S.groups=S.groups.map(g=>g.teacher_id===uid?Object.assign({},g,{teacher_id:null}):g);
+    var{error}=await db.from('profiles').delete().eq('id',uid);
+    if(error) throw error;
+    S.teachers=S.teachers.filter(t=>t.id!==uid);
+    renderUsers();
+    fillSelects();
+    toast('تم حذف حساب '+name+' — السجلات التاريخية محفوظة','ok');
+  }catch(e){
+    toast('خطأ في الحذف: '+e.message,'err');
+  }
+}
+
+// ══ تغيير الصلاحية ══
 async function changeRole(uid,role){
   const{error}=await db.from('profiles').update({role}).eq('id',uid);
   if(!error){S.teachers=S.teachers.map(t=>t.id===uid?{...t,role}:t);renderUsers();toast('تم تحديث الصلاحية','ok')}
   else toast('خطأ: '+error.message,'err');
+}
+
+// ══ تعطيل الحساب (بدون حذف) ══
+async function disableUser(uid, name){
+  confirmDelete({
+    title: 'تعطيل حساب: '+name,
+    body:  'سيتم تعطيل الحساب — لن يتمكن من الدخول لكن بياناته وسجلاته تبقى محفوظة كاملاً.',
+    onConfirm: async()=>{
+      const{error}=await db.from('profiles').update({status:'disabled'}).eq('id',uid);
+      if(error){toast('خطأ: '+error.message,'err');return;}
+      S.teachers=S.teachers.map(t=>t.id===uid?{...t,status:'disabled'}:t);
+      renderUsers();
+      toast('تم تعطيل حساب '+name,'ok');
+    }
+  });
+}
+
+// ══ إعادة تفعيل الحساب ══
+async function enableUser(uid, name){
+  const{error}=await db.from('profiles').update({status:'active'}).eq('id',uid);
+  if(error){toast('خطأ: '+error.message,'err');return;}
+  S.teachers=S.teachers.map(t=>t.id===uid?{...t,status:'active'}:t);
+  renderUsers();
+  toast('✅ تم إعادة تفعيل حساب '+name,'ok');
+}
+
+// ══ أرشفة الحساب ══
+async function archiveUser(uid, name){
+  confirmDelete({
+    title: 'أرشفة حساب: '+name,
+    body:  'سيُنقل الحساب إلى الأرشيف — يبقى غير نشط لكن جميع سجلاته وإحصائياته محفوظة.',
+    onConfirm: async()=>{
+      const{error}=await db.from('profiles').update({status:'archived'}).eq('id',uid);
+      if(error){toast('خطأ: '+error.message,'err');return;}
+      S.teachers=S.teachers.map(t=>t.id===uid?{...t,status:'archived'}:t);
+      renderUsers();
+      toast('تم أرشفة حساب '+name,'ok');
+    }
+  });
+}
+
+// ══ تأكيد الحذف النهائي ══
+function confirmDeleteUser(uid, name){
+  const dc = getUserDataCount(uid);
+  const g  = S.groups.filter(x=>x.teacher_id===uid).length;
+  const hasData = dc.total > 0 || g > 0;
+  const warnMsg = hasData
+    ? 'تحذير: هذا المستخدم لديه '+g+' حلقة و'+dc.students+' طالب و'+dc.recs+' جلسة تسميع. '
+      +'سجلاته ستُبقى في قاعدة البيانات (teacher_id يصبح null) لكن حسابه سيُحذف نهائياً.
+
+'
+      +'للحفاظ على السجلات يُنصح باستخدام "أرشفة" بدلاً من الحذف.'
+    : 'لا توجد بيانات مرتبطة بهذا الحساب — يمكن حذفه بأمان.';
+
+  // نستخدم نافذة confirmDelete الموجودة
+  let modal=$('m-confirm-delete');
+  if(!modal){
+    modal=document.createElement('div');modal.id='m-confirm-delete';modal.className='overlay';
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML=`
+    <div class="modal" style="max-width:460px">
+      <div class="mh" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">
+        <h3 style="color:#fff"><i class="fas fa-trash" style="margin-left:8px"></i>حذف حساب المستخدم</h3>
+        <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-confirm-delete')">✕</button>
+      </div>
+      <div class="mbody" style="padding:24px">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:48px;margin-bottom:8px">🗑️</div>
+          <div style="font-weight:700;font-size:15px;color:var(--danger)">حذف: ${name}</div>
+        </div>
+        ${hasData?`<div class="alert alert-d" style="margin-bottom:12px;font-size:12px">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>
+            <div style="font-weight:700;margin-bottom:4px">⚠️ هذا المستخدم لديه بيانات مرتبطة</div>
+            <div>📁 ${g} حلقة &nbsp;|&nbsp; 👥 ${dc.students} طالب &nbsp;|&nbsp; 📖 ${dc.recs} جلسة تسميع</div>
+            <div style="margin-top:6px;color:#991b1b;font-weight:600">يُنصح بالأرشفة بدلاً من الحذف للحفاظ على السجلات</div>
+          </div>
+        </div>`:''}
+        <div class="alert alert-w" style="font-size:12px">
+          <i class="fas fa-info-circle"></i>
+          <div>سجلات الحضور والتسميع والإحصائيات <strong>ستبقى محفوظة</strong> في قاعدة البيانات بعد الحذف.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+          ${hasData?`<button class="btn" style="background:#f0f4f8;color:#475569;border:1px solid var(--border);width:100%;justify-content:center" onclick="closeM('m-confirm-delete');archiveUser('${uid}','${name}')">
+            <i class="fas fa-archive" style="margin-left:6px"></i> أرشفة بدلاً من الحذف (موصى به)
+          </button>`:''}
+          <button class="btn btn-d" style="width:100%;justify-content:center" onclick="closeM('m-confirm-delete');executeDeleteUser('${uid}','${name}')">
+            <i class="fas fa-trash" style="margin-left:6px"></i> حذف نهائي — لا يمكن التراجع
+          </button>
+          <button class="btn btn-o" style="width:100%;justify-content:center" onclick="closeM('m-confirm-delete')">
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>`;
+  openM('m-confirm-delete');
+}
+
+// ══ تنفيذ الحذف الفعلي ══
+async function executeDeleteUser(uid, name){
+  try{
+    // 1. إزالة الارتباط من الحلقات (نبقي الحلقات لكن teacher_id يصبح null)
+    await db.from('groups').update({teacher_id:null}).eq('teacher_id',uid);
+    S.groups=S.groups.map(g=>g.teacher_id===uid?{...g,teacher_id:null}:g);
+
+    // 2. حذف البروفايل من جدول profiles
+    const{error:profErr}=await db.from('profiles').delete().eq('id',uid);
+    if(profErr) throw profErr;
+
+    // 3. إزالة من الذاكرة المحلية
+    S.teachers=S.teachers.filter(t=>t.id!==uid);
+
+    // 4. تحديث الواجهة
+    renderUsers();
+    fillSelects();
+    toast('تم حذف حساب '+name+' — السجلات التاريخية محفوظة','ok');
+  }catch(e){
+    toast('خطأ في الحذف: '+e.message,'err');
+  }
 }
 
 // ===================== STUDENTS =====================
@@ -3649,7 +3955,7 @@ tr:last-child td { border-bottom: none; }
 
 <!-- ══ رأس التقرير ══ -->
 <div class="pdf-header">
-  <img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png"
+  <img src="https://i.imgur.com/cNX0eZ4.jpeg"
        onerror="this.src='${logoFallback}'"
        alt="شعار">
   <div class="pdf-header-text">
@@ -4849,7 +5155,7 @@ function buildCertHTML({student,type,occasion,dateFormatted,notes,group,teacher,
     <div style="position:absolute;inset:12px;border:2.5px solid ${mid};border-radius:12px;opacity:.35;pointer-events:none"></div>
     <div style="position:absolute;inset:18px;border:1px solid ${mid};border-radius:8px;opacity:.18;pointer-events:none"></div>
     <!-- رأس -->
-    <img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png" alt="شعار" style="width:70px;height:70px;border-radius:50%;border:3px solid ${mid};object-fit:cover;margin-bottom:8px;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+    <img src="https://i.imgur.com/cNX0eZ4.jpeg" alt="شعار" style="width:70px;height:70px;border-radius:50%;border:3px solid ${mid};object-fit:cover;margin-bottom:8px;box-shadow:0 4px 16px rgba(0,0,0,.15)">
     <div style="font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:${dark};letter-spacing:.5px;margin-bottom:4px">جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية</div>
     <div style="font-family:'Tajawal',sans-serif;font-size:11px;color:${mid};margin-bottom:16px">دار القرآن الكريم — الوفاق الكبير، بنسركاو</div>
     <!-- فاصل -->
@@ -7766,7 +8072,7 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
 
   // شعار SVG احتياطي
   const fallback = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231565c0' stroke='%230a3d7a' stroke-width='2'/%3E%3Ctext x='40' y='50' text-anchor='middle' font-size='32' fill='white' font-family='serif'%3E%D9%88%3C/text%3E%3C/svg%3E`;
-  const logoHTML = `<img src="https://www.image2url.com/r2/default/images/1780350826443-4a3490c2-0222-4572-8d1f-82fa15f09c20.png" width="76" height="76"
+  const logoHTML = `<img src="https://i.imgur.com/cNX0eZ4.jpeg" width="76" height="76"
     style="width:76px;height:76px;border-radius:50%;border:2px solid #1565c0;object-fit:cover;display:block;opacity:1;filter:none"
     onerror="this.src='${fallback}'">`;
 
@@ -9224,6 +9530,7 @@ async function submitJoinRequest(){
       created_at:new Date().toISOString()
     };
 
+    // استخدام upsert لتجنب تضارب المفاتيح
     const{error}=await db.from('join_requests').insert({
       id:reqId, name, phone,
       email:email||null, gender, role,
@@ -9263,9 +9570,7 @@ async function loadJoinRequests(){
       .from('join_requests')
       .select('*')
       .order('created_at',{ascending:false});
-
     if(error){console.error('loadJoinRequests DB error:', error);return [];}
-
     _joinRequests=data||[];
 
     const pending=_joinRequests.filter(r=>r.status==='pending').length;
@@ -9295,11 +9600,34 @@ function renderJoinRequests(){
 
   if(!_joinRequests.length){
     container.innerHTML=`
-      <div class="empty card" style="padding:60px">
-        <i class="fas fa-user-clock"></i>
-        <p>لا توجد طلبات انضمام حتى الآن</p>
-        <div style="margin-top:12px;font-size:12px;color:var(--text3)">
-          ستظهر الطلبات هنا فور إرسالها من صفحة "طلب الانضمام"
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-body">
+          <div class="alert alert-i">
+            <i class="fas fa-info-circle"></i>
+            <div>
+              <strong>لا توجد طلبات انضمام حتى الآن.</strong><br>
+              <span style="font-size:12px;margin-top:4px;display:block">
+                تأكد أن جدول <code>settings</code> في Supabase يقبل الإدراج للمستخدمين غير المسجلين.<br>
+                اذهب إلى: <strong>Supabase → Authentication → Policies</strong> وأضف Policy للسماح بـ INSERT بدون مصادقة على جدول settings.
+              </span>
+            </div>
+          </div>
+          <div style="background:#f8fafc;border-radius:10px;padding:14px;border:1px solid var(--border);margin-top:12px">
+            <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px">⚙️ SQL مطلوب في Supabase — نفّذه مرة واحدة:</div>
+            <pre style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;direction:ltr;text-align:left">-- السماح للزوار بإرسال طلبات الانضمام
+CREATE POLICY "allow_join_requests"
+ON public.settings
+FOR INSERT
+TO anon
+WITH CHECK (key LIKE 'join_req_%');
+
+-- السماح للمصادقين بقراءة الطلبات
+CREATE POLICY "allow_read_join_requests"
+ON public.settings
+FOR SELECT
+TO authenticated
+USING (true);</pre>
+          </div>
         </div>
       </div>`;
     return;
@@ -9374,209 +9702,71 @@ function showCreateAccountModal(req){
     modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
     document.body.appendChild(modal);
   }
-  // توليد كلمة مرور عشوائية قوية
-  const autoPass='Wafaq@'+Math.floor(1000+Math.random()*9000);
   modal.innerHTML=`
-    <div class="modal" style="max-width:500px">
+    <div class="modal" style="max-width:480px">
       <div class="mh" style="background:linear-gradient(135deg,#0f4c2e,#16a34a)">
         <h3 style="color:#fff"><i class="fas fa-user-check" style="margin-left:8px"></i>إنشاء حساب جديد</h3>
         <button class="mclose" style="background:rgba(255,255,255,.2);color:#fff" onclick="closeM('m-create-account')">✕</button>
       </div>
       <div class="mbody" style="padding:20px">
-
-        <!-- بيانات الطالب المقدِّم -->
-        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
-          <div style="width:40px;height:40px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0">${req.name[0]}</div>
-          <div>
-            <div style="font-weight:700;font-size:14px">${req.name}</div>
-            <div style="font-size:12px;color:#166534">${req.role_label||req.role} · ${req.phone} · ${req.section==='women'?'قسم النساء':'قسم الرجال'}</div>
-          </div>
+        <div class="alert alert-s" style="margin-bottom:16px">
+          <i class="fas fa-info-circle"></i>
+          <div>سيتم إنشاء حساب Supabase Auth للمستخدم <strong>${req.name}</strong> وإضافته للنظام.</div>
         </div>
-
-        <!-- حقول الحساب -->
-        <div class="fgrid" style="gap:12px;margin-bottom:14px">
-          <div class="fg">
-            <label>البريد الإلكتروني *</label>
-            <input type="email" id="ca-email" value="${req.email||''}" placeholder="example@wafaq.com">
-            <small style="color:var(--text3);font-size:11px;margin-top:3px;display:block">سيستخدمه لتسجيل الدخول</small>
-          </div>
-          <div class="fg">
-            <label>كلمة المرور المؤقتة *</label>
-            <div style="display:flex;gap:6px;align-items:center">
-              <input type="text" id="ca-pass" value="${autoPass}" placeholder="كلمة المرور" style="flex:1">
-              <button type="button" onclick="document.getElementById('ca-pass').value='Wafaq@'+Math.floor(1000+Math.random()*9000)" style="padding:8px 10px;background:#f0f6ff;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap" title="توليد كلمة مرور جديدة">🔄</button>
-            </div>
-            <small style="color:var(--text3);font-size:11px;margin-top:3px;display:block">6 أحرف على الأقل</small>
-          </div>
+        <div class="fgrid" style="gap:12px">
+          <div class="fg"><label>البريد الإلكتروني *</label><input type="email" id="ca-email" value="${req.email||''}" placeholder="example@wafaq.com"></div>
+          <div class="fg"><label>كلمة المرور المؤقتة *</label><input type="text" id="ca-pass" value="Wafaq@${new Date().getFullYear()}" placeholder="كلمة المرور"></div>
           <div class="fg"><label>الاسم الكامل</label><input type="text" id="ca-name" value="${req.name}"></div>
           <div class="fg"><label>الدور</label><select id="ca-role">
-            <option value="parent"     ${req.role==='parent'    ?'selected':''}>ولي أمر</option>
-            <option value="teacher"    ${req.role==='teacher'   ?'selected':''}>أستاذ / أستاذة</option>
-            <option value="supervisor" ${req.role==='supervisor'?'selected':''}>مشرف / مشرفة</option>
+            <option value="parent" ${req.role==='parent'?'selected':''}>ولي أمر</option>
+            <option value="teacher" ${req.role==='teacher'?'selected':''}>أستاذ</option>
+            <option value="supervisor" ${req.role==='supervisor'?'selected':''}>مشرف</option>
           </select></div>
         </div>
-
-        <!-- حالة Edge Function -->
-        <div id="ca-status-bar" style="display:none;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:8px"></div>
-
-        <!-- تنبيه تأكيد الإيميل -->
-        <div id="ca-email-warning" style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#713f12">
-          <div style="font-weight:700;margin-bottom:4px"><i class="fas fa-exclamation-triangle" style="margin-left:5px"></i>مهم: قبل الإنشاء</div>
-          <div>إذا لم يتمكن المستخدم من الدخول بعد الإنشاء، افتح:</div>
-          <div style="direction:ltr;text-align:left;background:#fff;border-radius:6px;padding:5px 10px;margin-top:6px;font-family:monospace;font-size:11px">
-            Supabase → Authentication → Providers → Email<br>
-            ثم أوقف تشغيل: <strong>Confirm email</strong>
-          </div>
-          <div style="margin-top:6px">أو استخدم <strong>Edge Function</strong> لتجاوز هذا تلقائياً.</div>
+        <div class="alert alert-w" style="margin-top:12px">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div style="font-size:12px">سيحتاج المستخدم لتفعيل بريده الإلكتروني. أرسل له البيانات عبر واتساب إن لزم.</div>
         </div>
-
         <div class="login-err" id="ca-err" style="margin-top:10px"></div>
       </div>
-      <div class="mfoot" style="gap:8px">
+      <div class="mfoot">
         <button class="btn btn-o" onclick="closeM('m-create-account')">إلغاء</button>
-        <button class="btn" style="background:#25d366;color:#fff" onclick="sendAccountWA('${req.id}')">
-          <i class="fab fa-whatsapp"></i> إرسال واتساب
-        </button>
-        <button class="btn btn-s" style="flex:1" onclick="createAccountAndApprove('${req.id}')">
-          <i class="fas fa-user-plus"></i> إنشاء الحساب وتفعيله
-        </button>
+        <button class="btn" style="background:#25d366;color:#fff" onclick="sendAccountWA('${req.id}')"><i class="fab fa-whatsapp"></i> إرسال عبر واتساب</button>
+        <button class="btn btn-s" onclick="createAccountAndApprove('${req.id}')"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
       </div>
     </div>`;
   openM('m-create-account');
 }
 
-// ══ ثوابت Supabase للاستخدام في Edge Function ══
-const SUPABASE_PROJECT_URL = 'https://zqnfytquwduasradavhh.supabase.co';
-const SUPABASE_ANON_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxbmZ5dHF1d2R1YXNyYWRhdmhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NzY2OTAsImV4cCI6MjA5MjI1MjY5MH0.liqo7s8RCUTFxCDRwzkFIuyWnqamPjZEtGDXKXSWBCE';
-
-function showCaStatus(msg, type){
-  const bar = $('ca-status-bar');
-  if(!bar) return;
-  const colors = {
-    loading: {bg:'#f0f6ff', border:'#93c5fd', color:'#1e40af'},
-    success: {bg:'#f0fdf4', border:'#86efac', color:'#166534'},
-    warning: {bg:'#fef9c3', border:'#fde047', color:'#713f12'},
-    error:   {bg:'#fef2f2', border:'#fca5a5', color:'#991b1b'},
-  };
-  const c = colors[type]||colors.loading;
-  bar.style.cssText = `display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:12px;background:${c.bg};border:1px solid ${c.border};color:${c.color}`;
-  bar.innerHTML = msg;
-}
-
 async function createAccountAndApprove(reqId){
   const req=_joinRequests.find(x=>x.id===reqId);
-  if(!req) return;
-  const email = $('ca-email').value.trim();
-  const pass  = $('ca-pass').value.trim();
-  const name  = $('ca-name').value.trim();
-  const role  = $('ca-role').value;
-  const errEl = $('ca-err');
-  errEl.style.display='none';
-
-  // تحقق من البيانات
-  if(!email) { errEl.textContent='البريد الإلكتروني مطلوب'; errEl.style.display='block'; return; }
-  if(!/^[^@]+@[^@]+\.[^@]+$/.test(email)) { errEl.textContent='صيغة البريد غير صحيحة'; errEl.style.display='block'; return; }
-  if(!pass||pass.length<6) { errEl.textContent='كلمة المرور يجب أن تكون 6 أحرف على الأقل'; errEl.style.display='block'; return; }
-
-  const btn = document.querySelector('#m-create-account .btn-s');
-  if(btn){ btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...'; }
-
-  let userId = null;
-  let method = '';
-
+  if(!req)return;
+  const email=$('ca-email').value.trim();
+  const pass=$('ca-pass').value.trim();
+  const name=$('ca-name').value.trim();
+  const role=$('ca-role').value;
+  const errEl=$('ca-err');errEl.style.display='none';
+  if(!email||!pass){errEl.textContent='البريد الإلكتروني وكلمة المرور مطلوبان';errEl.style.display='block';return}
+  const btn=document.querySelector('#m-create-account .btn-s');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...';
   try{
-    // ══ المسار 1: Edge Function (تفعيل فوري 100%) ══
-    showCaStatus('<i class="fas fa-spinner fa-spin"></i> جاري المحاولة عبر Edge Function...', 'loading');
-    try{
-      const session = (await db.auth.getSession()).data?.session;
-      const token   = session?.access_token || SUPABASE_ANON_KEY;
-      const resp    = await fetch(`${SUPABASE_PROJECT_URL}/functions/v1/create-user`, {
-        method:  'POST',
-        headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
-        body:    JSON.stringify({ email, password:pass, name, role, gender:req.gender||null, section:req.section||'men' })
-      });
-      if(resp.ok){
-        const data = await resp.json();
-        if(data?.user?.id){
-          userId = data.user.id;
-          method = 'edge';
-          showCaStatus('<i class="fas fa-check-circle"></i> Edge Function نجحت — الحساب مفعّل فوراً', 'success');
-        }
-      } else {
-        const errData = await resp.json().catch(()=>({}));
-        console.log('Edge Function response:', resp.status, errData);
-      }
-    } catch(edgeErr){
-      console.log('Edge Function غير متوفرة بعد:', edgeErr.message);
+    // إنشاء حساب عبر Supabase Admin API (service role مطلوب — نستخدم signUp كـ fallback)
+    // ملاحظة: signUp يُرسل إيميل تأكيد للمستخدم تلقائياً
+    const{data:authData,error:authErr}=await db.auth.signUp({email,password:pass,options:{data:{name,role,gender:req.gender,section:req.section}}});
+    if(authErr)throw authErr;
+    // إضافة البروفايل
+    if(authData?.user){
+      await db.from('profiles').upsert({id:authData.user.id,name,role,email,gender:req.gender,section:req.section},{onConflict:'id'});
+      S.teachers.push({id:authData.user.id,name,role,email,gender:req.gender});
     }
-
-    // ══ المسار 2: signUp عادي (fallback) ══
-    if(!userId){
-      showCaStatus('<i class="fas fa-spinner fa-spin"></i> إنشاء الحساب عبر Supabase Auth...', 'loading');
-      const { data:authData, error:authErr } = await db.auth.signUp({
-        email,
-        password: pass,
-        options: { data: { name, role, gender:req.gender, section:req.section||'men' } }
-      });
-      if(authErr) throw authErr;
-
-      userId = authData?.user?.id;
-      if(!userId) throw new Error('فشل إنشاء الحساب — تحقق من صحة البريد الإلكتروني');
-
-      // هل يحتاج تأكيد إيميل؟
-      const needsConfirm = authData?.user?.identities?.length === 0 ||
-                           authData?.user?.email_confirmed_at === null;
-      method = needsConfirm ? 'signup_pending' : 'signup_ok';
-
-      if(needsConfirm){
-        showCaStatus(
-          '<i class="fas fa-exclamation-triangle"></i> تم الإنشاء — لكن يحتاج تأكيد إيميل. ' +
-          'لتفعيل الدخول الفوري: أوقف "Confirm email" من Supabase Auth Settings.',
-          'warning'
-        );
-      } else {
-        showCaStatus('<i class="fas fa-check-circle"></i> تم إنشاء الحساب بنجاح', 'success');
-      }
-    }
-
-    // ══ حفظ البروفايل ══
-    const { error:profErr } = await db.from('profiles').upsert({
-      id:      userId,
-      name,
-      role,
-      email,
-      gender:  req.gender  || null,
-      section: req.section || 'men'
-    }, { onConflict:'id' });
-    if(profErr) console.warn('Profile warning:', profErr.message);
-
-    // ══ تحديث الذاكرة ══
-    const existing = S.teachers.find(t=>t.id===userId);
-    if(!existing) S.teachers.push({ id:userId, name, role, email, gender:req.gender });
-    else Object.assign(existing, { name, role, email });
-
-    // ══ تحديث حالة الطلب ══
-    await updateJoinRequestStatus(reqId, 'approved');
-
-    // ══ انتظر ثانية لتأكيد النجاح ثم أغلق ══
-    await new Promise(r=>setTimeout(r, 1200));
+    // تحديث حالة الطلب
+    await updateJoinRequestStatus(reqId,'approved');
     closeM('m-create-account');
-
-    const toastMsg = method === 'edge'
-      ? `✅ ${name} — حساب مفعّل فوراً بدون تأكيد إيميل 🎉`
-      : method === 'signup_ok'
-        ? `✅ ${name} — تم الإنشاء وجاهز للدخول`
-        : `⚠️ ${name} — تم الإنشاء لكن يحتاج تأكيد إيميل`;
-
-    toast(toastMsg, method==='signup_pending'?'warn':'ok');
-    renderJoinRequests();
-    renderUsers();
-
-  } catch(e){
-    showCaStatus('', 'error');
-    errEl.textContent = 'خطأ: ' + e.message;
-    errEl.style.display = 'block';
-    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-user-plus"></i> إنشاء الحساب وتفعيله'; }
+    toast(`✅ تم إنشاء حساب ${name} — كلمة المرور المؤقتة: ${pass}`,'ok');
+    renderJoinRequests();renderUsers();
+  }catch(e){
+    errEl.textContent='خطأ: '+e.message;errEl.style.display='block';
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> إنشاء الحساب';
   }
 }
 
@@ -9609,13 +9799,12 @@ async function rejectJoinRequest(id){
 }
 
 async function updateJoinRequestStatus(id,status){
-  const{error}=await db
-    .from('join_requests')
-    .update({status, updated_at:new Date().toISOString()})
-    .eq('id',id);
-  if(error){toast('خطأ في تحديث الطلب: '+error.message,'err');return;}
   const r=_joinRequests.find(x=>x.id===id);
-  if(r){r.status=status;r.updated_at=new Date().toISOString();}
+  if(!r)return;
+  const{error:_updErr}=await db.from('join_requests').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+  if(_updErr){toast('خطأ: '+_updErr.message,'err');return;}
+  const _r=_joinRequests.find(x=>x.id===id);
+  if(_r){_r.status=status;_r.updated_at=new Date().toISOString();}
   loadJoinRequests();
 }
 
