@@ -722,10 +722,17 @@ textarea{resize:vertical;min-height:80px}
       <button class="lp-nl" onclick="document.getElementById('stats-live').scrollIntoView({behavior:'smooth'})">إحصائياتنا</button>
       <button class="lp-nl" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">من نحن</button>
       <button class="lp-nl" onclick="document.getElementById('news').scrollIntoView({behavior:'smooth'})">الأخبار</button>
-      <button class="lp-nl" onclick="document.getElementById('gallery').scrollIntoView({behavior:'smooth'})">المعرض</button>
       <button class="lp-nl" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">خدماتنا</button>
       <button class="lp-nl" onclick="document.getElementById('platform').scrollIntoView({behavior:'smooth'})">المنصة</button>
       <button class="lp-nl" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">تواصل</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="lp-enter" onclick="showRegister()" style="background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;box-shadow:0 4px 14px rgba(22,163,74,.4);font-weight:700;transition:all .25s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(22,163,74,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(22,163,74,.4)'">
+          <i class="fas fa-user-plus"></i> طلب الانضمام
+        </button>
+        <button class="lp-enter" onclick="showLogin()" style="background:linear-gradient(135deg,#1565c0,#1976d2);box-shadow:0 4px 14px rgba(21,101,192,.4);transition:all .25s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(21,101,192,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(21,101,192,.4)'">
+          <i class="fas fa-sign-in-alt"></i> دخول المنصة
+        </button>
+      </div>
     </div>
   </nav>
 
@@ -1659,14 +1666,15 @@ textarea{resize:vertical;min-height:80px}
 
       <!-- صفحة إدارة محتوى صفحة الهبوط -->
       <div class="page" id="page-landing-cms">
+
         <div class="ph">
           <div>
             <h1><i class="fas fa-globe" style="color:var(--primary);margin-left:8px"></i>إدارة محتوى صفحة الهبوط</h1>
             <p>تحكم في نصوص وصور وأخبار الصفحة الرئيسية دون تعديل الكود</p>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-o btn-sm" onclick="window.open(location.href.split('#')[0],'_blank')">
-              <i class="fas fa-eye"></i> معاينة الصفحة
+            <button class="btn btn-o btn-sm" onclick="window.open(window.location.href,'_blank')">
+              <i class="fas fa-eye"></i> معاينة
             </button>
             <button class="btn btn-s" onclick="saveLandingContent()">
               <i class="fas fa-save"></i> حفظ التغييرات
@@ -1674,82 +1682,73 @@ textarea{resize:vertical;min-height:80px}
           </div>
         </div>
 
-        <!-- تنبيه -->
-        <div class="alert alert-i" style="margin-bottom:16px">
+        <div class="alert alert-i" style="margin-bottom:20px">
           <i class="fas fa-info-circle"></i>
-          التغييرات تُحفظ في قاعدة البيانات وتظهر فوراً في صفحة الهبوط للزوار.
+          التغييرات تُحفظ في قاعدة البيانات وتظهر فوراً للزوار عند تحميل الصفحة.
         </div>
 
-        <!-- قسم: إعدادات عامة -->
-        <div class="cms-section-card">
-          <div class="cms-section-head" onclick="toggleCMS(this)">
-            <i class="fas fa-cog" style="color:var(--primary)"></i>
-            <h4>إعدادات عامة — Hero</h4>
-            <i class="fas fa-chevron-down" style="color:var(--text3);transition:transform .2s"></i>
-          </div>
-          <div class="cms-section-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="cms-field">
-                <label>عنوان المنصة الرئيسي</label>
-                <input id="cms-hero-title" value="دار القرآن الكريم" placeholder="العنوان الرئيسي">
-              </div>
-              <div class="cms-field">
-                <label>العنوان الفرعي (الأزرق)</label>
-                <input id="cms-hero-subtitle" value="الوفاق الكبير" placeholder="العنوان الفرعي">
-              </div>
-              <div class="cms-field full" style="grid-column:1/-1">
-                <label>الوصف المختصر</label>
-                <textarea id="cms-hero-desc">جمعية تربوية هادفة تروم إلى بثّ نفس الإصلاح القرآني والنبوي في كل فئات المجتمع</textarea>
+        <!-- تبويبات CMS -->
+        <div class="tabs" id="cms-tabs">
+          <div class="tab active" onclick="switchCMSTab('hero',this)"><i class="fas fa-home"></i> Hero</div>
+          <div class="tab" onclick="switchCMSTab('news',this)"><i class="fas fa-bell"></i> الإعلانات</div>
+          <div class="tab" onclick="switchCMSTab('gallery',this)"><i class="fas fa-images"></i> المعرض</div>
+          <div class="tab" onclick="switchCMSTab('why',this)"><i class="fas fa-star"></i> المميزات</div>
+        </div>
+
+        <!-- تبويب Hero -->
+        <div id="cms-pane-hero" class="tab-pane active">
+          <div class="card">
+            <div class="card-head"><h3><i class="fas fa-heading" style="color:var(--primary);margin-left:6px"></i>نصوص قسم Hero</h3></div>
+            <div class="card-body">
+              <div class="fgrid">
+                <div class="fg">
+                  <label>العنوان الرئيسي</label>
+                  <input id="cms-hero-title" placeholder="دار القرآن الكريم" value="دار القرآن الكريم">
+                </div>
+                <div class="fg">
+                  <label>العنوان الفرعي (الأزرق)</label>
+                  <input id="cms-hero-subtitle" placeholder="الوفاق الكبير" value="الوفاق الكبير">
+                </div>
+                <div class="fg full">
+                  <label>الوصف المختصر</label>
+                  <textarea id="cms-hero-desc" rows="3">جمعية تربوية هادفة تروم إلى بثّ نفس الإصلاح القرآني والنبوي في كل فئات المجتمع، للمساهمة العلمية والعملية في نشر الخير وتكثيره وصدّ الشر وتقليله.</textarea>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- قسم: الأخبار والإعلانات -->
-        <div class="cms-section-card">
-          <div class="cms-section-head" onclick="toggleCMS(this)">
-            <i class="fas fa-bell" style="color:#d97706"></i>
-            <h4>الأخبار والإعلانات</h4>
-            <span class="bx bx-b" style="font-size:11px" id="cms-news-count">3 إعلانات</span>
-            <i class="fas fa-chevron-down" style="color:var(--text3);transition:transform .2s"></i>
-          </div>
-          <div class="cms-section-body">
-            <div id="cms-news-list"></div>
-            <button class="btn btn-p btn-sm" onclick="addCMSNews()" style="width:100%;margin-top:8px">
-              <i class="fas fa-plus"></i> إضافة إعلان جديد
+        <!-- تبويب الإعلانات -->
+        <div id="cms-pane-news" class="tab-pane">
+          <div class="ph" style="margin-bottom:16px">
+            <div><h2 style="font-size:16px;font-weight:700">الإعلانات والأخبار</h2></div>
+            <button class="btn btn-p btn-sm" onclick="addCMSNews()">
+              <i class="fas fa-plus"></i> إعلان جديد
             </button>
           </div>
+          <div id="cms-news-list"></div>
         </div>
 
-        <!-- قسم: معرض الصور -->
-        <div class="cms-section-card">
-          <div class="cms-section-head" onclick="toggleCMS(this)">
-            <i class="fas fa-images" style="color:#7c3aed"></i>
-            <h4>معرض الصور</h4>
-            <i class="fas fa-chevron-down" style="color:var(--text3);transition:transform .2s"></i>
-          </div>
-          <div class="cms-section-body">
-            <div id="cms-gallery-list"></div>
-            <button class="btn btn-p btn-sm" onclick="addCMSGallery()" style="width:100%;margin-top:8px">
-              <i class="fas fa-plus"></i> إضافة صورة للمعرض
+        <!-- تبويب المعرض -->
+        <div id="cms-pane-gallery" class="tab-pane">
+          <div class="ph" style="margin-bottom:16px">
+            <div><h2 style="font-size:16px;font-weight:700">صور المعرض</h2></div>
+            <button class="btn btn-p btn-sm" onclick="addCMSGallery()">
+              <i class="fas fa-plus"></i> صورة جديدة
             </button>
           </div>
+          <div id="cms-gallery-list"></div>
         </div>
 
-        <!-- قسم: مميزاتنا -->
-        <div class="cms-section-card">
-          <div class="cms-section-head" onclick="toggleCMS(this)">
-            <i class="fas fa-star" style="color:#d97706"></i>
-            <h4>بطاقات المميزات (لماذا نحن)</h4>
-            <i class="fas fa-chevron-down" style="color:var(--text3);transition:transform .2s"></i>
-          </div>
-          <div class="cms-section-body">
-            <div id="cms-why-list"></div>
+        <!-- تبويب المميزات -->
+        <div id="cms-pane-why" class="tab-pane">
+          <div class="card">
+            <div class="card-head"><h3><i class="fas fa-star" style="color:#d97706;margin-left:6px"></i>بطاقات المميزات</h3></div>
+            <div class="card-body" id="cms-why-list"></div>
           </div>
         </div>
 
       </div>
-
 <!-- ===================== MODALS ===================== -->
 
 <!-- Modal Group -->
@@ -2511,8 +2510,16 @@ async function doLogout(){
   S.attendance=[];S.recitations=[];S.holidays=[];S.finance=[];S.manualStars=[];S._certs=[];
   EXAMS_DB=[];
   _RESULTS_CACHE=null;_SUBJECTS_CACHE=null;
+  // إخفاء التطبيق وجميع الصفحات
   $('app').style.display='none';
   $('login-page').style.display='none';
+  $('register-page').style.display='none';
+  // إغلاق أي مودال مفتوح
+  document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open'));
+  // إعادة تعيين الصفحات النشطة داخل التطبيق
+  document.querySelectorAll('#app .page.active').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#app .nav-item.active').forEach(n=>n.classList.remove('active'));
+  // إظهار صفحة الهبوط نظيفة
   $('landing').style.display='block';
   $('login-email').value='';
   $('login-pass').value='';
@@ -10733,44 +10740,48 @@ console.log('✅ نظام رفع الصور + دوال صفحة الهبوط —
     requestAnimationFrame(step);
   }
 
-  // ══ جلب الإحصائيات من Supabase (anon key — بيانات عامة فقط) ══
+  // ══ جلب الإحصائيات عبر RPC (يتجاوز RLS بأمان) ══
   async function fetchPublicStats() {
+    try {
+      // نستدعي الدالة get_public_stats() التي تعمل بصلاحية SECURITY DEFINER
+      const { data, error } = await db.rpc('get_public_stats');
+      if(!error && data) {
+        return {
+          students:    parseInt(data.students    || 0),
+          groups:      parseInt(data.groups      || 0),
+          teachers:    parseInt(data.teachers    || 0),
+          hizb:        parseInt(data.hizb        || 0),
+          recitations: parseInt(data.recitations || 0),
+        };
+      }
+    } catch(e) { console.warn('RPC get_public_stats:', e.message); }
+
+    // ══ Fallback: جلب مباشر إذا لم تُنشأ الدالة بعد ══
     const SUPA_URL = 'https://zqnfytquwduasradavhh.supabase.co';
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxbmZ5dHF1d2R1YXNyYWRhdmhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NzY2OTAsImV4cCI6MjA5MjI1MjY5MH0.liqo7s8RCUTFxCDRwzkFIuyWnqamPjZEtGDXKXSWBCE';
-    const headers  = { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' };
-
-    // ── جلب البيانات بالتوازي لأقصى سرعة ──
-    const [students, groups, teachers, hizb, recitations] = await Promise.allSettled([
-
-      // عدد الطلبة (غير صيفيين)
-      fetch(`${SUPA_URL}/rest/v1/students?select=id&is_summer=eq.false`, { headers })
-        .then(r => r.json()).then(d => Array.isArray(d) ? d.length : 0).catch(() => 0),
-
-      // عدد الحلقات النشطة
-      fetch(`${SUPA_URL}/rest/v1/groups?select=id&is_summer=eq.false`, { headers })
-        .then(r => r.json()).then(d => Array.isArray(d) ? d.length : 0).catch(() => 0),
-
-      // عدد الأساتذة والمؤطرين
-      fetch(`${SUPA_URL}/rest/v1/profiles?select=id&role=in.(teacher,supervisor)`, { headers })
-        .then(r => r.json()).then(d => Array.isArray(d) ? d.length : 0).catch(() => 0),
-
-      // عدد الأحزاب المُتمَّة (من settings بمفاتيح hizb_*)
-      fetch(`${SUPA_URL}/rest/v1/settings?select=id&key=like.hizb_*`, { headers })
-        .then(r => r.json()).then(d => Array.isArray(d) ? d.length : 0).catch(() => 0),
-
-      // عدد جلسات التسميع الإجمالية
-      fetch(`${SUPA_URL}/rest/v1/recitations?select=id`, { headers })
-        .then(r => r.json()).then(d => Array.isArray(d) ? d.length : 0).catch(() => 0),
-
-    ]);
-
-    return {
-      students:     students.status    === 'fulfilled' ? students.value    : 0,
-      groups:       groups.status      === 'fulfilled' ? groups.value      : 0,
-      teachers:     teachers.status    === 'fulfilled' ? teachers.value    : 0,
-      hizb:         hizb.status        === 'fulfilled' ? hizb.value        : 0,
-      recitations:  recitations.status === 'fulfilled' ? recitations.value : 0,
+    const h = {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'count=exact'
     };
+    const safe = async (url) => {
+      try {
+        const r = await fetch(url, { headers: h });
+        const count = r.headers.get('content-range');
+        if(count) return parseInt(count.split('/')[1]) || 0;
+        const d = await r.json();
+        return Array.isArray(d) ? d.length : 0;
+      } catch { return 0; }
+    };
+    const [students, groups, teachers, hizb, recitations] = await Promise.all([
+      safe(`${SUPA_URL}/rest/v1/students?select=id&is_summer=eq.false&limit=1`),
+      safe(`${SUPA_URL}/rest/v1/groups?select=id&is_summer=eq.false&limit=1`),
+      safe(`${SUPA_URL}/rest/v1/profiles?select=id&role=in.(teacher,supervisor)&limit=1`),
+      safe(`${SUPA_URL}/rest/v1/settings?select=id&key=like.hizb_*&limit=1`),
+      safe(`${SUPA_URL}/rest/v1/recitations?select=id&limit=1`),
+    ]);
+    return { students, groups, teachers, hizb, recitations };
   }
 
   // ══ عرض الإحصائيات وتشغيل العدادات ══
@@ -11008,9 +11019,26 @@ function openNewsModalDynamic(nid) {
 
 // ══ عرض واجهة CMS ══
 function renderCMSPage() {
+  // تعبئة حقول Hero من البيانات المحفوظة
+  const h = CMS_DATA.hero || {};
+  const titleEl = document.getElementById('cms-hero-title');
+  const subEl   = document.getElementById('cms-hero-subtitle');
+  const descEl  = document.getElementById('cms-hero-desc');
+  if(titleEl && h.title)    titleEl.value = h.title;
+  if(subEl   && h.subtitle) subEl.value   = h.subtitle;
+  if(descEl  && h.desc)     descEl.value  = h.desc;
   renderCMSNews();
   renderCMSGallery();
   renderCMSWhy();
+}
+
+// ══ تبديل تبويبات CMS ══
+function switchCMSTab(tab, el) {
+  document.querySelectorAll('#cms-tabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('[id^="cms-pane-"]').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  const pane = document.getElementById('cms-pane-' + tab);
+  if(pane) pane.classList.add('active');
 }
 
 function renderCMSNews() {
