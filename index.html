@@ -1065,6 +1065,9 @@ textarea{resize:vertical;min-height:80px}
     <div class="lf"><label>البريد الإلكتروني</label><input type="email" id="login-email" placeholder="example@wafaq.com" autocomplete="email"></div>
     <div class="lf"><label>كلمة المرور</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
     <button class="login-btn" id="login-btn" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> دخول</button>
+    <div style="text-align:center;margin-top:12px">
+      <a href="#" onclick="doForgotPassword();return false;" style="color:var(--primary-l);font-size:13px;font-weight:600;text-decoration:none">نسيت كلمة المرور؟</a>
+    </div>
     <div class="login-err" id="login-err"></div>
   </div>
 </div>
@@ -2211,33 +2214,7 @@ const S = {
   manualStars:[], sessionGroupId:null, _sessionInterval:null,
   _certs:[]
 };
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   إنشاء جدول الامتحانات في Supabase — نفّذ هذا SQL مرة واحدة:
-
-   create table if not exists public.exams (
-     id            text primary key,
-     student_id    uuid references public.students(id) on delete cascade,
-     student_name  text,
-     group_id      uuid references public.groups(id) on delete set null,
-     group_name    text,
-     teacher_id    uuid references public.profiles(id) on delete set null,
-     date          date not null default current_date,
-     questions_count int default 0,
-     total_itqan   numeric default 0,
-     total_adaa    numeric default 0,
-     avg_itqan     numeric default 0,
-     avg_adaa      numeric default 0,
-     avg           numeric default 0,
-     pct           int default 0,
-     max_per_q     int default 20,
-     details       jsonb default '[]',
-     created_at    timestamptz default now()
-   );
-   alter table public.exams enable row level security;
-   create policy "auth users can manage exams"
-     on public.exams for all using (auth.uid() is not null);
-
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* مخطط جدول exams موثّق خارج الواجهة في ملف قاعدة البيانات. */
 let EXAMS_DB = []; // سجل محلي للامتحانات - يُحمَّل من Supabase عند الدخول
 
 // ===================== IMAGE FALLBACK =====================
@@ -2482,6 +2459,23 @@ async function doLogin(){
     showApp();
   }catch(e){err.textContent='خطأ في الاتصال: '+e.message;err.style.display='block'}
   finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-sign-in-alt"></i> دخول'}
+}
+
+// ═══ استرجاع كلمة المرور عبر البريد (Supabase Auth) ═══
+async function doForgotPassword(){
+  const err=$('login-err');
+  if(err){err.style.display='none';}
+  let email=($('login-email')?.value||'').trim();
+  if(!email){
+    email=(prompt('أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين كلمة المرور:')||'').trim();
+  }
+  if(!email){ if(err){err.textContent='يرجى إدخال البريد الإلكتروني أولاً';err.style.display='block';} return; }
+  try{
+    const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+    if(error){ if(err){err.textContent='تعذّر الإرسال: '+error.message;err.style.display='block';} return; }
+    if(typeof toast==='function') toast('✅ تم إرسال رابط إعادة التعيين إلى بريدك (تحقّق من صندوق الوارد والـ Spam)','ok');
+    else alert('تم إرسال رابط إعادة التعيين إلى بريدك.');
+  }catch(e){ if(err){err.textContent='خطأ في الاتصال: '+e.message;err.style.display='block';} }
 }
 
 /**
@@ -5080,6 +5074,20 @@ function fillSelects(){
 // ===================== INIT =====================
 checkAuth();
 
+// ═══ معالج العودة من رابط إعادة تعيين كلمة المرور ═══
+// يُستدعى فقط عند الدخول عبر رابط الاسترجاع، ولا يؤثّر على الدخول العادي
+db.auth.onAuthStateChange(async (event) => {
+  if(event === 'PASSWORD_RECOVERY'){
+    const np = prompt('أدخل كلمة المرور الجديدة (٦ أحرف على الأقل):');
+    if(!np || np.length < 6){ alert('كلمة المرور قصيرة جداً. أعد المحاولة من الرابط.'); return; }
+    try{
+      const { error } = await db.auth.updateUser({ password: np });
+      if(error){ alert('تعذّر التحديث: ' + error.message); return; }
+      alert('✅ تم تحديث كلمة المرور بنجاح. يمكنك الدخول الآن.');
+    }catch(e){ alert('خطأ: ' + e.message); }
+  }
+});
+
 // ===================== MOBILE SIDEBAR =====================
 function toggleSidebar(){
   const sb=$('sidebar');
@@ -6656,35 +6664,7 @@ renderRecs = function(){
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  SQL المطلوب في Supabase (تعليق توضيحي)                      ║
 // ╚══════════════════════════════════════════════════════════════╝
-/*
-  سجل الأحزاب محفوظ حالياً في جدول settings بمفاتيح hizb_*
-  لإنشاء جدول مستقل لاحقاً:
-
-  create table if not exists public.hizb_completions (
-    id           uuid primary key default gen_random_uuid(),
-    student_id   uuid references public.students(id) on delete cascade,
-    student_name text,
-    group_id     uuid references public.groups(id) on delete set null,
-    group_name   text,
-    teacher_id   uuid references public.profiles(id) on delete set null,
-    hizb_number  int not null check(hizb_number between 1 and 60),
-    date         date not null default current_date,
-    created_at   timestamptz default now(),
-    unique(student_id, hizb_number)
-  );
-  alter table public.hizb_completions enable row level security;
-  create policy "auth users manage hizb"
-    on public.hizb_completions for all using (auth.uid() is not null);
-
-  -- الحلقات الإضافية محفوظة في settings بمفاتيح extra_groups_*
-  -- لإنشاء جدول مستقل لاحقاً:
-
-  create table if not exists public.student_group_links (
-    student_id uuid references public.students(id) on delete cascade,
-    group_id   uuid references public.groups(id)   on delete cascade,
-    primary key (student_id, group_id)
-  );
-*/
+/* مخطط جداول hizb/links موثّق خارج الواجهة في ملف قاعدة البيانات. */
 
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  عرض آخر تسميع عند اختيار الطالب في نافذة التسميع          ║
@@ -10689,31 +10669,7 @@ document.addEventListener('keydown', e => {
 // ══════════════════════════════════════════════════════════════
 // ٤. SQL Supabase Storage المطلوب (توثيق)
 // ══════════════════════════════════════════════════════════════
-/*
-  ══ لتفعيل رفع الصور — خطوة واحدة في Supabase ══
-
-  Supabase Dashboard → Storage → New Bucket
-    Name: images
-    Public bucket: ✅ (مفعّل)
-    → Create bucket
-
-  ثم أضف هذا السياسة في SQL Editor:
-
-  -- السماح للمصادقين برفع الصور
-  CREATE POLICY "auth users upload images"
-    ON storage.objects FOR INSERT
-    WITH CHECK (bucket_id = 'images' AND auth.uid() IS NOT NULL);
-
-  -- السماح للجميع بقراءة الصور
-  CREATE POLICY "public read images"
-    ON storage.objects FOR SELECT
-    USING (bucket_id = 'images');
-
-  -- السماح للمصادقين بحذف صورهم
-  CREATE POLICY "auth users delete images"
-    ON storage.objects FOR DELETE
-    USING (bucket_id = 'images' AND auth.uid() IS NOT NULL);
-*/
+/* إعداد bucket الصور وسياساته موثّق خارج الواجهة في ملف قاعدة البيانات. */
 
 console.log('✅ نظام رفع الصور + دوال صفحة الهبوط — تم التحميل');
 </script>
