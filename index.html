@@ -7594,6 +7594,16 @@ async function loadResults() {
 function loadResultsSync() { return _RESULTS_CACHE || []; }
 
 async function saveOneResult(record) {
+  // نحافظ على teacher_id الأصلي عند التعديل — لا نستبدله بـ ID المدير
+  const existingInCache = _RESULTS_CACHE?.find(r => r.id === record.id);
+  const originalTeacherId = existingInCache?.teacher_id
+    || record._originalTeacherId   // جُلب من DB عند غياب الكاش
+    || null;
+  const isNewRecord = !existingInCache && !record._originalTeacherId;
+  const teacher_id = isNewRecord
+    ? (S.profile?.id || null)
+    : (originalTeacherId || S.profile?.id || null);
+
   const row = {
     id:             record.id,
     student_id:     record.student_id,
@@ -7607,7 +7617,7 @@ async function saveOneResult(record) {
     total_weighted: record.totalWeighted,
     total_coef:     record.totalCoef,
     general_note:   record.generalNote || '',
-    teacher_id:     S.profile?.id || null,
+    teacher_id,
   };
   const { error } = await db.from('session_results').upsert(row, { onConflict: 'id' });
   if (error) throw error;
@@ -7932,10 +7942,44 @@ async function buildResultModal(rid, prefillStudentId) {
           </div>
         </div>
 
-        <!-- ملاحظة عامة -->
+        <!-- ملاحظة عامة — هجينة (اختيار من قائمة أو كتابة يدوية) -->
         <div class="fg" style="margin-bottom:8px">
           <label><i class="fas fa-comment-alt" style="color:var(--primary);margin-left:5px"></i>الملاحظة العامة (اختياري)</label>
-          <textarea id="re-general-note" rows="2" placeholder="أي ملاحظة تظهر في النتيجة..." style="resize:none">${editing?.generalNote||''}</textarea>
+          <select id="re-note-preset" onchange="applyNotePreset(this.value)"
+            style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13px;margin-bottom:6px;background:#f8fafc;color:var(--text)">
+            <option value="">— اختر عبارة جاهزة أو اكتب يدوياً —</option>
+            <optgroup label="🌟 جيد جداً (18 – 20)">
+              <option value="تميز بارع وأداء استثنائي، بارك الله فيك ووفقك لخدمة كتابه الكريم.">تميز بارع وأداء استثنائي...</option>
+              <option value="أثلجت صدورنا بجدك واجتهادك، فوفقك الله وسدد خطاك وإلى الأمام دائماً.">أثلجت صدورنا بجدك...</option>
+              <option value="مثال يحتذى به في الأدب والتحصيل، زادك الله علماً ونوراً وبارك فيك.">مثال يحتذى به...</option>
+            </optgroup>
+            <optgroup label="✅ جيد (16 – أقل من 18)">
+              <option value="مستوى رائع ومجهود مشكور، فوفقك الله وبارك في جهودك ونفع بك.">مستوى رائع ومجهود مشكور...</option>
+              <option value="أداؤك متميز وهمتك عالية، واصل مسيرتك المباركة ووفقك الله لكل خير.">أداؤك متميز وهمتك عالية...</option>
+              <option value="طالب مجتهد وحريص، بارك الله فيك وفي والديك ووفقك للمزيد من النجاح.">طالب مجتهد وحريص...</option>
+            </optgroup>
+            <optgroup label="👍 حسن (14 – أقل من 16)">
+              <option value="مستوى حسن ومبشر، بارك الله فيك ووفقك لتحقيق الأفضل دائماً.">مستوى حسن ومبشر...</option>
+              <option value="جهد طيب وثبات مبارك، استمر في عطائك فوفقك الله وأعلى مراتبك.">جهد طيب وثبات مبارك...</option>
+              <option value="نتمنى لك مزيداً من التقدم والتفوق، بارك الله في همتك ووفقك.">نتمنى لك مزيداً من التقدم...</option>
+            </optgroup>
+            <optgroup label="🔶 مستحسن (12 – أقل من 14)">
+              <option value="خطواتك ثابتة ومستواك مستحسن، وفقك الله وبانتظار تميزك في الدورة القادمة.">خطواتك ثابتة ومستواك مستحسن...</option>
+              <option value="جهد مبارك تشكر عليه، بقليل من التركيز والمراجعة ستصل للقمة بإذن الله.">جهد مبارك تشكر عليه...</option>
+              <option value="بارك الله فيك، لديك قدرات رائعة تؤهلك للأفضل، فوفقك الله ويسر أمرك.">بارك الله فيك، لديك قدرات...</option>
+            </optgroup>
+            <optgroup label="🔸 لا بأس به (10 – أقل من 12)">
+              <option value="بداية طيبة وتحتاج إلى مزيد من الجد والمثابرة، فوفقك الله وأخذ بيدك.">بداية طيبة وتحتاج إلى مزيد...</option>
+              <option value="بارك الله فيك، بالصبر والاستمرار تحقق الانتصار، وفقك الله لرفع مستواك.">بالصبر والاستمرار تحقق الانتصار...</option>
+              <option value="جهدك مقدر، وننتظر منك همة أعلى وعزيمة أقوى في القادم، وفقك الله وبارك فيك.">جهدك مقدر، وننتظر منك همة...</option>
+            </optgroup>
+            <optgroup label="⚠️ متوسط / ضعيف (أقل من 10)">
+              <option value="تعثر البدايات يصنع نجاح النهايات، لا تيأس واجتهد أكثر، فوفقك الله وبارك فيك.">تعثر البدايات يصنع نجاح النهايات...</option>
+              <option value="لديك طاقة كامنة ننتظر رؤيتها في الدورة القادمة، شد الهمة فوفقك الله ويسر دربك.">لديك طاقة كامنة ننتظر رؤيتها...</option>
+              <option value="المؤمن قوي بعزيمته، نثق بقدرتك على التعويض والتميز مستقبلاً، بارك الله فيك.">المؤمن قوي بعزيمته...</option>
+            </optgroup>
+          </select>
+          <textarea id="re-general-note" rows="2" placeholder="اختر من القائمة أو اكتب ملاحظتك هنا..." style="resize:none">${editing?.generalNote||''}</textarea>
         </div>
 
       </div>
@@ -8037,6 +8081,15 @@ function onResultStudentChange() {
   if (levelEl && s?.level) levelEl.value = s.level;
 }
 
+// ═══ تطبيق الملاحظة الجاهزة من القائمة المنسدلة ═══
+function applyNotePreset(val) {
+  if (!val) return;
+  const ta = document.getElementById('re-general-note');
+  if (ta) { ta.value = val; ta.focus(); }
+  const sel = document.getElementById('re-note-preset');
+  if (sel) sel.value = '';
+}
+
 // ═══ حفظ النتيجة ═══
 async function saveResult(editId) {
   const sid     = document.getElementById('re-student')?.value;
@@ -8074,6 +8127,15 @@ async function saveResult(editId) {
     if (editId) {
       const existing = _RESULTS_CACHE?.find(r => r.id === editId);
       record.created_at = existing?.created_at;
+      // إن لم يكن السجل في الكاش نجلبه من DB للحفاظ على teacher_id الأصلي
+      if (!existing) {
+        const { data: dbRec } = await db.from('session_results')
+          .select('teacher_id, created_at').eq('id', editId).single();
+        if (dbRec) {
+          record._originalTeacherId = dbRec.teacher_id;
+          record.created_at = dbRec.created_at;
+        }
+      }
     } else {
       record.created_at = new Date().toISOString();
     }
@@ -8135,7 +8197,19 @@ function showResultPreviewModal(record, subjects) {
     document.body.appendChild(modal);
   }
 
-  const certHTML = buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef, student, group, teacher);
+  // حساب معدل القسم (متوسط معدلات الحلقة في نفس الدورة والسنة)
+  const _allGroupRes = (S.results || []).filter(r => {
+    const st = S.students.find(x => x.id === r.student_id);
+    return st?.group_id === student?.group_id
+      && r.session === record.session
+      && r.year    === record.year;
+  });
+  if (record.id === 'preview') _allGroupRes.push({ avg: parseFloat(avg) });
+  const sectionAvg = _allGroupRes.length
+    ? ((_allGroupRes.reduce((a, r) => a + (parseFloat(r.avg)||0), 0)) / _allGroupRes.length).toFixed(2)
+    : '—';
+
+  const certHTML = buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef, student, group, teacher, sectionAvg);
 
   modal.innerHTML = `
     <div class="modal" style="max-width:750px;width:100%">
@@ -8161,7 +8235,7 @@ function showResultPreviewModal(record, subjects) {
 }
 
 // ═══ بناء شهادة النتيجة — مطابق للتصميم الرسمي ═══
-function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef, student, group, teacher) {
+function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef, student, group, teacher, sectionAvg) {
   const teacherName_ = (teacher?.name||'').replace(/^(الأستاذ|المشرف|المدير)\s*/,'').trim() || '—';
   const groupName_   = group?.name || '—';
   const dateNow      = new Date().toLocaleDateString('ar-MA',{year:'numeric',month:'long',day:'numeric'});
@@ -8256,9 +8330,9 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
     </tr>
   </table>
 
-  <!-- ══ بطاقات النتيجة الإجمالية: 4 بطاقات مثل الصورة ══ -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-    <!-- التقدير — أصفر مثل الصورة -->
+  <!-- ══ بطاقات النتيجة الإجمالية ══ -->
+  <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1fr;gap:8px;margin-bottom:10px">
+    <!-- التقدير العام -->
     <div style="text-align:center;border:2px solid ${appre.border||'#16a34a'};border-radius:8px;overflow:hidden">
       <div style="background:${appre.headerBg||appre.border||'#16a34a'};color:${appre.headerTxt||'#fff'};padding:5px 6px;font-size:11px;font-weight:700">التقدير العام</div>
       <div style="padding:6px 4px 10px;background:${appre.bg||'#dcfce7'}">
@@ -8266,15 +8340,15 @@ function buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef,
         <div style="font-size:16px;font-weight:900;color:${appre.valueTxt||'#14532d'}">${appre.ar}</div>
       </div>
     </div>
-    <!-- المعدل -->
+    <!-- معدل الطالب /20 — بارز وأكبر -->
     <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
-      <div style="background:#1565c0;color:#fff;padding:5px 6px;font-size:11px;font-weight:700">20/ المعدل</div>
-      <div style="padding:6px 4px;font-size:22px;font-weight:900;color:#1565c0">${avg.toFixed(2)}</div>
+      <div style="background:#1565c0;color:#fff;padding:6px 8px;font-size:13px;font-weight:700">معدل الطالب /20</div>
+      <div style="padding:8px 4px;font-size:30px;font-weight:900;color:#1565c0">${avg.toFixed ? avg.toFixed(2) : avg}</div>
     </div>
-    <!-- مجموع القسط -->
+    <!-- معدل القسم — ديناميكي من متوسط المعدلات -->
     <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
-      <div style="background:#1565c0;color:#fff;padding:5px 6px;font-size:11px;font-weight:700">مجموع القسط</div>
-      <div style="padding:10px 4px;font-size:20px;font-weight:900;color:#1565c0">${totalCoef*20}</div>
+      <div style="background:#1565c0;color:#fff;padding:5px 6px;font-size:11px;font-weight:700">معدل القسم</div>
+      <div style="padding:10px 4px;font-size:20px;font-weight:900;color:#1565c0">${sectionAvg||'—'}</div>
     </div>
     <!-- مجموع النقاط -->
     <div style="text-align:center;border:2px solid #1565c0;border-radius:8px;overflow:hidden">
@@ -8360,7 +8434,16 @@ async function printResult(rid) {
   const student = S.students.find(x => x.id === record.student_id);
   const group   = student ? S.groups.find(x => x.id === student.group_id) : null;
   const teacher = group   ? S.teachers.find(x => x.id === group.teacher_id) : null;
-  const certHTML = buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef, student, group, teacher);
+  // حساب معدل القسم
+  const _grpRes2 = (S.results || []).filter(r => {
+    const st = S.students.find(x => x.id === r.student_id);
+    return st?.group_id === student?.group_id
+      && r.session === record.session && r.year === record.year;
+  });
+  const sectionAvg2 = _grpRes2.length
+    ? (_grpRes2.reduce((a, r) => a + (parseFloat(r.avg)||0), 0) / _grpRes2.length).toFixed(2)
+    : '—';
+  const certHTML = buildResultCertHTML(record, rows, avg, appre, totalWeighted, totalCoef, student, group, teacher, sectionAvg2);
   const w = window.open('', '_blank');
   if (!w) { toast('يرجى السماح بالنوافذ المنبثقة','warn'); return; }
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
