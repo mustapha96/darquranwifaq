@@ -8198,7 +8198,7 @@ function showResultPreviewModal(record, subjects) {
   }
 
   // حساب معدل القسم (متوسط معدلات الحلقة في نفس الدورة والسنة)
-  const _allGroupRes = (S.results || []).filter(r => {
+  const _allGroupRes = loadResultsSync().filter(r => {
     const st = S.students.find(x => x.id === r.student_id);
     return st?.group_id === student?.group_id
       && r.session === record.session
@@ -8435,7 +8435,7 @@ async function printResult(rid) {
   const group   = student ? S.groups.find(x => x.id === student.group_id) : null;
   const teacher = group   ? S.teachers.find(x => x.id === group.teacher_id) : null;
   // حساب معدل القسم
-  const _grpRes2 = (S.results || []).filter(r => {
+  const _grpRes2 = loadResultsSync().filter(r => {
     const st = S.students.find(x => x.id === r.student_id);
     return st?.group_id === student?.group_id
       && r.session === record.session && r.year === record.year;
