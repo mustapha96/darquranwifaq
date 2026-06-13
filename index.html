@@ -7698,6 +7698,7 @@ function initResultsSystem() {
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-w btn-sm" onclick="openSubjectsConfig()"><i class="fas fa-cog"></i> إعداد المواد</button>
+        <button class="btn btn-w btn-sm" style="background:var(--success);color:#fff;border-color:var(--success)" onclick="openDownloadResultsModal()"><i class="fas fa-file-download"></i> تحميل النتائج</button>
         <button class="btn btn-p" onclick="openNewResult()"><i class="fas fa-plus"></i> نتيجة جديدة</button>
       </div>
     </div>
@@ -7836,6 +7837,276 @@ async function renderResultsList() {
         </tr>`;
       }).join('')}</tbody>
     </table></div>`;
+}
+
+// ═══ تحميل النتائج — نافذة الخيارات ═══
+function openDownloadResultsModal() {
+  const isAdminOrSup = S.profile?.role === 'admin' || S.profile?.role === 'supervisor';
+  const teachers = isAdminOrSup ? (S.teachers || []) : [];
+  const groups   = myGroups();
+  const sessions = ['الدورة الأولى','الدورة الثانية'];
+  const years    = ['2024/2025','2025/2026'];
+
+  let m = document.getElementById('m-download-results');
+  if (!m) { m = document.createElement('div'); m.id = 'm-download-results'; m.className = 'modal'; document.body.appendChild(m); }
+
+  m.innerHTML = `
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-head">
+      <h3><i class="fas fa-file-download" style="color:var(--primary);margin-left:8px"></i>تحميل النتائج PDF</h3>
+      <button class="modal-close" onclick="closeM('m-download-results')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+
+      <!-- نوع التحميل -->
+      <div class="fg" style="margin-bottom:14px">
+        <label style="font-weight:700">نوع التحميل</label>
+        <select id="dl-type" onchange="onDlTypeChange()" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif">
+          <option value="student">📄 نتيجة طالب واحد</option>
+          <option value="group">📚 نتائج حلقة كاملة</option>
+          ${isAdminOrSup ? `<option value="teacher">👨‍🏫 نتائج أستاذ معين</option>` : ''}
+          ${isAdminOrSup ? `<option value="section">👥 نتائج قسم كامل (رجال/نساء)</option>` : ''}
+          <option value="all">🏫 نتائج الدورة كاملة</option>
+        </select>
+      </div>
+
+      <!-- الفلاتر الديناميكية -->
+      <div id="dl-dynamic-filters"></div>
+
+      <!-- الدورة والسنة -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="fg">
+          <label>الدورة</label>
+          <select id="dl-session" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif">
+            <option value="">كل الدورات</option>
+            ${sessions.map(s=>`<option value="${s}">${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <label>السنة الدراسية</label>
+          <select id="dl-year" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif">
+            <option value="">كل السنوات</option>
+            ${years.map(y=>`<option value="${y}">${y}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <button onclick="generateBatchResultsPDF()" class="btn btn-p" style="width:100%;padding:11px;font-size:15px">
+        <i class="fas fa-file-pdf"></i> إنشاء وتحميل PDF
+      </button>
+    </div>
+  </div>`;
+
+  m.style.display = 'flex';
+  onDlTypeChange();
+}
+
+function onDlTypeChange() {
+  const type = document.getElementById('dl-type')?.value;
+  const container = document.getElementById('dl-dynamic-filters');
+  if (!container) return;
+  const isAdminOrSup = S.profile?.role === 'admin' || S.profile?.role === 'supervisor';
+  const teachers = isAdminOrSup ? (S.teachers || []) : [];
+  const groups   = myGroups();
+
+  const sel = (id, label, opts) => `
+    <div class="fg" style="margin-bottom:14px">
+      <label>${label}</label>
+      <select id="${id}" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif">
+        ${opts}
+      </select>
+    </div>`;
+
+  if (type === 'student') {
+    const students = myStudents();
+    container.innerHTML = sel('dl-student','الطالب',
+      students.map(s=>`<option value="${s.id}">${s.name}</option>`).join(''));
+  } else if (type === 'group') {
+    container.innerHTML = sel('dl-group','الحلقة',
+      groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join(''));
+  } else if (type === 'teacher') {
+    container.innerHTML = sel('dl-teacher','الأستاذ',
+      teachers.map(t=>`<option value="${t.id}">${t.name}</option>`).join(''));
+  } else if (type === 'section') {
+    container.innerHTML = sel('dl-section','القسم',
+      `<option value="ذكر">قسم الرجال</option><option value="أنثى">قسم النساء</option>`);
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+async function generateBatchResultsPDF() {
+  const type    = document.getElementById('dl-type')?.value;
+  const session = document.getElementById('dl-session')?.value || '';
+  const year    = document.getElementById('dl-year')?.value    || '';
+  const allRes  = await loadResults();
+  const allStudents = myStudents();
+
+  let list = allRes.filter(r => allStudents.some(s => s.id === r.student_id));
+  if (session) list = list.filter(r => r.session === session);
+  if (year)    list = list.filter(r => r.year    === year);
+
+  let title2 = '', subtitle = '';
+
+  if (type === 'student') {
+    const sid = document.getElementById('dl-student')?.value;
+    list = list.filter(r => r.student_id === sid);
+    const st = allStudents.find(s => s.id === sid);
+    title2 = `نتائج الطالب: ${st?.name || '—'}`;
+  } else if (type === 'group') {
+    const gid = document.getElementById('dl-group')?.value;
+    const g   = S.groups.find(x => x.id === gid);
+    list = list.filter(r => { const s = allStudents.find(x => x.id === r.student_id); return s?.group_id === gid; });
+    title2   = `نتائج حلقة: ${g?.name || '—'}`;
+    subtitle = `الأستاذ: ${S.teachers?.find(t=>t.id===g?.teacher_id)?.name || '—'}`;
+  } else if (type === 'teacher') {
+    const tid   = document.getElementById('dl-teacher')?.value;
+    const tch   = S.teachers?.find(t => t.id === tid);
+    const tGrps = S.groups.filter(g => g.teacher_id === tid).map(g => g.id);
+    list = list.filter(r => { const s = allStudents.find(x => x.id === r.student_id); return tGrps.includes(s?.group_id); });
+    title2   = `نتائج الأستاذ: ${tch?.name || '—'}`;
+    subtitle = `عدد الحلقات: ${tGrps.length}`;
+  } else if (type === 'section') {
+    const sec = document.getElementById('dl-section')?.value;
+    list = list.filter(r => { const s = allStudents.find(x => x.id === r.student_id); return s?.gender === sec; });
+    title2 = `نتائج قسم: ${sec === 'ذكر' ? 'الرجال' : 'النساء'}`;
+  } else {
+    title2 = 'نتائج الدورة كاملة';
+  }
+
+  if (!list.length) { toast('لا توجد نتائج للفلاتر المحددة','warn'); return; }
+
+  list = list.sort((a,b) => b.avg - a.avg);
+  const avgAll   = (list.reduce((a,r)=>a+(parseFloat(r.avg)||0),0)/list.length).toFixed(2);
+  const passCount = list.filter(r=>r.avg>=10).length;
+
+  // بناء الـ PDF
+  const logoUrl = document.querySelector('.sb-logo img')?.src || '';
+  const logoHTML = logoUrl ? `<img src="${logoUrl}" style="width:65px;height:65px;border-radius:12px;object-fit:cover" onerror="this.style.display='none'">` : '';
+  const dateStr  = new Date().toLocaleDateString('ar-MA',{year:'numeric',month:'long',day:'numeric'});
+  const sessionLabel = session || 'كل الدورات';
+  const yearLabel    = year    || 'كل السنوات';
+
+  const rows = list.map((r,i) => {
+    const s   = allStudents.find(x=>x.id===r.student_id);
+    const g   = s ? S.groups.find(x=>x.id===s.group_id) : null;
+    const app = getAppreciation(r.avg);
+    const rowBg = i%2===0 ? '#ffffff' : '#f8fafc';
+    return `<tr style="background:${rowBg}">
+      <td style="padding:7px 10px;text-align:center;font-weight:700;color:#666">${i+1}</td>
+      <td style="padding:7px 10px;font-weight:700">${r.student_name}</td>
+      <td style="padding:7px 10px;color:#444">${r.level||'—'}</td>
+      <td style="padding:7px 10px;color:#444">${g?.name||'—'}</td>
+      <td style="padding:7px 10px;text-align:center;font-weight:900;font-size:16px;color:#1565c0">${parseFloat(r.avg).toFixed(2)}</td>
+      <td style="padding:7px 10px;text-align:center">
+        <span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${app.bg};border:1px solid ${app.border};color:${app.valueTxt}">${app.ar}</span>
+      </td>
+      <td style="padding:7px 10px;font-size:11px;color:#555">${r.generalNote||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>${title2}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Tajawal',sans-serif;direction:rtl;background:#fff;color:#1a1a1a;padding:20px}
+    @media print{body{padding:10px} .no-print{display:none!important} @page{margin:1cm}}
+  </style>
+</head>
+<body>
+<div style="max-width:800px;margin:0 auto">
+
+  <!-- بسملة -->
+  <div style="text-align:center;font-family:'Amiri',serif;font-size:15px;margin-bottom:8px">بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ</div>
+
+  <!-- رأس الصفحة -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <div style="flex:0 0 70px">${logoHTML}</div>
+    <div style="flex:1;text-align:center;padding:0 10px">
+      <div style="font-size:16px;font-weight:700;color:#0d2e6e">جمعية الوفاق للأنشطة التربوية والثقافية والاجتماعية</div>
+      <div style="font-size:13px;color:#1565c0;margin:3px 0">دار القرآن الكريم — الوفاق الكبير، بنسركاو</div>
+      <div style="margin-top:8px;display:inline-block;border:2px solid #1565c0;border-radius:6px;padding:5px 28px;background:#f0f6ff">
+        <span style="font-family:'Amiri',serif;font-size:18px;font-weight:700;color:#0d2e6e">${title2}</span>
+      </div>
+      ${subtitle ? `<div style="font-size:12px;color:#555;margin-top:4px">${subtitle}</div>` : ''}
+    </div>
+    <div style="flex:0 0 70px;display:flex;justify-content:flex-end">${logoHTML}</div>
+  </div>
+
+  <!-- فاصل -->
+  <div style="border-top:2.5px solid #1565c0;margin-bottom:10px"></div>
+
+  <!-- معلومات التقرير -->
+  <div style="display:flex;justify-content:space-between;font-size:12px;color:#444;margin-bottom:12px;background:#f8fafc;padding:8px 14px;border-radius:8px">
+    <span><b>الدورة:</b> ${sessionLabel}</span>
+    <span><b>السنة الدراسية:</b> ${yearLabel}</span>
+    <span><b>تاريخ الاستخراج:</b> ${dateStr}</span>
+    <span><b>عدد النتائج:</b> ${list.length}</span>
+  </div>
+
+  <!-- جدول النتائج -->
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead>
+      <tr style="background:#1565c0;color:#fff">
+        <th style="padding:9px 10px;text-align:center">#</th>
+        <th style="padding:9px 10px">اسم الطالب</th>
+        <th style="padding:9px 10px">المستوى</th>
+        <th style="padding:9px 10px">الحلقة</th>
+        <th style="padding:9px 10px;text-align:center">المعدل /20</th>
+        <th style="padding:9px 10px;text-align:center">التقدير</th>
+        <th style="padding:9px 10px">الملاحظة</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <!-- ملخص إحصائي -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:16px">
+    <div style="text-align:center;background:#f0f6ff;border:1px solid #bcd4f5;border-radius:8px;padding:10px">
+      <div style="font-size:22px;font-weight:900;color:#1565c0">${list.length}</div>
+      <div style="font-size:12px;color:#555">إجمالي النتائج</div>
+    </div>
+    <div style="text-align:center;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px">
+      <div style="font-size:22px;font-weight:900;color:#16a34a">${passCount}</div>
+      <div style="font-size:12px;color:#555">الناجحون (≥10)</div>
+    </div>
+    <div style="text-align:center;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:10px">
+      <div style="font-size:22px;font-weight:900;color:#ca8a04">${((passCount/list.length)*100).toFixed(0)}%</div>
+      <div style="font-size:12px;color:#555">نسبة النجاح</div>
+    </div>
+    <div style="text-align:center;background:#faf5ff;border:1px solid #c4b5fd;border-radius:8px;padding:10px">
+      <div style="font-size:22px;font-weight:900;color:#7c3aed">${avgAll}</div>
+      <div style="font-size:12px;color:#555">متوسط المعدلات</div>
+    </div>
+  </div>
+
+  <!-- توقيعات -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:30px;font-size:12px;text-align:center">
+    <div><div style="border-top:1px solid #999;padding-top:6px;color:#555">إمضاء الأستاذ</div></div>
+    <div><div style="border-top:1px solid #999;padding-top:6px;color:#555">إمضاء المشرف</div></div>
+    <div><div style="border-top:1px solid #999;padding-top:6px;color:#555">ختم الجمعية</div></div>
+  </div>
+
+  <!-- طباعة -->
+  <div class="no-print" style="text-align:center;margin-top:20px">
+    <button onclick="window.print()" style="background:#1565c0;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+      <span style="margin-left:6px">🖨️</span> طباعة / حفظ PDF
+    </button>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+  const w = window.open('','_blank','width=900,height=700');
+  if (!w) { toast('يرجى السماح بفتح النوافذ في المتصفح','warn'); return; }
+  w.document.write(html);
+  w.document.close();
+  closeM('m-download-results');
 }
 
 // ═══ نافذة إدخال / تعديل النتيجة ═══
