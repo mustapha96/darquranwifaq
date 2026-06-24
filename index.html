@@ -10063,6 +10063,14 @@ async function approveJoinRequest(id){
   showCreateAccountModal(r);
 }
 
+// يولّد إيميلاً ثابتاً من رقم الهاتف للحسابات التي بلا بريد حقيقي
+// (التطبيع مطابق لدالة canon_phone في القاعدة لضمان توافق الدخول بالهاتف)
+function phoneToEmail(phone){
+  const d=String(phone||'').replace(/\D/g,'').replace(/^00/,'').replace(/^212/,'').replace(/^0/,'');
+  return d?('p'+d+'@phone.wafaq.app'):'';
+}
+function isGeneratedEmail(email){ return /@phone\.wafaq\.app$/i.test(String(email||'')); }
+
 function showCreateAccountModal(req){
   let modal=$('m-create-account');
   if(!modal){
@@ -10093,8 +10101,8 @@ function showCreateAccountModal(req){
         <div class="fgrid" style="gap:12px;margin-bottom:14px">
           <div class="fg">
             <label>البريد الإلكتروني *</label>
-            <input type="email" id="ca-email" value="${esc(req.email||'')}" placeholder="example@wafaq.com">
-            <small style="color:var(--text3);font-size:11px;margin-top:3px;display:block">سيستخدمه لتسجيل الدخول</small>
+            <input type="email" id="ca-email" value="${esc(req.email||phoneToEmail(req.phone))}" placeholder="example@wafaq.com">
+            <small style="color:var(--text3);font-size:11px;margin-top:3px;display:block">${req.email?'سيستخدمه لتسجيل الدخول':'⚙️ وُلّد تلقائياً من الرقم — سيدخل بهاتفه فقط'}</small>
           </div>
           <div class="fg">
             <label>رقم الهاتف (اختياري — للدخول)</label>
@@ -10288,7 +10296,10 @@ function sendAccountWA(reqId){
   if(!req||!req.phone)return;
   const email=$('ca-email')?.value||'';
   const pass=$('ca-pass')?.value||'';
-  const msg=`السلام عليكم ${esc(req.name)} 🌹\n\nتمت الموافقة على طلب انضمامك لمنصة دار القرآن الكريم — الوفاق.\n\n🔐 بيانات الدخول:\n📧 البريد: ${email}\n🔑 كلمة المرور: ${pass}\n\nيمكنك الدخول من هنا: ${window.location.href}\n\nجزاكم الله خيراً 🌟`;
+  const loginLine = isGeneratedEmail(email)
+    ? `📱 الدخول برقم الهاتف: ${req.phone}`
+    : `📧 البريد: ${email}`;
+  const msg=`السلام عليكم ${esc(req.name)} 🌹\n\nتمت الموافقة على طلب انضمامك لمنصة دار القرآن الكريم — الوفاق.\n\n🔐 بيانات الدخول:\n${loginLine}\n🔑 كلمة المرور: ${pass}\n\nيمكنك الدخول من هنا: ${window.location.href}\n\nجزاكم الله خيراً 🌟`;
   openWA(req.phone,msg);
 }
 
