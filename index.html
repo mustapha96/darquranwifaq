@@ -1341,6 +1341,7 @@ textarea{resize:vertical;min-height:80px}
           <div class="tab active" onclick="switchStudentView('grid',this)"><i class="fas fa-th-large"></i> بطاقات</div>
           <div class="tab" onclick="switchStudentView('table',this)"><i class="fas fa-table"></i> جدول</div>
         </div>
+        <div id="due-bar-season"></div>
         <div id="students-grid" class="student-grid"></div>
         <div id="students-table" style="display:none" class="card"><div class="tbl-wrap"><table><thead id="s-thead"></thead><tbody id="s-tbody"></tbody></table></div></div>
       </div>
@@ -3268,13 +3269,14 @@ async function delStudent(id){
   }catch(e){toast('خطأ: '+e.message,'err')}
 }
 function renderStudents(){
+  const _db=$('due-bar-season'); if(_db) _db.innerHTML=dueBarHTML(false);
   const gf=$('filter-group').value;
   const list=(gf?myStudents().filter(s=>s.group_id===gf):myStudents());
   if(sView==='grid'){
     $('students-grid').innerHTML=list.length?list.map(s=>{
       const g=S.groups.find(x=>x.id===s.group_id);
       const att=getAttRate(s.id),v=getTotalV(s.id),stars=getStars(s.id);
-      return`<div class="s-card" onclick="openSDetail('${s.id}')"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="s-av">${s.photo_url?`<img src="${s.photo_url}">`:(s.name[0]||'؟')}</div><div><h4 style="font-size:14px;font-weight:700">${esc(s.name)}</h4><p style="font-size:12px;color:var(--text3)">${esc(g?.name||'—')}</p></div></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="bx bx-b" style="font-size:10px">${esc(s.level||'—')}</span><span style="font-size:13px;color:#d97706;font-weight:700">${stars}⭐</span></div><div style="margin-bottom:4px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>الحضور</span><span>${att}%</span></div><div class="prog"><div class="prog-bar" style="width:${att}%"></div></div></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px;color:var(--text3)"><span><i class="fas fa-quran" style="color:var(--accent)"></i> ${v} آية</span>${s.phone?`<button onclick="event.stopPropagation();openWAReportModal('${s.id}')" style="background:none;border:none;cursor:pointer;color:#25d366;font-size:16px" title="إرسال تقرير واتساب"><i class="fab fa-whatsapp"></i></button>`:'<span></span>'}</div></div>`;
+      return`<div class="s-card" onclick="openSDetail('${s.id}')"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="s-av">${s.photo_url?`<img src="${s.photo_url}">`:(s.name[0]||'؟')}</div><div><h4 style="font-size:14px;font-weight:700">${esc(s.name)}</h4><p style="font-size:12px;color:var(--text3)">${esc(g?.name||'—')}</p></div></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="bx bx-b" style="font-size:10px">${esc(s.level||'—')}</span><span style="font-size:13px;color:#d97706;font-weight:700">${stars}⭐</span></div><div style="margin-bottom:4px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>الحضور</span><span>${att}%</span></div><div class="prog"><div class="prog-bar" style="width:${att}%"></div></div></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px;color:var(--text3)"><span><i class="fas fa-quran" style="color:var(--accent)"></i> ${v} آية</span><div style="display:flex;gap:6px;align-items:center">${dueBadge(s.id,false)}${s.phone?`<button onclick="event.stopPropagation();openWAReportModal('${s.id}')" style="background:none;border:none;cursor:pointer;color:#25d366;font-size:16px" title="إرسال تقرير واتساب"><i class="fab fa-whatsapp"></i></button>`:'<span></span>'}</div></div></div>`;
     }).join(''):'<div class="empty" style="grid-column:1/-1"><i class="fas fa-user-graduate"></i><p>لا يوجد طلبة</p></div>';
   }else{
     $('s-thead').innerHTML='<tr><th>الاسم</th><th>الحلقة</th><th>المستوى</th><th>الحضور</th><th>الآيات</th><th>النجوم</th><th>إجراءات</th></tr>';
@@ -3836,6 +3838,120 @@ async function delFinance(id){
   const{error}=await db.from('finance').delete().eq('id',id);
   if(!error){S.finance=S.finance.filter(f=>f.id!==id);renderFinance();toast('تم الحذف','ok')}
 }
+
+// ═══════════════ تتبّع الواجب الشهري (مرتبط بالمالية) ═══════════════
+function dueMonthVal(){ return S.dueMonth || (S.dueMonth = new Date().toISOString().slice(0,7)); }
+function isDueStaff(){ return S.profile?.role==='admin'||S.profile?.role==='supervisor'; }
+function _findStudentAny(sid){ return S.students.find(x=>x.id===sid) || (typeof SUMMER!=='undefined'?SUMMER.students.find(x=>x.id===sid):null); }
+function hasPaidMonthly(sid){ const m=dueMonthVal(); return S.finance.some(f=>f.student_id===sid&&f.category==='monthly_due'&&f.month===m); }
+function hasPaidSummerDue(sid){ return S.finance.some(f=>f.student_id===sid&&f.category==='summer_due'); }
+function studentDuePaid(sid,isSummer){ return isSummer?hasPaidSummerDue(sid):hasPaidMonthly(sid); }
+
+// مؤشّر 🟢/🔴 في بطاقة الطالب (للمدير/المشرف فقط)
+function dueBadge(sid,isSummer){
+  if(!isDueStaff()) return '';
+  const paid=studentDuePaid(sid,isSummer);
+  const t=(isSummer?'واجب الدورة':'واجب الشهر')+': '+(paid?'أدّى':'لم يؤدّ');
+  return `<button onclick="event.stopPropagation();dueToggle('${sid}',${isSummer})" title="${t}" style="width:26px;height:26px;border-radius:50%;border:2px solid ${paid?'#16a34a':'#dc2626'};background:${paid?'#16a34a':'transparent'};color:${paid?'#fff':'#dc2626'};cursor:pointer;font-size:11px;font-weight:800;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-${paid?'check':'coins'}"></i></button>`;
+}
+
+function dueToggle(sid,isSummer){
+  if(studentDuePaid(sid,isSummer)){
+    if(confirm('التراجع عن أداء الواجب وحذف القيد المالي المرتبط؟')) removeDuePaid(sid,isSummer);
+  } else { openDueModal(sid,isSummer); }
+}
+
+function openDueModal(sid,isSummer){
+  const s=_findStudentAny(sid); if(!s){toast('لم يتم العثور على الطالب','warn');return;}
+  if(!$('m-due')){
+    const div=document.createElement('div');
+    div.className='overlay'; div.id='m-due';
+    div.innerHTML=`<div class="modal" style="max-width:380px"><div class="mhead"><h3 id="due-title"></h3><button class="mx" onclick="closeM('m-due')">&times;</button></div><div class="mbody"><input type="hidden" id="due-sid"><input type="hidden" id="due-sum"><div class="fg"><label>المبلغ (د.م.) *</label><input type="number" id="due-amount" min="0" step="0.5" placeholder="مثال: 50" style="width:100%"></div><div class="fg"><label>ملاحظة (اختياري)</label><input type="text" id="due-note" placeholder=""></div></div><div class="mfoot"><button class="btn btn-o" onclick="closeM('m-due')">إلغاء</button><button class="btn btn-p" onclick="confirmDuePaid()"><i class="fas fa-check"></i> تأكيد الأداء</button></div></div>`;
+    document.body.appendChild(div);
+  }
+  $('due-sid').value=sid; $('due-sum').value=isSummer?'1':'';
+  $('due-amount').value=''; $('due-note').value='';
+  $('due-title').textContent=(isSummer?'واجب الدورة — ':'واجب الشهر — ')+s.name;
+  openM('m-due'); setTimeout(()=>$('due-amount')?.focus(),100);
+}
+
+async function confirmDuePaid(){
+  const sid=$('due-sid').value; const isSummer=$('due-sum').value==='1';
+  const amount=parseFloat($('due-amount').value)||0;
+  if(amount<=0){toast('أدخل مبلغاً صحيحاً','warn');return;}
+  const s=_findStudentAny(sid); const m=dueMonthVal();
+  const data={type:'دخل',amount,
+    description:isSummer?`واجب الدورة الصيفية — ${s?.name||''}`:`الواجب الشهري (${m}) — ${s?.name||''}`,
+    student_id:sid,date:today(),notes:$('due-note').value||'',
+    category:isSummer?'summer_due':'monthly_due',month:isSummer?null:m};
+  try{
+    const{data:nf,error}=await db.from('finance').insert(data).select().single();
+    if(error)throw error;
+    S.finance.unshift(nf);
+    closeM('m-due'); toast('تم تسجيل الأداء ✅','ok');
+    refreshDueViews(isSummer);
+  }catch(e){toast('خطأ: '+e.message,'err')}
+}
+
+async function removeDuePaid(sid,isSummer){
+  const m=dueMonthVal();
+  const recs=S.finance.filter(f=>f.student_id===sid&&(isSummer?f.category==='summer_due':(f.category==='monthly_due'&&f.month===m)));
+  try{
+    for(const r of recs){ const{error}=await db.from('finance').delete().eq('id',r.id); if(error)throw error; }
+    S.finance=S.finance.filter(f=>!recs.some(r=>r.id===f.id));
+    toast('تم التراجع','ok'); refreshDueViews(isSummer);
+  }catch(e){toast('خطأ: '+e.message,'err')}
+}
+
+function refreshDueViews(isSummer){
+  if(isSummer){ if(typeof renderSumStudents==='function') renderSumStudents(); }
+  else { if(typeof renderStudents==='function') renderStudents(); }
+  if(typeof renderFinance==='function') renderFinance();
+}
+
+// شريط عدّاد الواجب + اختيار الشهر + تنبيه جماعي
+function dueBarHTML(isSummer){
+  if(!isDueStaff()) return '';
+  const studs = isSummer ? (typeof SUMMER!=='undefined'?SUMMER.students:[]) : (typeof myStudents==='function'?myStudents():S.students);
+  const paid = studs.filter(s=>studentDuePaid(s.id,isSummer)).length;
+  const unpaid = studs.length - paid;
+  const m=dueMonthVal();
+  const ctrl = isSummer
+    ? '<span style="font-weight:700;font-size:13px">واجب الدورة الصيفية ☀️</span>'
+    : `<label style="font-size:12px;color:var(--text3)">الشهر:</label><input type="month" value="${m}" onchange="S.dueMonth=this.value;renderStudents()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px">`;
+  return `<div class="card" style="margin-bottom:14px;padding:12px 16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:150px"><i class="fas fa-hand-holding-usd" style="color:var(--accent)"></i>${ctrl}</div>
+    <span class="bx bx-g" style="font-size:13px">أدّى ${paid}</span>
+    <span class="bx bx-r" style="font-size:13px">لم يؤدّ ${unpaid}</span>
+    <button class="btn btn-sm" style="background:#25d366;color:#fff" onclick="dueRemindAllUnpaid(${isSummer})"><i class="fab fa-whatsapp"></i> تنبيه غير المؤدّين</button>
+  </div></div>`;
+}
+
+function dueReminderWA(sid,isSummer){
+  const s=_findStudentAny(sid); if(!s){toast('لم يتم العثور على الطالب','warn');return;}
+  if(!s.phone){toast('⚠️ لا يوجد رقم هاتف لولي الأمر','warn');return;}
+  const m=dueMonthVal();
+  const what=isSummer?'واجب الدورة الصيفية ☀️':`الواجب الشهري لشهر ${m}`;
+  const msg=`السلام عليكم ورحمة الله وبركاته 🌷
+
+تحية طيبة لولي أمر الطالب: ${s.name}
+
+نذكّركم بلطف بأنه لم يُسجَّل بعدُ أداء ${what}.
+
+نرجو منكم التكرّم بأدائه في أقرب وقت، وجزاكم الله خيراً على دعمكم ومتابعتكم 🌹
+
+📍 دار القرآن الكريم — جمعية الوفاق`;
+  openWA(s.phone,msg);
+}
+
+function dueRemindAllUnpaid(isSummer){
+  const studs = isSummer ? (typeof SUMMER!=='undefined'?SUMMER.students:[]) : (typeof myStudents==='function'?myStudents():S.students);
+  const unpaid = studs.filter(s=>!studentDuePaid(s.id,isSummer)&&s.phone);
+  if(!unpaid.length){toast('لا يوجد طلاب غير مؤدّين لديهم أرقام هواتف','warn');return;}
+  unpaid.forEach((s,i)=>setTimeout(()=>dueReminderWA(s.id,isSummer),i*1200));
+  toast(`📲 جاري إرسال ${unpaid.length} تذكير...`,'ok');
+}
+
 function renderFinance(){
   const inc=S.finance.filter(f=>f.type==='دخل').reduce((a,f)=>a+(f.amount||0),0);
   const exp=S.finance.filter(f=>f.type==='مصروف').reduce((a,f)=>a+(f.amount||0),0);
@@ -9117,6 +9233,7 @@ function renderSumStudents(){
   let list=gf?SUMMER.students.filter(s=>s.group_id===gf):SUMMER.students;
   if(search)list=list.filter(s=>s.name.toLowerCase().includes(search));
   document.getElementById('sum-tab-students').innerHTML=`
+  ${dueBarHTML(true)}
   <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end">
     <div class="fg" style="flex:1;min-width:140px">
       <label>الفوج</label>
@@ -9152,7 +9269,8 @@ function renderSumStudents(){
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px;color:var(--text3)">
           <span><i class="fas fa-quran" style="color:var(--accent)"></i> ${v} آية</span>
-          <div style="display:flex;gap:4px">
+          <div style="display:flex;gap:4px;align-items:center">
+            ${dueBadge(s.id,true)}
             <button onclick="event.stopPropagation();openSumStudentModal('${s.id}')" style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:14px"><i class="fas fa-edit"></i></button>
             <button onclick="event.stopPropagation();deleteSumStudent('${s.id}')" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:14px"><i class="fas fa-trash"></i></button>
           </div>
