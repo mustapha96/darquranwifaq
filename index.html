@@ -9313,10 +9313,22 @@ async function saveSumAtt(){
 }
 
 function sendSumAbsenceBulk(){
-  const dt=$('satt2-date')?.value;const gid=$('satt2-group')?.value;if(!dt||!gid)return;
-  const absent=SUMMER.attendance.filter(a=>a.date===dt&&a.group_id===gid&&(a.status==='غائب'||a.status==='بعذر'));
-  const wp=absent.filter(a=>SUMMER.students.find(s=>s.id===a.student_id)?.phone);
-  if(!wp.length){toast('لا أرقام للطلبة الغائبين','warn');return;}
+  const dt=$('satt2-date')?.value;const gid=$('satt2-group')?.value;
+  if(!dt||!gid){toast('اختر الفوج والتاريخ','warn');return;}
+  // مطابقة مرنة: نقبل سجل الغياب إن طابق group_id أو إن كان الطالب ينتمي للفوج
+  const inGroup = sid => SUMMER.students.find(s=>s.id===sid)?.group_id===gid;
+  const absent = SUMMER.attendance.filter(a=>a.date===dt
+      && (a.group_id===gid || inGroup(a.student_id))
+      && (a.status==='غائب'||a.status==='بعذر'));
+  if(!absent.length){
+    toast('لا يوجد غياب محفوظ لهذا الفوج في هذا التاريخ — تأكد من تحديد الغياب ثم الضغط على «حفظ» أولاً','warn');
+    return;
+  }
+  const wp = absent.filter(a=>SUMMER.students.find(s=>s.id===a.student_id)?.phone);
+  if(!wp.length){
+    toast('الطلاب الغائبون ليس لديهم أرقام هواتف مسجلة في ملفاتهم','warn');
+    return;
+  }
   wp.forEach((a,i)=>setTimeout(()=>{const s=SUMMER.students.find(x=>x.id===a.student_id);if(s)openWA(s.phone,buildAbsenceMsg(s.id,dt));},i*1200));
   toast(`📲 جاري إرسال ${wp.length} رسالة...`,'ok');
 }
