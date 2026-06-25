@@ -4820,6 +4820,66 @@ function sendWA(phone, name){
 }
 
 // ── رسالة التقرير الشامل ──────────────────────────────
+// ── تقرير الطالب في الدورة الصيفية (بيانات SUMMER.*) ──
+function buildSummerReportMsg(sid){
+  const s = SUMMER.students.find(x=>x.id===sid); if(!s) return '';
+  const g = SUMMER.groups.find(x=>x.id===s.group_id);
+  const attAll = SUMMER.attendance.filter(a=>a.student_id===sid);
+  const present = attAll.filter(a=>a.status==='حاضر').length;
+  const absent  = attAll.filter(a=>a.status==='غائب'||a.status==='بعذر').length;
+  const attRate = getSummerAttRate(sid);
+  const v = getSummerTotalV(sid);
+  const stars = getSummerStars(sid);
+  const lastRecs = SUMMER.recitations.filter(r=>r.student_id===sid&&r.type==='حفظ جديد').slice(0,3);
+  const lastHifz = lastRecs.length
+    ? lastRecs.map(r=>{
+        const fs=SURAHS.find(x=>x.n===r.surah_from), ts=SURAHS.find(x=>x.n===r.surah_to);
+        return `${esc(fs?.name||'—')}(${r.verse_from}) → ${esc(ts?.name||'—')}(${r.verse_to})`;
+      }).join('\n      ')
+    : 'لا يوجد سجل بعد';
+  const attLabel = attRate>=85?'رائع ✅': attRate>=70?'جيد 👍': attRate>=50?'متوسط ⚠️':'ضعيف ❌';
+  const notes = s.notes ? `\n${esc(s.notes)}` : '\nلا توجد ملاحظات خاصة.';
+  const dt = new Date().toLocaleDateString('ar-MA',{day:'2-digit',month:'long',year:'numeric'});
+
+  return `السلام عليكم ورحمة الله وبركاته 🌷
+
+يسرنا إطلاعكم على تقرير الطالب في الدورة الصيفية ☀️:
+👤 ${esc(s.name)}
+
+📘 الفوج: ${esc(g?.name||'—')}
+📅 تاريخ التقرير: ${dt}
+
+━━━━━━━━━━━━━━
+📖 الحفظ
+━━━━━━━━━━━━━━
+
+✅ آخر ما تم تسميعه:
+      ${lastHifz}
+
+📊 مجموع الآيات المحفوظة: ${v} آية
+
+━━━━━━━━━━━━━━
+🕌 الحضور والانضباط
+━━━━━━━━━━━━━━
+
+✅ أيام الحضور: ${present} يوم
+❌ أيام الغياب: ${absent} يوم
+📊 نسبة الحضور: ${attRate}% — ${attLabel}
+⭐ النجوم المكتسبة: ${stars} نجمة
+
+━━━━━━━━━━━━━━
+📝 ملاحظات الأستاذ
+━━━━━━━━━━━━━━
+${notes}
+
+━━━━━━━━━━━━━━
+🌟 نسأل الله أن يبارك في ابنكم وينفع به،
+ونشكر لكم متابعتكم وحرصكم.
+
+📍 دار القرآن الكريم — جمعية الوفاق
+الوفاق الكبير، بنسركاو، المغرب`;
+}
+
 function buildReportMsg(sid){
   const s = S.students.find(x=>x.id===sid); if(!s) return '';
   const g = S.groups.find(x=>x.id===s.group_id);
@@ -4886,9 +4946,13 @@ ${notes}
 
 // ── رسالة الغياب ──────────────────────────────────────
 function buildAbsenceMsg(sid, date){
-  const s = S.students.find(x=>x.id===sid); if(!s) return '';
-  const g = S.groups.find(x=>x.id===s.group_id);
-  const absCount = S.attendance.filter(a=>a.student_id===sid&&(a.status==='غائب'||a.status==='بعذر')).length;
+  const sum = (typeof SUMMER!=='undefined') ? SUMMER.students.find(x=>x.id===sid) : null;
+  const s = S.students.find(x=>x.id===sid) || sum; if(!s) return '';
+  const g = (sum?SUMMER.groups:S.groups).find(x=>x.id===s.group_id);
+  const attSrc = sum?SUMMER.attendance:S.attendance;
+  const absCount = attSrc.filter(a=>a.student_id===sid&&(a.status==='غائب'||a.status==='بعذر')).length;
+  const ctxLabel = sum?'الفوج (الدورة الصيفية ☀️)':'الحلقة';
+  const ctxWord  = sum?'الفوج':'الحلقة القرآنية';
   const dt = date
     ? new Date(date).toLocaleDateString('ar-MA',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
     : new Date().toLocaleDateString('ar-MA',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
@@ -4898,10 +4962,10 @@ function buildAbsenceMsg(sid, date){
 نحيطكم علمًا بأن الطالب:
 👤 ${esc(s.name)}
 
-قد سُجّل عليه غياب عن الحلقة القرآنية.
+قد سُجّل عليه غياب عن ${ctxWord}.
 
 📅 التاريخ: ${dt}
-📘 الحلقة: ${esc(g?.name||'—')}
+📘 ${ctxLabel}: ${esc(g?.name||'—')}
 📌 عدد مرات الغياب الحالية: ${absCount} مرة
 
 نرجو منكم متابعة الابن والحرص على المواظبة،
@@ -4939,9 +5003,11 @@ function buildAchievMsg(sid, achievement){
 
 // ── نافذة معاينة الرسالة ──────────────────────────────
 function openWAReportModal(sid){
-  const s = S.students.find(x=>x.id===sid); if(!s) return;
+  const sum = (typeof SUMMER!=='undefined') ? SUMMER.students.find(x=>x.id===sid) : null;
+  const s = S.students.find(x=>x.id===sid) || sum;
+  if(!s){ toast('⚠️ لم يتم العثور على الطالب','warn'); return; }
   if(!s.phone){ toast('⚠️ لا يوجد رقم هاتف لولي الأمر','warn'); return; }
-  const msg = buildReportMsg(sid);
+  const msg = sum ? buildSummerReportMsg(sid) : buildReportMsg(sid);
   showWAPreview({
     title: `📊 تقرير الطالب — ${esc(s.name)}`,
     phone: s.phone,
@@ -4952,7 +5018,9 @@ function openWAReportModal(sid){
 }
 
 function openWAAbsenceModal(sid, date){
-  const s = S.students.find(x=>x.id===sid); if(!s) return;
+  const sum = (typeof SUMMER!=='undefined') ? SUMMER.students.find(x=>x.id===sid) : null;
+  const s = S.students.find(x=>x.id===sid) || sum;
+  if(!s){ toast('⚠️ لم يتم العثور على الطالب','warn'); return; }
   if(!s.phone){ toast('⚠️ لا يوجد رقم هاتف لولي الأمر','warn'); return; }
   const msg = buildAbsenceMsg(sid, date);
   showWAPreview({
