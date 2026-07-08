@@ -193,6 +193,8 @@ img{font-size:0;color:transparent}
 .nav-item i{width:20px;text-align:center;font-size:15px}
 .nav-item:hover{color:#fff;background:rgba(255,255,255,.07)}
 .nav-item.active{color:#fff;background:rgba(255,255,255,.12);border-right-color:var(--accent-l);font-weight:600}
+@keyframes inboxPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.55)}50%{box-shadow:0 0 0 14px rgba(220,38,38,0)}}
+.inbox-urgent{border:3px solid #dc2626!important;animation:inboxPulse 1.4s infinite}
 .sb-footer{margin-top:auto;padding:14px 20px;border-top:1px solid rgba(255,255,255,.08)}
 .logout-btn{width:100%;display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(220,38,38,.15);color:#fca5a5;border:none;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;transition:background .2s}
 .logout-btn:hover{background:rgba(220,38,38,.25)}
@@ -1191,6 +1193,7 @@ textarea{resize:vertical;min-height:80px}
       <div class="nav-item" onclick="nav('groups')"><i class="fas fa-users-class"></i> الحلقات</div>
       <div class="nav-item" onclick="nav('teachers')"><i class="fas fa-chalkboard-teacher"></i> الأساتذة</div>
       <div class="nav-item" onclick="nav('users')"><i class="fas fa-users-cog"></i> المستخدمون</div>
+      <div class="nav-item" onclick="nav('messages')"><i class="fas fa-envelope"></i> الرسائل الداخلية</div>
     </div>
     <div class="nav-sec">
       <div class="nav-sec-title">الطلبة</div>
@@ -1291,6 +1294,7 @@ textarea{resize:vertical;min-height:80px}
       </div>
 
       <!-- TEACHERS -->
+      <div class="page" id="page-messages"></div>
       <div class="page" id="page-teachers">
         <div class="ph"><div><h1>الأساتذة</h1><p>طاقم الأساتذة</p></div></div>
         <div id="teachers-content"></div>
@@ -2726,7 +2730,116 @@ async function checkAuth(){
 }
 
 // ===================== NAV =====================
-const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',students:'الطلبة',attendance:'الحضور والغياب','absence-stats':'إحصائيات الغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات',certificates:'الشهادات'};
+// ═══════════════ الرسائل الداخلية ═══════════════
+function _msgStaff(){ return S.profile?.role==='admin'||S.profile?.role==='supervisor'; }
+
+// عرض نوافذ الرسائل غير المقروءة عند الدخول (للأستاذ والمشرف)
+let _inboxQueue=[];
+async function checkInboxPopups(){
+  const uid=S.profile?.id; if(!uid) return;
+  try{
+    const {data:msgs}=await db.from('internal_messages')
+      .select('*').or(`target.eq.all,target.eq.${uid}`).order('created_at',{ascending:true});
+    if(!msgs||!msgs.length) return;
+    // لا نُظهر للمرسِل رسائله هو
+    const others=msgs.filter(m=>m.sender_id!==uid);
+    if(!others.length) return;
+    const {data:reads}=await db.from('message_reads').select('message_id').eq('user_id',uid);
+    const readSet=new Set((reads||[]).map(r=>r.message_id));
+    const unread=others.filter(m=>!readSet.has(m.id));
+    if(unread.length) showInboxQueue(unread);
+  }catch(e){ /* صامت */ }
+}
+function showInboxQueue(list){ _inboxQueue=list.slice(); showNextInbox(); }
+function showNextInbox(){
+  if(!_inboxQueue.length){ closeM('m-inbox'); return; }
+  const m=_inboxQueue[0]; const urgent=!!m.urgent;
+  if(!$('m-inbox')){ const d=document.createElement('div'); d.className='overlay'; d.id='m-inbox'; document.body.appendChild(d); }
+  $('m-inbox').innerHTML=`<div class="modal ${urgent?'inbox-urgent':''}" style="max-width:440px">
+    <div style="padding:22px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="width:46px;height:46px;border-radius:50%;background:${urgent?'#fee2e2':'#e0f2fe'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${urgent?'⚠️':'✉️'}</div>
+        <div><div style="font-weight:800;font-size:16px;color:${urgent?'#b91c1c':'var(--text)'}">${esc(m.title)}</div>
+          <div style="font-size:11px;color:var(--text3)">${urgent?'رسالة عاجلة':'رسالة'} من ${esc(m.sender_name||'الإدارة')} • ${fmtDate(m.created_at)}</div></div>
+      </div>
+      <div style="font-size:14px;line-height:1.9;color:var(--text2);white-space:pre-wrap;max-height:42vh;overflow:auto">${esc(m.body)}</div>
+      <button class="btn btn-p" style="width:100%;margin-top:18px${urgent?';background:#dc2626':''}" onclick="ackMessage('${m.id}')"><i class="fas fa-check"></i> فهمت</button>
+      ${_inboxQueue.length>1?`<div style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px">${_inboxQueue.length-1} رسالة أخرى بعد هذه</div>`:''}
+    </div></div>`;
+  openM('m-inbox');
+}
+async function ackMessage(id){
+  const uid=S.profile?.id;
+  try{ await db.from('message_reads').insert({message_id:id,user_id:uid}); }catch(e){}
+  _inboxQueue=_inboxQueue.filter(m=>m.id!==id);
+  showNextInbox();
+}
+
+// صفحة المدير: إرسال + متابعة القراءة
+async function renderMessages(){
+  const c=$('page-messages'); if(!c) return;
+  if(!_msgStaff()){ c.innerHTML='<div class="empty card" style="padding:60px"><i class="fas fa-lock"></i><p>هذه الصفحة للمدير والمشرف فقط</p></div>'; return; }
+  const recips=(S.teachers||[]).filter(t=>t.role==='teacher'||t.role==='supervisor');
+  const opts=recips.map(t=>`<option value="${t.id}">${esc(getDisplayName?getDisplayName(t):t.name)}</option>`).join('');
+  let msgs=[],reads=[];
+  try{
+    msgs=(await db.from('internal_messages').select('*').order('created_at',{ascending:false})).data||[];
+    reads=(await db.from('message_reads').select('*')).data||[];
+  }catch(e){}
+  const readsByMsg={}; reads.forEach(r=>{(readsByMsg[r.message_id]=readsByMsg[r.message_id]||new Set()).add(r.user_id)});
+  const sentList = msgs.length ? msgs.map(m=>{
+    const targets = m.target==='all' ? recips : recips.filter(t=>t.id===m.target);
+    const rs = readsByMsg[m.id]||new Set();
+    const readCount = targets.filter(t=>rs.has(t.id)).length;
+    const unreadNames = targets.filter(t=>!rs.has(t.id)).map(t=>esc(t.name)).join('، ')||'—';
+    const readNames   = targets.filter(t=>rs.has(t.id)).map(t=>esc(t.name)).join('، ')||'—';
+    return `<div class="card" style="margin-bottom:10px;padding:14px 16px;border-right:4px solid ${m.urgent?'#dc2626':'var(--primary)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
+        <div><span style="font-weight:800;font-size:14px">${m.urgent?'⚠️ ':''}${esc(m.title)}</span>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${m.target==='all'?'إلى: كل الأساتذة والمشرفين':'إلى: '+esc((recips.find(t=>t.id===m.target)||{}).name||'—')} • ${fmtDate(m.created_at)}</div></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="bx bx-g" style="font-size:12px">قرأ ${readCount}/${targets.length}</span>
+          <button onclick="delInternalMessage('${m.id}')" style="background:none;border:none;color:var(--danger);cursor:pointer" title="حذف"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);margin-top:8px;white-space:pre-wrap">${esc(m.body)}</div>
+      <details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--primary)">تفاصيل القراءة</summary>
+        <div style="font-size:12px;color:var(--text3);margin-top:6px">✅ قرأها: ${readNames}<br>🔴 لم يقرأها: ${unreadNames}</div>
+      </details>
+    </div>`;
+  }).join('') : '<div class="empty card" style="padding:40px"><i class="fas fa-inbox"></i><p>لا رسائل مرسلة بعد</p></div>';
+
+  c.innerHTML=`<div class="ph"><div><h1>الرسائل الداخلية</h1><p>إرسال رسائل للأساتذة ومتابعة القراءة</p></div></div>
+    <div class="card" style="margin-bottom:18px;padding:18px">
+      <h3 style="margin-bottom:14px"><i class="fas fa-paper-plane" style="color:var(--primary)"></i> رسالة جديدة</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="fg"><label>المستقبِل</label><select id="im-target" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif"><option value="all">👥 كل الأساتذة والمشرفين</option>${opts}</select></div>
+        <div class="fg"><label>النوع</label><select id="im-urgent" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif"><option value="0">عادية</option><option value="1">⚠️ عاجلة</option></select></div>
+      </div>
+      <div class="fg" style="margin-bottom:12px"><label>العنوان</label><input id="im-title" placeholder="عنوان الرسالة" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif"></div>
+      <div class="fg" style="margin-bottom:14px"><label>النص</label><textarea id="im-body" rows="4" placeholder="اكتب رسالتك هنا..." style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;resize:vertical"></textarea></div>
+      <button class="btn btn-p" onclick="sendInternalMessage()"><i class="fas fa-paper-plane"></i> إرسال</button>
+    </div>
+    <h3 style="margin-bottom:12px">الرسائل المُرسَلة</h3>${sentList}`;
+}
+
+async function sendInternalMessage(){
+  const title=$('im-title').value.trim(), body=$('im-body').value.trim();
+  const target=$('im-target').value, urgent=$('im-urgent').value==='1';
+  if(!title||!body){toast('أدخل العنوان والنص','warn');return;}
+  try{
+    const {error}=await db.from('internal_messages').insert({sender_id:S.profile.id,sender_name:S.profile.name,title,body,urgent,target});
+    if(error)throw error;
+    toast('تم إرسال الرسالة ✅','ok'); renderMessages();
+  }catch(e){toast('خطأ: '+e.message,'err')}
+}
+async function delInternalMessage(id){
+  if(!confirm('حذف هذه الرسالة نهائياً؟'))return;
+  try{ const {error}=await db.from('internal_messages').delete().eq('id',id); if(error)throw error; toast('تم الحذف','ok'); renderMessages(); }
+  catch(e){toast('خطأ: '+e.message,'err')}
+}
+
+const PAGE_TITLES={dashboard:'لوحة التحكم',groups:'الحلقات',teachers:'الأساتذة',users:'المستخدمون',messages:'الرسائل الداخلية',students:'الطلبة',attendance:'الحضور والغياب','absence-stats':'إحصائيات الغياب',recitations:'الحفظ والمراجعة',reports:'التقارير',holidays:'العطل',finance:'الإدارة المالية',exams:'الامتحانات',summer:'الدورة الصيفية',settings:'الإعدادات',certificates:'الشهادات'};
 
 function nav(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -2739,6 +2852,7 @@ function nav(page){
   if(page==='groups')renderGroups();
   if(page==='teachers')renderTeachers();
   if(page==='users')renderUsers();
+  if(page==='messages')renderMessages();
   if(page==='students')renderStudents();
   if(page==='attendance')initAtt();
   if(page==='recitations')renderRecs();
@@ -11664,6 +11778,15 @@ showApp = function() {
     loadLandingContent().then(() => applyLandingContent(CMS_DATA));
   }, 800);
 };
+
+// ══ عرض الرسائل الداخلية غير المقروءة عند الدخول ══
+(function(){
+  const _prevShowApp = showApp;
+  showApp = function(){
+    _prevShowApp.apply(this, arguments);
+    setTimeout(checkInboxPopups, 1600);
+  };
+})();
 
 // ══ تطبيق المحتوى عند تحميل صفحة الهبوط للزوار ══
 document.addEventListener('DOMContentLoaded', () => {
