@@ -2780,7 +2780,7 @@ async function renderMessages(){
   const c=$('page-messages'); if(!c) return;
   if(!_msgStaff()){ c.innerHTML='<div class="empty card" style="padding:60px"><i class="fas fa-lock"></i><p>هذه الصفحة للمدير والمشرف فقط</p></div>'; return; }
   const recips=(S.teachers||[]).filter(t=>t.role==='teacher'||t.role==='supervisor');
-  const opts=recips.map(t=>`<option value="${t.id}">${esc(getDisplayName?getDisplayName(t):t.name)}</option>`).join('');
+  const opts=recips.map(t=>`<option value="${t.id}">${esc(t.name||'')}</option>`).join('');
   let msgs=[],reads=[];
   try{
     msgs=(await db.from('internal_messages').select('*').order('created_at',{ascending:false})).data||[];
