@@ -2523,6 +2523,8 @@ async function fixStudentTeacherLinks(){
 async function doLogout(){
   try{await db.auth.signOut()}catch(e){}
   if(S._sessionInterval){clearInterval(S._sessionInterval);S._sessionInterval=null;}
+  if(S._inboxInterval){clearInterval(S._inboxInterval);S._inboxInterval=null;}
+  _inboxQueue=[];
   S.user=null;S.profile=null;S.groups=[];S.teachers=[];S.students=[];
   S.attendance=[];S.recitations=[];S.holidays=[];S.finance=[];S.manualStars=[];S._certs=[];
   EXAMS_DB=[];
@@ -2737,6 +2739,7 @@ function _msgStaff(){ return S.profile?.role==='admin'||S.profile?.role==='super
 let _inboxQueue=[];
 async function checkInboxPopups(){
   const uid=S.profile?.id; if(!uid) return;
+  if(_inboxQueue.length) return; // نافذة مفتوحة حالياً — لا نقاطعها، ننتظر الدورة التالية
   try{
     const {data:msgs}=await db.from('internal_messages')
       .select('*').or(`target.eq.all,target.eq.${uid}`).order('created_at',{ascending:true});
@@ -11785,6 +11788,9 @@ showApp = function() {
   showApp = function(){
     _prevShowApp.apply(this, arguments);
     setTimeout(checkInboxPopups, 1600);
+    // فحص دوري كل 30 ثانية لعرض الرسائل الجديدة أثناء العمل
+    if(S._inboxInterval) clearInterval(S._inboxInterval);
+    S._inboxInterval = setInterval(checkInboxPopups, 30000);
   };
 })();
 
