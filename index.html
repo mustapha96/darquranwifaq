@@ -2782,7 +2782,8 @@ async function ackMessage(id){
 async function renderMessages(){
   const c=$('page-messages'); if(!c) return;
   if(!_msgStaff()){ c.innerHTML='<div class="empty card" style="padding:60px"><i class="fas fa-lock"></i><p>هذه الصفحة للمدير والمشرف فقط</p></div>'; return; }
-  const recips=(S.teachers||[]).filter(t=>t.role==='teacher'||t.role==='supervisor');
+  const isAdm = S.profile?.role==='admin';
+  const recips=(S.teachers||[]).filter(t=>t.id!==S.profile?.id && (t.role==='teacher'||t.role==='supervisor'));
   const opts=recips.map(t=>`<option value="${t.id}">${esc(t.name||'')}</option>`).join('');
   let msgs=[],reads=[];
   try{
@@ -2816,7 +2817,7 @@ async function renderMessages(){
     <div class="card" style="margin-bottom:18px;padding:18px">
       <h3 style="margin-bottom:14px"><i class="fas fa-paper-plane" style="color:var(--primary)"></i> رسالة جديدة</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div class="fg"><label>المستقبِل</label><select id="im-target" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif"><option value="all">👥 كل الأساتذة والمشرفين</option>${opts}</select></div>
+        <div class="fg"><label>المستقبِل</label><select id="im-target" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif">${isAdm?'<option value="all">👥 كل الأساتذة والمشرفين</option>':''}${opts}</select></div>
         <div class="fg"><label>النوع</label><select id="im-urgent" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif"><option value="0">عادية</option><option value="1">⚠️ عاجلة</option></select></div>
       </div>
       <div class="fg" style="margin-bottom:12px"><label>العنوان</label><input id="im-title" placeholder="عنوان الرسالة" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif"></div>
@@ -3298,12 +3299,21 @@ function renderUsers(){
     return prefix + n;
   }
   const content=$('users-content');
-  content.innerHTML=`<div class="card"><div class="card-head"><h3>قائمة المستخدمين</h3></div><div class="tbl-wrap"><table><thead><tr><th>الاسم الكامل</th><th>الهاتف (للدخول)</th><th>الدور الحالي</th><th>تغيير الصلاحية</th></tr></thead><tbody>${S.teachers.map(t=>{
+  const supervisors=S.teachers.filter(x=>x.role==='supervisor');
+  content.innerHTML=`<div class="card"><div class="card-head"><h3>قائمة المستخدمين</h3></div><div class="tbl-wrap"><table><thead><tr><th>الاسم الكامل</th><th>الهاتف (للدخول)</th><th>الدور الحالي</th><th>تغيير الصلاحية</th><th>المشرف المسؤول</th></tr></thead><tbody>${S.teachers.map(t=>{
     const rLabel=t.role==='admin'?'👑 مدير النظام':t.role==='supervisor'?'🛡️ مشرف':'📚 أستاذ';
     const dn = getDisplayName(t);
     const ini = dn.replace(/^(الأستاذ|المدير|المشرف)\s*/,'').trim()[0]||'م';
-    return`<tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:${t.role==='admin'?'linear-gradient(135deg,#d97706,#f59e0b)':t.role==='supervisor'?'linear-gradient(135deg,#0891b2,#06b6d4)':'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">${ini}</div><div><div style="font-weight:700;font-size:13px">${dn}</div><div style="font-size:11px;color:var(--text3)">${esc(t.email||'')}</div></div></div></td><td><input value="${esc(t.phone||'')}" onchange="setUserPhone('${t.id}',this.value)" placeholder="06xxxxxxxx" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px;width:120px" dir="ltr"></td><td>${rLabel}</td><td>${t.role!=='admin'?`<select onchange="changeRole('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px"><option value="teacher" ${t.role==='teacher'?'selected':''}>أستاذ</option><option value="supervisor" ${t.role==='supervisor'?'selected':''}>مشرف</option></select>`:'<span style="color:var(--text3);font-size:12px">مدير النظام</span>'}</td></tr>`;
+    const supCell = t.role==='teacher'
+      ? `<select onchange="setUserSupervisor('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px"><option value="">— بلا مشرف —</option>${supervisors.map(s=>`<option value="${s.id}" ${t.supervisor_id===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select>`
+      : '<span style="color:var(--text3);font-size:12px">—</span>';
+    return`<tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:${t.role==='admin'?'linear-gradient(135deg,#d97706,#f59e0b)':t.role==='supervisor'?'linear-gradient(135deg,#0891b2,#06b6d4)':'var(--primary)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">${ini}</div><div><div style="font-weight:700;font-size:13px">${dn}</div><div style="font-size:11px;color:var(--text3)">${esc(t.email||'')}</div></div></div></td><td><input value="${esc(t.phone||'')}" onchange="setUserPhone('${t.id}',this.value)" placeholder="06xxxxxxxx" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px;width:120px" dir="ltr"></td><td>${rLabel}</td><td>${t.role!=='admin'?`<select onchange="changeRole('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Tajawal',sans-serif;font-size:12px"><option value="teacher" ${t.role==='teacher'?'selected':''}>أستاذ</option><option value="supervisor" ${t.role==='supervisor'?'selected':''}>مشرف</option></select>`:'<span style="color:var(--text3);font-size:12px">مدير النظام</span>'}</td><td>${supCell}</td></tr>`;
   }).join('')}</tbody></table></div></div>`;
+}
+async function setUserSupervisor(uid,supId){
+  const{error}=await db.from('profiles').update({supervisor_id:supId||null}).eq('id',uid);
+  if(!error){S.teachers=S.teachers.map(t=>t.id===uid?{...t,supervisor_id:supId||null}:t);toast('تم تحديث المشرف','ok');}
+  else toast('خطأ: '+error.message,'err');
 }
 async function setUserPhone(uid,phone){
   phone=(phone||'').trim()||null;
@@ -3946,7 +3956,7 @@ async function saveFinance(){
   const data={type:$('f-type').value,amount,description:desc,student_id:$('f-student').value||null,date:$('f-date').value||today(),notes:$('f-notes').value};
   try{
     if(id){const{error}=await db.from('finance').update(data).eq('id',id);if(error)throw error;S.finance=S.finance.map(f=>f.id===id?{...f,...data}:f);toast('تم التحديث','ok')}
-    else{const{data:nf,error}=await db.from('finance').insert(data).select().single();if(error)throw error;S.finance.unshift(nf);toast('تم الحفظ','ok')}
+    else{const{data:nf,error}=await db.from('finance').insert({...data,created_by:S.profile?.id}).select().single();if(error)throw error;S.finance.unshift(nf);toast('تم الحفظ','ok')}
     closeM('m-finance');renderFinance();
   }catch(e){toast('خطأ: '+e.message,'err')}
 }
@@ -4000,7 +4010,7 @@ async function confirmDuePaid(){
   const data={type:'دخل',amount,
     description:isSummer?`واجب الدورة الصيفية — ${s?.name||''}`:`الواجب الشهري (${m}) — ${s?.name||''}`,
     student_id:sid,date:today(),notes:$('due-note').value||'',
-    category:isSummer?'summer_due':'monthly_due',month:isSummer?null:m};
+    category:isSummer?'summer_due':'monthly_due',month:isSummer?null:m,created_by:S.profile?.id};
   try{
     const{data:nf,error}=await db.from('finance').insert(data).select().single();
     if(error)throw error;
